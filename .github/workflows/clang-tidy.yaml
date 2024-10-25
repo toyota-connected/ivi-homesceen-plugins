@@ -141,6 +141,9 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release
           ninja -C . install
 
+      - name: Configure CMake
+        working-directory: ${{github.workspace}}
+        run: |
           mkdir -p ${{github.workspace}}/build/debug
           PKG_CONFIG_PATH=${{github.workspace}}/libcamera/buildDir/staging/release/lib/x86_64-linux-gnu/pkgconfig \
           CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake -GNinja \
@@ -189,7 +192,7 @@ jobs:
             \
             -D CMAKE_EXPORT_COMPILE_COMMANDS=ON
 
-          ln -s ${{github.workspace}}/build/debug/compile_commands.json ..
+          ln -s ${{github.workspace}}/build/debug/compile_commands.json .
 
       - name: clang-tidy
         working-directory: ${{github.workspace}}
