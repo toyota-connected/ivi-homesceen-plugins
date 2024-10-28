@@ -25,54 +25,19 @@
 #include <future>
 #include <thread>
 
+#include <libxml2/libxml/tree.h>
+
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar.h>
 #include <asio/io_context_strand.hpp>
 
-#include "messages.h"
+#include "inipp.h"
+#include "messages.g.h"
 
 namespace flatpak_plugin {
 
 class FlatpakPlugin final : public flutter::Plugin, public FlatpakApi {
  public:
-  struct version {
-    uint32_t major;
-    uint32_t minor;
-    uint32_t micro;
-  };
-
-  struct installation {
-    std::string id;
-    std::string display_name;
-    std::filesystem::path path;
-    bool no_interaction;
-    bool is_user;
-    int32_t priority;
-    std::vector<std::string> default_languages;
-    std::vector<std::string> default_locales;
-  };
-
-  struct remote {
-    std::string name;
-    std::filesystem::path appstream_dir;
-    std::filesystem::path appstream_timestamp;
-    std::string url;
-    std::string collection_id;
-    std::string title;
-    std::string comment;
-    std::string description;
-    std::string homepage;
-    std::string icon;
-    std::string default_branch;
-    std::string main_ref;
-    bool gpg_verify;
-    bool no_enumerate;
-    bool no_deps;
-    bool disabled;
-    int32_t prio;
-    std::string filter;
-  };
-
   struct desktop_file {
     std::string name;
     std::string comment;
@@ -92,8 +57,47 @@ class FlatpakPlugin final : public flutter::Plugin, public FlatpakApi {
 
   ~FlatpakPlugin() override;
 
-  static flutter::EncodableList GetRemotes(FlatpakInstallation* installation,
-                                           const std::string& default_arch);
+  // Get Flatpak Version
+  ErrorOr<std::string> GetVersion() override;
+
+  // Get the default flatpak arch
+  ErrorOr<std::string> GetDefaultArch() override;
+
+  // Get all arches supported by flatpak
+  ErrorOr<flutter::EncodableList> GetSupportedArches() override;
+
+  // Get configuration of all remote repositories.
+  ErrorOr<flutter::EncodableList> GetSystemInstallations() override;
+
+  // Get configuration of user installation.
+  ErrorOr<Installation> GetUserInstallation() override;
+
+  // Add a remote repository.
+  ErrorOr<bool> RemoteAdd(const Remote& configuration) override;
+
+  // Remove Remote configuration.
+  ErrorOr<bool> RemoteRemove(const std::string& id) override;
+
+  // Get a list of applications installed on machine.
+  ErrorOr<flutter::EncodableList> GetApplicationsInstalled() override;
+
+  // Get list of applications hosted on a remote.
+  ErrorOr<flutter::EncodableList> GetApplicationsRemote(
+      const std::string& id) override;
+
+  // Install application of given id.
+  ErrorOr<bool> ApplicationInstall(const std::string& id) override;
+
+  // Uninstall application with specified id.
+  ErrorOr<bool> ApplicationUninstall(const std::string& id) override;
+
+  // Start application using specified configuration.
+  ErrorOr<bool> ApplicationStart(
+      const std::string& id,
+      const flutter::EncodableMap* configuration) override;
+
+  // Stop application with given id.
+  ErrorOr<bool> ApplicationStop(const std::string& id) override;
 
   static flutter::EncodableList GetApplicationList(
       FlatpakInstallation* installation);
@@ -124,18 +128,26 @@ class FlatpakPlugin final : public flutter::Plugin, public FlatpakApi {
   asio::executor_work_guard<decltype(io_context_->get_executor())> work_;
   std::unique_ptr<asio::io_context::strand> strand_;
 
-  version version_{};
-  std::string default_arch_;
-  std::vector<std::string> supported_arches_;
-  std::vector<std::unique_ptr<struct installation>> installations_;
-  std::mutex installations_mutex_;
+  static GPtrArray* get_system_installations();
 
-  static void PrintInstallation(
-      const std::unique_ptr<struct installation>& install);
+  static GPtrArray* get_remotes(FlatpakInstallation* installation);
 
-  static void process_system_installation(gpointer data, gpointer user_data);
+  static std::vector<char> decompressGzip(
+      const std::vector<char>& compressedData,
+      std::vector<char>& decompressedData);
 
-  std::future<void> GetInstallations();
+  static std::string executeXPathQuery(xmlDoc* doc, const char* xpathExpr);
+
+  static std::time_t get_appstream_timestamp(
+      const std::filesystem::path& timestamp_filepath);
+
+  static Installation get_installation(FlatpakInstallation* installation);
+
+  static flutter::EncodableList installation_get_default_languages(
+      FlatpakInstallation* installation);
+
+  static flutter::EncodableList installation_get_default_locales(
+      FlatpakInstallation* installation);
 
   static std::string get_application_id(FlatpakInstalledRef* installed_ref);
 
@@ -143,10 +155,17 @@ class FlatpakPlugin final : public flutter::Plugin, public FlatpakApi {
                                   const char* deploy_dir,
                                   bool print_raw_xml = false);
 
+  static void parse_appstream_xml_string(const std::string& buffer);
+
+  static inipp::Ini<char> get_ini_file(const std::filesystem::path& filepath);
+
   static void parse_repo_appstream_xml(const char* appstream_xml);
 
   static void parse_desktop_file(const std::filesystem::path& filepath,
                                  struct desktop_file& desktop);
+
+  static std::vector<char> read_file_to_vector(
+      const std::filesystem::path& filepath);
 };
 }  // namespace flatpak_plugin
 

@@ -22,7 +22,7 @@ pkg_check_modules(ZLIB IMPORTED_TARGET REQUIRED zlib)
 add_library(plugin_flatpak STATIC
         flatpak_plugin_c_api.cc
         flatpak_plugin.cc
-        messages.cc
+        messages.g.cc
 )
 
 target_include_directories(plugin_flatpak PRIVATE include)
