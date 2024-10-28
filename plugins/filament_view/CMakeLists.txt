@@ -120,6 +120,7 @@ add_library(plugin_filament_view STATIC
         core/utils/deserialize.cc
         core/scene/view_target.cc
         core/systems/derived/view_target_system.cc
+        core/systems/derived/entityobject_locator_system.cc
 )
 
 target_include_directories(plugin_filament_view PUBLIC

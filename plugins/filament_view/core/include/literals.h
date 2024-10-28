@@ -61,6 +61,12 @@ static constexpr char kCollisionRayRequestLength[] =
     "COLLISION_RAY_REQUEST_LENGTH";
 static constexpr char kCollisionRayRequestGUID[] = "COLLISION_RAY_REQUEST_GUID";
 
+static constexpr char kChangeMaterialParameter[] = "CHANGE_MATERIAL_PARAMETER";
+static constexpr char kChangeMaterialParameterData[] =
+    "CHANGE_MATERIAL_PARAMETER_DATA";
+static constexpr char kChangeMaterialParameterEntityGuid[] =
+    "CHANGE_MATERIAL_PARAMETER_ENTITY_GUID";
+
 // Deserialization
 static constexpr char kId[] = "id";
 static constexpr char kName[] = "name";

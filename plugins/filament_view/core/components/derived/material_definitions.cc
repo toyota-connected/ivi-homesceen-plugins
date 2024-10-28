@@ -16,12 +16,12 @@
 
 #include "material_definitions.h"
 
+#include <core/include/literals.h>
+#include <core/systems/ecsystems_manager.h>
 #include <filament/Material.h>
 #include <filament/TextureSampler.h>
 #include <plugins/common/common.h>
 #include <filesystem>
-#include <core/include/literals.h>
-#include <core/systems/ecsystems_manager.h>
 
 namespace plugin_filament_view {
 
@@ -29,8 +29,8 @@ using MinFilter = filament::TextureSampler::MinFilter;
 using MagFilter = filament::TextureSampler::MagFilter;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-MaterialDefinitions::MaterialDefinitions(const flutter::EncodableMap& params) :
-  Component(std::string(__FUNCTION__)) {
+MaterialDefinitions::MaterialDefinitions(const flutter::EncodableMap& params)
+    : Component(std::string(__FUNCTION__)) {
   SPDLOG_TRACE("++{}::{}", __FILE__, __FUNCTION__);
   const auto flutterAssetPath =
       ECSystemManager::GetInstance()->getConfigValue<std::string>(kAssetPath);
@@ -79,20 +79,20 @@ MaterialDefinitions::~MaterialDefinitions() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void MaterialDefinitions::DebugPrint(const std::string& tabPrefix) const{
+void MaterialDefinitions::DebugPrint(const std::string& tabPrefix) const {
   spdlog::debug(tabPrefix + "++++++++ (MaterialDefinitions) ++++++++");
   if (!assetPath_.empty()) {
-    spdlog::debug(tabPrefix +"assetPath: [{}]", assetPath_);
+    spdlog::debug(tabPrefix + "assetPath: [{}]", assetPath_);
 
     const auto flutterAssetPath =
-      ECSystemManager::GetInstance()->getConfigValue<std::string>(kAssetPath);
+        ECSystemManager::GetInstance()->getConfigValue<std::string>(kAssetPath);
 
     const std::filesystem::path asset_folder(flutterAssetPath);
-    spdlog::debug(tabPrefix +"asset_path {} valid",
+    spdlog::debug(tabPrefix + "asset_path {} valid",
                   exists(asset_folder / assetPath_) ? "is" : "is not");
   }
   if (!url_.empty()) {
-    spdlog::debug(tabPrefix +"url: [{}]", url_);
+    spdlog::debug(tabPrefix + "url: [{}]", url_);
   }
   spdlog::debug(tabPrefix + "ParamCount: [{}]", parameters_.size());
 
@@ -131,6 +131,78 @@ MaterialDefinitions::vecGetTextureMaterialParameters() const {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+void MaterialDefinitions::vApplyMaterialParameterToInstance(
+    filament::MaterialInstance* materialInstance,
+    const MaterialParameter* param,
+    const TextureMap& loadedTextures) const {
+  auto szParamName = param->szGetParameterName().c_str();
+
+  switch (param->type_) {
+    case MaterialParameter::MaterialType::COLOR: {
+      materialInstance->setParameter(szParamName, filament::RgbaType::LINEAR,
+                                     param->colorValue_.value());
+    } break;
+
+    case MaterialParameter::MaterialType::FLOAT: {
+      materialInstance->setParameter(szParamName, param->fValue_.value());
+    } break;
+
+    case MaterialParameter::MaterialType::TEXTURE: {
+      // make sure we have the texture:
+      auto foundResource =
+          loadedTextures.find(param->getTextureValueAssetPath());
+
+      if (foundResource == loadedTextures.end()) {
+        // log and continue
+        spdlog::warn(
+            "Got to a case where a texture was not loaded before trying to "
+            "apply to a material.");
+        return;
+      }
+
+      // sampler will be on 'our' deserialized
+      // texturedefinitions->texture_sampler
+      const auto textureSampler = param->getTextureSampler();
+
+      filament::TextureSampler sampler(MinFilter::LINEAR, MagFilter::LINEAR);
+
+      if (textureSampler != nullptr) {
+        // SPDLOG_INFO("Overloading filtering options with set param
+        // values");
+        sampler.setMinFilter(textureSampler->getMinFilter());
+        sampler.setMagFilter(textureSampler->getMagFilter());
+        sampler.setAnisotropy(
+            static_cast<float>(textureSampler->getAnisotropy()));
+
+        // Currently leaving this commented out, but this is for 3d
+        // textures, which are not currently expected to be loaded
+        // as time of writing.
+        // sampler.setWrapModeR(textureSampler->getWrapModeR());
+
+        sampler.setWrapModeS(textureSampler->getWrapModeS());
+        sampler.setWrapModeT(textureSampler->getWrapModeT());
+      }
+
+      if (!foundResource->second.getData().has_value()) {
+        spdlog::warn(
+            "Got to a case where a texture resource data was not loaded "
+            "before trying to "
+            "apply to a material.");
+        return;
+      }
+
+      const auto texture = foundResource->second.getData().value();
+      materialInstance->setParameter(szParamName, texture, sampler);
+    } break;
+
+    default: {
+      SPDLOG_WARN("Type template not setup yet, see {} {}", __FILE__,
+                  __FUNCTION__);
+    } break;
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 void MaterialDefinitions::vSetMaterialInstancePropertiesFromMyPropertyMap(
     const filament::Material* materialResult,
     filament::MaterialInstance* materialInstance,
@@ -156,71 +228,8 @@ void MaterialDefinitions::vSetMaterialInstancePropertiesFromMyPropertyMap(
       }
       SPDLOG_TRACE("Setting material param {}", param.name);
 
-      switch (iter->second->type_) {
-        case MaterialParameter::MaterialType::COLOR: {
-          materialInstance->setParameter(param.name, filament::RgbaType::LINEAR,
-                                         iter->second->colorValue_.value());
-        } break;
-
-        case MaterialParameter::MaterialType::FLOAT: {
-          materialInstance->setParameter(param.name,
-                                         iter->second->fValue_.value());
-        } break;
-
-        case MaterialParameter::MaterialType::TEXTURE: {
-          // make sure we have the texture:
-          auto foundResource =
-              loadedTextures.find(iter->second->getTextureValueAssetPath());
-
-          if (foundResource == loadedTextures.end()) {
-            // log and continue
-            spdlog::warn(
-                "Got to a case where a texture was not loaded before trying to "
-                "apply to a material.");
-            continue;
-          }
-
-          // sampler will be on 'our' deserialized
-          // texturedefinitions->texture_sampler
-          const auto textureSampler = iter->second->getTextureSampler();
-
-          filament::TextureSampler sampler(MinFilter::LINEAR,
-                                           MagFilter::LINEAR);
-
-          if (textureSampler != nullptr) {
-            // SPDLOG_INFO("Overloading filtering options with set param
-            // values");
-            sampler.setMinFilter(textureSampler->getMinFilter());
-            sampler.setMagFilter(textureSampler->getMagFilter());
-            sampler.setAnisotropy(
-                static_cast<float>(textureSampler->getAnisotropy()));
-
-            // Currently leaving this commented out, but this is for 3d
-            // textures, which are not currently expected to be loaded
-            // as time of writing.
-            // sampler.setWrapModeR(textureSampler->getWrapModeR());
-
-            sampler.setWrapModeS(textureSampler->getWrapModeS());
-            sampler.setWrapModeT(textureSampler->getWrapModeT());
-          }
-
-          if (!foundResource->second.getData().has_value()) {
-            spdlog::warn(
-                "Got to a case where a texture resource data was not loaded "
-                "before trying to "
-                "apply to a material.");
-            continue;
-          }
-
-          const auto texture = foundResource->second.getData().value();
-          materialInstance->setParameter(param.name, texture, sampler);
-        } break;
-
-        default: {
-          SPDLOG_WARN("Type template not setup yet, see {} {}", __FILE__,
-                      __FUNCTION__);
-        } break;
-      }
+      vApplyMaterialParameterToInstance(materialInstance, iter->second.get(),
+                                        loadedTextures);
     }
   }
 }

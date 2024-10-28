@@ -26,6 +26,8 @@
 #include <filament/Scene.h>
 #include <plugins/common/common.h>
 
+#include "entityobject_locator_system.h"
+
 namespace plugin_filament_view {
 
 using shapes::BaseShape;
@@ -47,6 +49,14 @@ void ShapeSystem::vToggleAllShapesInScene(const bool bValue) const {
 ////////////////////////////////////////////////////////////////////////////////////
 void ShapeSystem::vRemoveAllShapesInScene() {
   vToggleAllShapesInScene(false);
+
+  const auto objectLocatorSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
+          EntityObjectLocatorSystem::StaticGetTypeID(), "addShapesToScene");
+  for (auto it = shapes_.begin(); it != shapes_.end(); ++it) {
+    objectLocatorSystem->vUnregisterEntityObject(*it);
+  }
+
   shapes_.clear();
 }
 
@@ -110,6 +120,10 @@ void ShapeSystem::addShapesToScene(
   // needed
   // oEntitymanager.create(shapes.size(), lstEntities);
 
+  const auto objectLocatorSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
+          EntityObjectLocatorSystem::StaticGetTypeID(), "addShapesToScene");
+
   for (auto& shape : *shapes) {
     auto oEntity = std::make_shared<Entity>(oEntitymanager.create());
 
@@ -124,7 +138,10 @@ void ShapeSystem::addShapesToScene(
     // To investigate
     // rcm.setLayerMask(instance, 0xff, 0x00);
 
-    shapes_.emplace_back(shape.release());
+    std::shared_ptr<BaseShape> sharedPtr = std::move(shape);
+
+    shapes_.push_back(sharedPtr);
+    objectLocatorSystem->vRegisterEntityObject(sharedPtr);
   }
 
   SPDLOG_TRACE("--{} {}", __FILE__, __FUNCTION__);

@@ -70,7 +70,8 @@ void Deserialize::DecodeParameterWithDefault(
   if (const auto it = params.find(flutter::EncodableValue(key));
       it != params.end() &&
       std::holds_alternative<flutter::EncodableMap>(it->second)) {
-    out_value = std::make_unique<MaterialDefinitions>(std::get<flutter::EncodableMap>(it->second));
+    out_value = std::make_unique<MaterialDefinitions>(
+        std::get<flutter::EncodableMap>(it->second));
   } else {
     out_value.reset();  // or set it to std::nullopt if desired
   }

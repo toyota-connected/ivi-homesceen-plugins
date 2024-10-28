@@ -109,30 +109,33 @@ class MaterialParameter {
   [[nodiscard]] std::unique_ptr<MaterialParameter> clone() const {
     switch (type_) {
       case MaterialType::COLOR:
-        return std::make_unique<MaterialParameter>(name_, type_, colorValue_.value());
+        return std::make_unique<MaterialParameter>(name_, type_,
+                                                   colorValue_.value());
       case MaterialType::FLOAT:
-        return std::make_unique<MaterialParameter>(name_, type_, fValue_.value());
+        return std::make_unique<MaterialParameter>(name_, type_,
+                                                   fValue_.value());
       case MaterialType::TEXTURE:
         if (textureValue_.has_value()) {
           const auto& textureValue = textureValue_.value();
-          const auto& texturePtr = std::get<std::unique_ptr<TextureDefinitions>>(textureValue);
+          const auto& texturePtr =
+              std::get<std::unique_ptr<TextureDefinitions>>(textureValue);
           if (texturePtr) {
             // Assuming TextureDefinitions has a clone method
-            return std::make_unique<MaterialParameter>(name_, type_, std::move(texturePtr->clone()));
+            return std::make_unique<MaterialParameter>(
+                name_, type_, std::move(texturePtr->clone()));
           }
         }
-      break;
+        break;
       // Handle other types (BOOL, BOOL_VECTOR, INT, etc.)
       case MaterialType::BOOL:
       case MaterialType::INT:
-          // Add cloning logic for these types
-          break;
+        // Add cloning logic for these types
+        break;
       default:
         throw std::runtime_error("Unsupported MaterialType in clone.");
     }
     return nullptr;  // In case of unsupported type or missing value.
   }
-
 
  private:
   static constexpr char kColor[] = "COLOR";

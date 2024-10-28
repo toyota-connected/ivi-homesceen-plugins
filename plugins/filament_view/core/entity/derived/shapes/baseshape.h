@@ -82,6 +82,8 @@ class BaseShape : public EntityObject {
   /// direction of the shape rotation in the world space
   filament::math::float3 m_f3Normal;
   /// material to be used for the shape - instantiated from material definition
+  /// This should probably be on the entity level as model would use this in
+  /// future as well.
   Resource<filament::MaterialInstance*> m_poMaterialInstance;
 
   std::shared_ptr<utils::Entity> m_poEntity;
@@ -93,6 +95,12 @@ class BaseShape : public EntityObject {
   //        For now this is unimplemented, but would be a <small> savings
   //        when building as code currently allocates buffers for UVs
   bool m_bHasTexturedMaterial = true;
+
+  void vChangeMaterialDefinitions(const flutter::EncodableMap& params,
+                                  const TextureMap& loadedTextures) override;
+  void vChangeMaterialInstanceProperty(
+      const MaterialParameter* materialParam,
+      const TextureMap& loadedTextures) override;
 
  private:
   void vDestroyBuffers();

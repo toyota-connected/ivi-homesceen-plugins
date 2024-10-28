@@ -83,6 +83,13 @@ class Model : public EntityObject {
   // lookup, but they're not owned here, but on EntityObject's list.
   std::weak_ptr<BaseTransform> m_poBaseTransform;
   std::weak_ptr<CommonRenderable> m_poCommonRenderable;
+
+  void vChangeMaterialDefinitions(
+      const flutter::EncodableMap& /*params*/,
+      const TextureMap& /*loadedTextures*/) override {}
+  void vChangeMaterialInstanceProperty(
+      const MaterialParameter* /*materialParam*/,
+      const TextureMap& /*loadedTextures*/) override {}
 };
 
 class GlbModel final : public Model {

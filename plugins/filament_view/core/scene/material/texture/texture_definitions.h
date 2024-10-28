@@ -55,8 +55,9 @@ class TextureDefinitions {
 
   TextureSampler* getSampler() { return sampler_; }
 
- [[nodiscard]] std::unique_ptr<TextureDefinitions> clone() const {
-   return std::make_unique<TextureDefinitions>(type_, assetPath_, url_, sampler_);
+  [[nodiscard]] std::unique_ptr<TextureDefinitions> clone() const {
+    return std::make_unique<TextureDefinitions>(type_, assetPath_, url_,
+                                                sampler_);
   }
 
  private:

@@ -116,7 +116,8 @@ void SceneTextDeserializer::vDeserializeRootLevel(
           SPDLOG_DEBUG("CreationParamName unable to cast {}", key.c_str());
           continue;
         }
-        auto shape = ShapeSystem::poDeserializeShapeFromData(std::get<flutter::EncodableMap>(iter));
+        auto shape = ShapeSystem::poDeserializeShapeFromData(
+            std::get<flutter::EncodableMap>(iter));
 
         shapes_.emplace_back(shape.release());
       }
@@ -184,15 +185,16 @@ void SceneTextDeserializer::vRunPostSetupLoad() {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-void SceneTextDeserializer::setUpLoadingModels() const {
+void SceneTextDeserializer::setUpLoadingModels() {
   SPDLOG_TRACE("++{}::{}", __FILE__, __FUNCTION__);
   // animationManager_ = std::make_unique<AnimationManager>();
 
-  for (const auto& iter : models_) {
-    Model* poCurrModel = iter.get();
+  for (auto& iter : models_) {
     // Note: Instancing or prefab of models is not currently supported but might
     // affect the loading process here in the future. Backlogged.
-    loadModel(poCurrModel);
+    //
+    // This will transfer ownership
+    loadModel(iter);
   }
 
   SPDLOG_TRACE("--{}::{}", __FILE__, __FUNCTION__);
@@ -228,41 +230,42 @@ void SceneTextDeserializer::setUpShapes() {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-void SceneTextDeserializer::loadModel(Model* model) {
+void SceneTextDeserializer::loadModel(std::unique_ptr<Model>& model) {
   const auto ecsManager = ECSystemManager::GetInstance();
   const auto& strand = *ecsManager->GetStrand();
 
-  post(strand, [=] {
+  post(strand, [model = std::move(model)]() mutable {
     const auto modelSystem =
         ECSystemManager::GetInstance()->poGetSystemAs<ModelSystem>(
             ModelSystem::StaticGetTypeID(), "loadModel");
 
     if (modelSystem == nullptr) {
       spdlog::error("Unable to find the model system.");
-      /*return Resource<std::string_view>::Error(
-          "Unable to find the model system.");*/
+      return;
     }
 
     const auto& loader = modelSystem;
-    if (dynamic_cast<GlbModel*>(model)) {
-      const auto glb_model = dynamic_cast<GlbModel*>(model);
+    if (dynamic_cast<GlbModel*>(model.get())) {
+      const auto glb_model = dynamic_cast<GlbModel*>(model.get());
       if (!glb_model->szGetAssetPath().empty()) {
-        loader->loadGlbFromAsset(model, glb_model->szGetAssetPath(), false);
+        loader->loadGlbFromAsset(std::move(model), glb_model->szGetAssetPath(),
+                                 false);
       }
 
       if (!glb_model->szGetURLPath().empty()) {
-        loader->loadGlbFromUrl(model, glb_model->szGetURLPath());
+        loader->loadGlbFromUrl(std::move(model), glb_model->szGetURLPath());
       }
-    } else if (dynamic_cast<GltfModel*>(model)) {
-      const auto gltf_model = dynamic_cast<GltfModel*>(model);
+    } else if (dynamic_cast<GltfModel*>(model.get())) {
+      const auto gltf_model = dynamic_cast<GltfModel*>(model.get());
       if (!gltf_model->szGetAssetPath().empty()) {
-        ModelSystem::loadGltfFromAsset(model, gltf_model->szGetAssetPath(),
-                                       gltf_model->szGetPrefix(),
-                                       gltf_model->szGetPostfix());
+        ModelSystem::loadGltfFromAsset(
+            std::move(model), gltf_model->szGetAssetPath(),
+            gltf_model->szGetPrefix(), gltf_model->szGetPostfix());
       }
 
       if (!gltf_model->szGetURLPath().empty()) {
-        ModelSystem::loadGltfFromUrl(model, gltf_model->szGetURLPath());
+        ModelSystem::loadGltfFromUrl(std::move(model),
+                                     gltf_model->szGetURLPath());
       }
     }
   });

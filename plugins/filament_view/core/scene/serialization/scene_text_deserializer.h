@@ -37,7 +37,9 @@ class SceneTextDeserializer {
   virtual ~SceneTextDeserializer() {}
 
  private:
+  // These get released to the Model_system / obj locator
   std::vector<std::unique_ptr<Model>> models_;
+  // These get released to the Shape_System / obj locator
   std::vector<std::unique_ptr<shapes::BaseShape>> shapes_;
 
   void vDeserializeRootLevel(const std::vector<uint8_t>& params,
@@ -46,13 +48,13 @@ class SceneTextDeserializer {
   // tag
   void vDeserializeSceneLevel(const flutter::EncodableValue& params);
 
-  void setUpLoadingModels() const;
+  void setUpLoadingModels();
   void setUpSkybox();
   void setUpLight();
   void setUpIndirectLight();
   void setUpShapes();
 
-  static void loadModel(Model* model);
+  static void loadModel(std::unique_ptr<Model>& model);
 
   std::unique_ptr<Skybox> skybox_;
   std::unique_ptr<IndirectLight> indirect_light_;

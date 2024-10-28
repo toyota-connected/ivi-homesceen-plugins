@@ -20,13 +20,16 @@
 #include <vector>
 
 #include <core/components/base/component.h>
+#include <core/components/derived/material_definitions.h>
 
 namespace plugin_filament_view {
+class MaterialParameter;
 
 using EntityGUID = std::string;
 
 class EntityObject {
   friend class CollisionSystem;
+  friend class MaterialSystem;
 
  public:
   // Overloading the == operator to compare based on global_guid_
@@ -100,6 +103,18 @@ class EntityObject {
                                     EntityObject& other) const;
 
   void DeserializeNameAndGlobalGuid(const flutter::EncodableMap& params);
+
+  // These are expected to have Material instances in base class after we go
+  // from Uber shader to <?more interchangeable?> on models. For now these are
+  // not implemented on Models, but are on BaseShapes.
+
+  // This is a heavy lift function as it will recreate / load a material
+  // if it doesn't exist and reset everything from scratch.
+  virtual void vChangeMaterialDefinitions(const flutter::EncodableMap& params,
+                                          const TextureMap& loadedTextures) = 0;
+  virtual void vChangeMaterialInstanceProperty(
+      const MaterialParameter* materialParam,
+      const TextureMap& loadedTextures) = 0;
 
  private:
   EntityGUID global_guid_;

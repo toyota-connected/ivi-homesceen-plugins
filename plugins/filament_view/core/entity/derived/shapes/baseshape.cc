@@ -80,8 +80,6 @@ BaseShape::BaseShape(const flutter::EncodableMap& params)
                                               ShapeType::Unset);
   Deserialize::DecodeParameterWithDefault(kNormal, &m_f3Normal, params,
                                           float3(0, 0, 0));
-  //Deserialize::DecodeParameterWithDefault(kMaterial, m_poMaterialDefinitions,
-  //                                        params);
   Deserialize::DecodeParameterWithDefault(kDoubleSided, &m_bDoubleSided, params,
                                           false);
 
@@ -98,8 +96,9 @@ BaseShape::BaseShape(const flutter::EncodableMap& params)
   // (optional)
   if (const auto it = params.find(flutter::EncodableValue(kMaterial));
       it != params.end() && !it->second.IsNull()) {
-      auto materialDefinitions = std::make_shared<MaterialDefinitions>(std::get<flutter::EncodableMap>(it->second));
-      vAddComponent(std::move(materialDefinitions));
+    auto materialDefinitions = std::make_shared<MaterialDefinitions>(
+        std::get<flutter::EncodableMap>(it->second));
+    vAddComponent(std::move(materialDefinitions));
   }
 
   SPDLOG_TRACE("--{} {}", __FILE__, __FUNCTION__);
@@ -138,6 +137,7 @@ void BaseShape::vDestroyBuffers() {
 ////////////////////////////////////////////////////////////////////////////
 // Unique that we don't want to copy all components, as shapes can have
 // collidables, which would make a cascading collidable chain
+// NOTE: We also don't copy material definitions. (Purposefully)
 void BaseShape::CloneToOther(BaseShape& other) const {
   other.m_f3Normal = m_f3Normal;
   other.m_bDoubleSided = m_bDoubleSided;
@@ -193,11 +193,13 @@ void BaseShape::vBuildRenderable(filament::Engine* engine_) {
       // this will also set all the default values of the material instance from
       // the material param list
 
-        const auto materialDefinitions = GetComponentByStaticTypeID(MaterialDefinitions::StaticGetTypeID());
-        if(materialDefinitions != nullptr) {
-            m_poMaterialInstance =
-                materialSystem->getMaterialInstance(dynamic_cast<const MaterialDefinitions*>(materialDefinitions.get()));
-        }
+      const auto materialDefinitions =
+          GetComponentByStaticTypeID(MaterialDefinitions::StaticGetTypeID());
+      if (materialDefinitions != nullptr) {
+        m_poMaterialInstance = materialSystem->getMaterialInstance(
+            dynamic_cast<const MaterialDefinitions*>(
+                materialDefinitions.get()));
+      }
 
       if (m_poMaterialInstance.getStatus() != Status::Success) {
         spdlog::error("Failed to get material instance.");
@@ -275,6 +277,27 @@ void BaseShape::DebugPrint(const char* tag) const {
   DebugPrint();
 
   spdlog::debug("-------- (Shape) --------");
+}
+
+////////////////////////////////////////////////////////////////////////////
+void BaseShape::vChangeMaterialDefinitions(
+    const flutter::EncodableMap& /*params*/,
+    const TextureMap& /*loadedTextures*/) {}
+
+////////////////////////////////////////////////////////////////////////////
+void BaseShape::vChangeMaterialInstanceProperty(
+    const MaterialParameter* materialParam,
+    const TextureMap& loadedTextures) {
+  auto data = m_poMaterialInstance.getData().value();
+
+  auto matDefs = dynamic_cast<MaterialDefinitions*>(
+      GetComponentByStaticTypeID(MaterialDefinitions::StaticGetTypeID()).get());
+  if (matDefs == nullptr) {
+    return;
+  }
+
+  matDefs->vApplyMaterialParameterToInstance(data, materialParam,
+                                             loadedTextures);
 }
 
 }  // namespace plugin_filament_view::shapes

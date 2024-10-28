@@ -16,45 +16,25 @@
 
 #pragma once
 
-#include "shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
-
-#include <core/entity/derived/shapes/baseshape.h>
+#include <core/entity/base/entityobject.h>
 #include <core/systems/base/ecsystem.h>
-#include <core/systems/derived/material_system.h>
-#include <list>
+#include <map>
 
 namespace plugin_filament_view {
 
-namespace shapes {
-class BaseShape;
-}
-
-class ShapeSystem : public ECSystem {
+class EntityObjectLocatorSystem : public ECSystem {
  public:
-  ShapeSystem() = default;
-
-  void addShapesToScene(
-      std::vector<std::unique_ptr<shapes::BaseShape>>* shapes);
+  EntityObjectLocatorSystem() = default;
 
   // Disallow copy and assign.
-  ShapeSystem(const ShapeSystem&) = delete;
-  ShapeSystem& operator=(const ShapeSystem&) = delete;
-
-  // will add/remove already made entities to/from the scene
-  void vToggleAllShapesInScene(bool bValue) const;
-
-  void vRemoveAllShapesInScene();
-
-  // Creates the derived class of BaseShape based on the map data sent in, does
-  // not add it to any list only returns the shape for you, Also does not build
-  // the data out, only stores it for building when ready.
-  static std::unique_ptr<shapes::BaseShape> poDeserializeShapeFromData(
-      const flutter::EncodableMap& mapData);
+  EntityObjectLocatorSystem(const EntityObjectLocatorSystem&) = delete;
+  EntityObjectLocatorSystem& operator=(const EntityObjectLocatorSystem&) =
+      delete;
 
   [[nodiscard]] size_t GetTypeID() const override { return StaticGetTypeID(); }
 
   [[nodiscard]] static size_t StaticGetTypeID() {
-    return typeid(ShapeSystem).hash_code();
+    return typeid(EntityObjectLocatorSystem).hash_code();
   }
 
   void vInitSystem() override;
@@ -62,7 +42,13 @@ class ShapeSystem : public ECSystem {
   void vShutdownSystem() override;
   void DebugPrint() override;
 
+  void vRegisterEntityObject(std::shared_ptr<EntityObject> entity);
+  void vUnregisterEntityObject(std::shared_ptr<EntityObject> entity);
+
+  std::shared_ptr<EntityObject> poGetEntityObjectById(EntityGUID id) const;
+
  private:
-  std::list<std::shared_ptr<shapes::BaseShape>> shapes_;
+  std::map<EntityGUID, std::shared_ptr<EntityObject>> _entities;
 };
+
 }  // namespace plugin_filament_view
