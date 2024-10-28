@@ -30,7 +30,6 @@
 #include <core/systems/ecsystems_manager.h>
 #include <messages.g.h>
 #include <plugins/common/common.h>
-#include <standard_message_codec.h>
 #include <asio/post.hpp>
 
 class FlutterView;
@@ -251,7 +250,7 @@ void FilamentViewPlugin::ChangeAnimationByIndex(
 
 void FilamentViewPlugin::ChangeMaterialParameter(
     const flutter::EncodableMap& params,
-    EntityGUID guid) {
+    const EntityGUID& guid) {
   ECSMessage materialData;
   materialData.addData(ECSMessageType::ChangeMaterialParameter, params);
   materialData.addData(ECSMessageType::ChangeMaterialEntity, guid);

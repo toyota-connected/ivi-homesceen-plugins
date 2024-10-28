@@ -288,9 +288,9 @@ void BaseShape::vChangeMaterialDefinitions(
 void BaseShape::vChangeMaterialInstanceProperty(
     const MaterialParameter* materialParam,
     const TextureMap& loadedTextures) {
-  auto data = m_poMaterialInstance.getData().value();
+  const auto data = m_poMaterialInstance.getData().value();
 
-  auto matDefs = dynamic_cast<MaterialDefinitions*>(
+  const auto matDefs = dynamic_cast<MaterialDefinitions*>(
       GetComponentByStaticTypeID(MaterialDefinitions::StaticGetTypeID()).get());
   if (matDefs == nullptr) {
     return;

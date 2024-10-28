@@ -105,7 +105,7 @@ class FilamentViewApi {
   virtual ~FilamentViewApi() = default;
 
   virtual void ChangeMaterialParameter(const flutter::EncodableMap& params,
-                                       EntityGUID guid) = 0;
+                                       const EntityGUID& guid) = 0;
 
   virtual void ChangeDirectLightByIndex(
       int32_t index,

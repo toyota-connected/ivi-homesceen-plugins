@@ -135,7 +135,8 @@ void MaterialDefinitions::vApplyMaterialParameterToInstance(
     filament::MaterialInstance* materialInstance,
     const MaterialParameter* param,
     const TextureMap& loadedTextures) const {
-  auto szParamName = param->szGetParameterName().c_str();
+  const std::string paramName = param->szGetParameterName();
+  const char* szParamName = paramName.c_str();
 
   switch (param->type_) {
     case MaterialParameter::MaterialType::COLOR: {
@@ -149,7 +150,7 @@ void MaterialDefinitions::vApplyMaterialParameterToInstance(
 
     case MaterialParameter::MaterialType::TEXTURE: {
       // make sure we have the texture:
-      auto foundResource =
+      const auto foundResource =
           loadedTextures.find(param->getTextureValueAssetPath());
 
       if (foundResource == loadedTextures.end()) {

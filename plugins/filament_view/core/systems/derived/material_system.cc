@@ -186,13 +186,14 @@ void MaterialSystem::vInitSystem() {
                     EntityObjectLocatorSystem::StaticGetTypeID(),
                     "ChangeMaterialParameter");
 
-        auto entityObject = objectLocatorSystem->poGetEntityObjectById(guid);
-        if (entityObject != nullptr) {
+        if (const auto entityObject =
+                objectLocatorSystem->poGetEntityObjectById(guid);
+            entityObject != nullptr) {
           spdlog::debug("ChangeMaterialParameter valid entity found.");
           // When we change the full material definitions
           // entityObject->vChangeMaterialDefinitions(params, loadedTextures_);
 
-          auto parameter = MaterialParameter::Deserialize("", params);
+          const auto parameter = MaterialParameter::Deserialize("", params);
 
           entityObject->vChangeMaterialInstanceProperty(parameter.get(),
                                                         loadedTextures_);

@@ -129,13 +129,11 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
         } else if (methodCall.method_name() == kChangeMaterialParameter) {
           const auto& args = std::get_if<EncodableMap>(methodCall.arguments());
           EntityGUID objectGuid;
-          flutter::EncodableMap paramData;
-
-          SPDLOG_DEBUG("IN kChangeMaterialParameter");
+          EncodableMap paramData;
 
           for (const auto& [fst, snd] : *args) {
             if (kChangeMaterialParameterData == std::get<std::string>(fst)) {
-              paramData = std::get<flutter::EncodableMap>(snd);
+              paramData = std::get<EncodableMap>(snd);
             } else if (kChangeMaterialParameterEntityGuid ==
                        std::get<std::string>(fst)) {
               objectGuid = std::get<std::string>(snd);
