@@ -62,7 +62,6 @@ void GoRouterApi::SetUp(flutter::BinaryMessenger* binary_messenger,
             buffer.Clear();
             rapidjson::Writer writer(buffer);
             args->Accept(writer);
-            spdlog::debug("[go_router] {}", buffer.GetString());
 
             if (method == "selectSingleEntryHistory") {
               spdlog::debug("[go_router] selectSingleEntryHistory");
