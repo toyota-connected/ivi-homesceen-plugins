@@ -199,7 +199,7 @@ jobs:
         run: |
           export FILE_LIST=$(find plugins -type d -name third_party -prune -o -name '*.cc' -o -name '*.hpp' -o -name '*.h')
           echo $FILE_LIST
-          clang18/bin/clang-tidy --warnings-as-errors='*,-bugprone-macro-parentheses' --quiet --export-fixes=tidy-results-suggested-fixes.txt $FILE_LIST 2> tidy-results-log.txt
+          clang18/bin/run-clang-tidy -warnings-as-errors='*,-bugprone-macro-parentheses' -quiet -export-fixes=tidy-results-suggested-fixes.txt $FILE_LIST > tidy-results-log.txt
 
       - name: Show results
         if: always()
