@@ -239,25 +239,25 @@ void Remote::set_prio(int64_t value_arg) {
 EncodableList Remote::ToEncodableList() const {
   EncodableList list;
   list.reserve(19);
-  list.emplace_back(EncodableValue(name_));
-  list.emplace_back(EncodableValue(url_));
-  list.emplace_back(EncodableValue(collection_id_));
-  list.emplace_back(EncodableValue(title_));
-  list.emplace_back(EncodableValue(comment_));
+  list.emplace_back(name_);
+  list.emplace_back(url_);
+  list.emplace_back(collection_id_);
+  list.emplace_back(title_);
+  list.emplace_back(comment_);
   list.emplace_back(description_);
-  list.emplace_back(EncodableValue(homepage_));
-  list.emplace_back(EncodableValue(icon_));
-  list.emplace_back(EncodableValue(default_branch_));
-  list.emplace_back(EncodableValue(main_ref_));
-  list.emplace_back(EncodableValue(remote_type_));
-  list.emplace_back(EncodableValue(filter_));
-  list.emplace_back(EncodableValue(appstream_timestamp_));
-  list.emplace_back(EncodableValue(appstream_dir_));
-  list.emplace_back(EncodableValue(gpg_verify_));
-  list.emplace_back(EncodableValue(no_enumerate_));
-  list.emplace_back(EncodableValue(no_deps_));
-  list.emplace_back(EncodableValue(disabled_));
-  list.emplace_back(EncodableValue(prio_));
+  list.emplace_back(homepage_);
+  list.emplace_back(icon_);
+  list.emplace_back(default_branch_);
+  list.emplace_back(main_ref_);
+  list.emplace_back(remote_type_);
+  list.emplace_back(filter_);
+  list.emplace_back(appstream_timestamp_);
+  list.emplace_back(appstream_dir_);
+  list.emplace_back(gpg_verify_);
+  list.emplace_back(no_enumerate_);
+  list.emplace_back(no_deps_);
+  list.emplace_back(disabled_);
+  list.emplace_back(prio_);
   return list;
 }
 
@@ -291,7 +291,9 @@ Application::Application(std::string name,
                          std::string latest_commit,
                          std::string eol,
                          std::string eol_rebase,
-                         EncodableList subpaths)
+                         EncodableList subpaths,
+                         std::string metadata,
+                         std::string appdata)
     : name_(std::move(name)),
       id_(std::move(id)),
       summary_(std::move(summary)),
@@ -305,7 +307,9 @@ Application::Application(std::string name,
       latest_commit_(std::move(latest_commit)),
       eol_(std::move(eol)),
       eol_rebase_(std::move(eol_rebase)),
-      subpaths_(std::move(subpaths)) {}
+      subpaths_(std::move(subpaths)),
+      metadata_(std::move(metadata)),
+      appdata_(std::move(appdata)) {}
 
 const std::string& Application::name() const {
   return name_;
@@ -419,23 +423,41 @@ void Application::set_subpaths(const EncodableList& value_arg) {
   subpaths_ = value_arg;
 }
 
+const std::string& Application::metadata() const {
+  return metadata_;
+}
+
+void Application::set_metadata(std::string_view value_arg) {
+  metadata_ = value_arg;
+}
+
+const std::string& Application::appdata() const {
+  return appdata_;
+}
+
+void Application::set_appdata(std::string_view value_arg) {
+  appdata_ = value_arg;
+}
+
 EncodableList Application::ToEncodableList() const {
   EncodableList list;
-  list.reserve(14);
-  list.push_back(EncodableValue(name_));
-  list.push_back(EncodableValue(id_));
-  list.push_back(EncodableValue(summary_));
-  list.push_back(EncodableValue(version_));
-  list.push_back(EncodableValue(origin_));
-  list.push_back(EncodableValue(license_));
-  list.push_back(EncodableValue(installed_size_));
-  list.push_back(EncodableValue(deploy_dir_));
-  list.push_back(EncodableValue(is_current_));
-  list.push_back(EncodableValue(content_rating_type_));
-  list.push_back(EncodableValue(latest_commit_));
-  list.push_back(EncodableValue(eol_));
-  list.push_back(EncodableValue(eol_rebase_));
-  list.push_back(EncodableValue(subpaths_));
+  list.reserve(16);
+  list.emplace_back(name_);
+  list.emplace_back(id_);
+  list.emplace_back(summary_);
+  list.emplace_back(version_);
+  list.emplace_back(origin_);
+  list.emplace_back(license_);
+  list.emplace_back(installed_size_);
+  list.emplace_back(deploy_dir_);
+  list.emplace_back(is_current_);
+  list.emplace_back(content_rating_type_);
+  list.emplace_back(latest_commit_);
+  list.emplace_back(eol_);
+  list.emplace_back(eol_rebase_);
+  list.emplace_back(subpaths_);
+  list.emplace_back(metadata_);
+  list.emplace_back(appdata_);
   return list;
 }
 
@@ -447,7 +469,8 @@ Application Application::FromEncodableList(const EncodableList& list) {
       std::get<int64_t>(list[6]), std::get<std::string>(list[7]),
       std::get<bool>(list[8]), std::get<std::string>(list[9]),
       std::get<std::string>(list[10]), std::get<std::string>(list[11]),
-      std::get<std::string>(list[12]), std::get<EncodableList>(list[13]));
+      std::get<std::string>(list[12]), std::get<EncodableList>(list[13]),
+      std::get<std::string>(list[14]), std::get<std::string>(list[15]));
   return decoded;
 }
 
@@ -901,7 +924,7 @@ void FlatpakApi::SetUp(flutter::BinaryMessenger* binary_messenger,
                 return;
               }
               EncodableList wrapped;
-              wrapped.push_back(EncodableValue(std::move(output).TakeValue()));
+              wrapped.emplace_back(std::move(output).TakeValue());
               reply(EncodableValue(std::move(wrapped)));
             } catch (const std::exception& exception) {
               reply(WrapError(exception.what()));
@@ -935,7 +958,7 @@ void FlatpakApi::SetUp(flutter::BinaryMessenger* binary_messenger,
                 return;
               }
               EncodableList wrapped;
-              wrapped.push_back(EncodableValue(std::move(output).TakeValue()));
+              wrapped.emplace_back(std::move(output).TakeValue());
               reply(EncodableValue(std::move(wrapped)));
             } catch (const std::exception& exception) {
               reply(WrapError(exception.what()));
@@ -969,7 +992,7 @@ void FlatpakApi::SetUp(flutter::BinaryMessenger* binary_messenger,
                 return;
               }
               EncodableList wrapped;
-              wrapped.push_back(EncodableValue(std::move(output).TakeValue()));
+              wrapped.emplace_back(std::move(output).TakeValue());
               reply(EncodableValue(std::move(wrapped)));
             } catch (const std::exception& exception) {
               reply(WrapError(exception.what()));
@@ -1007,7 +1030,7 @@ void FlatpakApi::SetUp(flutter::BinaryMessenger* binary_messenger,
                 return;
               }
               EncodableList wrapped;
-              wrapped.push_back(EncodableValue(std::move(output).TakeValue()));
+              wrapped.emplace_back(std::move(output).TakeValue());
               reply(EncodableValue(std::move(wrapped)));
             } catch (const std::exception& exception) {
               reply(WrapError(exception.what()));
@@ -1041,7 +1064,7 @@ void FlatpakApi::SetUp(flutter::BinaryMessenger* binary_messenger,
                 return;
               }
               EncodableList wrapped;
-              wrapped.push_back(EncodableValue(std::move(output).TakeValue()));
+              wrapped.emplace_back(std::move(output).TakeValue());
               reply(EncodableValue(std::move(wrapped)));
             } catch (const std::exception& exception) {
               reply(WrapError(exception.what()));
