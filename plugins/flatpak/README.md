@@ -36,8 +36,14 @@ flatpak install org.gnome.Todo
 flatpak run org.gnome.Todo
 ```
 
+### Flutter code
+
+https://github.com/meta-flutter/flatpak_flutter
+
 ### Generate message.g.h and messages.g.cc
 
+    git clone https://github.com/meta-flutter/flatpak_flutter
+    cd flatpak_flutter
     dart run pigeon --input pigeons/messages.dart
 
 ### Flatpak API reference

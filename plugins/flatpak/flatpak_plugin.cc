@@ -17,13 +17,10 @@
 #include "flatpak_plugin.h"
 
 #include <filesystem>
-#include <fstream>
-#include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 
-#include <libxml2/libxml/parser.h>
-#include <libxml2/libxml/xpath.h>
 #include <zlib.h>
 #include <asio/post.hpp>
 
@@ -31,12 +28,6 @@
 #include "plugins/common/common.h"
 
 namespace flatpak_plugin {
-
-static constexpr char kIconPathSuffix[] =
-    "files/share/app-info/icons/flatpak/64x64";
-static constexpr char kIconXpathQuery[] =
-    "//components[1]/component[1]/icon[@type='cached' and @height='64' and "
-    "@width='64']";
 
 constexpr size_t BUFFER_SIZE = 32768;
 
@@ -123,22 +114,6 @@ GPtrArray* FlatpakPlugin::get_remotes(FlatpakInstallation* installation) {
     g_clear_error(&error);
   }
   return remotes;
-}
-
-FlatpakRemote* GetRemoteByName(const char* name) {
-  FlatpakInstallation* installation = nullptr;
-  GError* error = nullptr;
-  GCancellable* cancellable = g_cancellable_new();
-  auto remote = flatpak_installation_get_remote_by_name(installation, name,
-                                                        cancellable, &error);
-  g_cancellable_cancel(cancellable);
-  g_object_unref(cancellable);
-
-  if (error) {
-    spdlog::error("[FlatpakPlugin] Error listing remotes: {}", error->message);
-    g_clear_error(&error);
-  }
-  return remote;
 }
 
 flutter::EncodableList FlatpakPlugin::installation_get_default_languages(
@@ -305,8 +280,9 @@ ErrorOr<bool> FlatpakPlugin::RemoteRemove(const std::string& /* id */) {
   return true;
 }
 
-void get_application_list(FlatpakInstallation* installation,
-                          flutter::EncodableList& application_list) {
+void FlatpakPlugin::get_application_list(
+    FlatpakInstallation* installation,
+    flutter::EncodableList& application_list) {
   flutter::EncodableList result;
   GError* error = nullptr;
 
@@ -332,7 +308,6 @@ void get_application_list(FlatpakInstallation* installation,
     auto installed_size =
         static_cast<int64_t>(flatpak_installed_ref_get_installed_size(ref));
     auto deploy_dir = flatpak_installed_ref_get_deploy_dir(ref);
-    //    parse_appstream_xml(ref, deploy_dir);
     auto is_current = flatpak_installed_ref_get_is_current(ref);
     auto content_rating_type =
         flatpak_installed_ref_get_appdata_content_rating_type(ref);
@@ -357,7 +332,8 @@ void get_application_list(FlatpakInstallation* installation,
         deploy_dir ? deploy_dir : "", is_current,
         content_rating_type ? content_rating_type : "",
         latest_commit ? latest_commit : "", eol ? eol : "",
-        eol_rebase ? eol_rebase : "", subpath_list)));
+        eol_rebase ? eol_rebase : "", subpath_list, get_metadata_as_string(ref),
+        get_appdata_as_string(ref))));
   }
   g_ptr_array_unref(refs);
 }
@@ -407,109 +383,6 @@ ErrorOr<bool> FlatpakPlugin::ApplicationStop(const std::string& /* id */) {
   return true;
 }
 
-flutter::EncodableList FlatpakPlugin::GetApplicationList(
-    FlatpakInstallation* installation) {
-  flutter::EncodableList result;
-  GError* error = nullptr;
-  GCancellable* cancellable = nullptr;
-
-  // List all installed refs
-  cancellable = g_cancellable_new();
-  auto refs = flatpak_installation_list_installed_refs(installation,
-                                                       cancellable, &error);
-  g_cancellable_cancel(cancellable);
-  g_object_unref(cancellable);
-
-  if (error) {
-    spdlog::error("[FlatpakPlugin] Error listing installed refs: {}",
-                  error->message);
-    g_clear_error(&error);
-    g_object_unref(installation);
-    return {};
-  }
-
-  for (guint i = 0; i < refs->len; i++) {
-    auto ref = static_cast<FlatpakInstalledRef*>(g_ptr_array_index(refs, i));
-
-    flutter::EncodableMap map;
-
-    auto appdata_name = flatpak_installed_ref_get_appdata_name(ref);
-    map.emplace(flutter::EncodableValue("appdata_name"),
-                flutter::EncodableValue(
-                    appdata_name ? appdata_name
-                                 : flatpak_installation_get_id(installation)));
-
-    map.emplace(flutter::EncodableValue("application_id"),
-                flutter::EncodableValue(get_application_id(ref)));
-
-    auto appdata_summary = flatpak_installed_ref_get_appdata_summary(ref);
-    map.emplace(
-        flutter::EncodableValue("appdata_summary"),
-        flutter::EncodableValue(appdata_summary ? appdata_summary : ""));
-
-    auto appdata_version = flatpak_installed_ref_get_appdata_version(ref);
-    map.emplace(
-        flutter::EncodableValue("appdata_version"),
-        flutter::EncodableValue(appdata_version ? appdata_version : ""));
-
-    auto appdata_origin = flatpak_installed_ref_get_origin(ref);
-    map.emplace(flutter::EncodableValue("appdata_origin"),
-                flutter::EncodableValue(appdata_origin ? appdata_origin : ""));
-
-    auto appdata_license = flatpak_installed_ref_get_appdata_license(ref);
-    map.emplace(
-        flutter::EncodableValue("appdata_license"),
-        flutter::EncodableValue(appdata_license ? appdata_license : ""));
-
-    // convert back to BigInt in Dart.  e.g. var x = new BigInt.from(5);
-    auto installed_size =
-        static_cast<int64_t>(flatpak_installed_ref_get_installed_size(ref));
-    map.emplace(flutter::EncodableValue("installed_size"),
-                flutter::EncodableValue(installed_size));
-
-    auto deploy_dir = flatpak_installed_ref_get_deploy_dir(ref);
-    map.emplace(flutter::EncodableValue("deploy_dir"),
-                flutter::EncodableValue(deploy_dir ? deploy_dir : ""));
-
-    parse_appstream_xml(ref, deploy_dir);
-
-    auto is_current = flatpak_installed_ref_get_is_current(ref);
-    map.emplace(flutter::EncodableValue("is_current"),
-                flutter::EncodableValue(is_current));
-
-    auto content_rating_type =
-        flatpak_installed_ref_get_appdata_content_rating_type(ref);
-    map.emplace(flutter::EncodableValue("content_rating_type"),
-                flutter::EncodableValue(
-                    content_rating_type ? content_rating_type : ""));
-
-    auto latest_commit = flatpak_installed_ref_get_latest_commit(ref);
-    map.emplace(flutter::EncodableValue("latest_commit"),
-                flutter::EncodableValue(latest_commit ? latest_commit : ""));
-
-    auto eol = flatpak_installed_ref_get_eol(ref);
-    map.emplace(flutter::EncodableValue("eol"),
-                flutter::EncodableValue(eol ? eol : ""));
-
-    auto eol_rebase = flatpak_installed_ref_get_eol_rebase(ref);
-    map.emplace(flutter::EncodableValue("eol_rebase"),
-                flutter::EncodableValue(eol_rebase ? eol_rebase : ""));
-
-    flutter::EncodableList subpath_list;
-    auto subpaths = flatpak_installed_ref_get_subpaths(ref);
-    if (subpaths != nullptr) {
-      for (auto sub_path = subpaths; *sub_path != nullptr; ++sub_path) {
-        subpath_list.emplace_back(*sub_path);
-      }
-      map.emplace(flutter::EncodableValue("subpaths"), std::move(subpath_list));
-    }
-    result.push_back(
-        static_cast<const flutter::EncodableValue>(std::move(map)));
-  }
-
-  return result;
-}
-
 std::time_t FlatpakPlugin::get_appstream_timestamp(
     const std::filesystem::path& timestamp_filepath) {
   if (exists(timestamp_filepath)) {
@@ -528,7 +401,7 @@ std::time_t FlatpakPlugin::get_appstream_timestamp(
   return {};
 }
 
-std::vector<char> FlatpakPlugin::decompressGzip(
+std::vector<char> FlatpakPlugin::decompress_gzip(
     const std::vector<char>& compressedData,
     std::vector<char>& decompressedData) {
   z_stream zs;
@@ -568,336 +441,8 @@ std::vector<char> FlatpakPlugin::decompressGzip(
   return decompressedData;
 }
 
-std::string FlatpakPlugin::executeXPathQuery(xmlDoc* doc,
-                                             const char* xpathExpr) {
-  std::string result;
-
-  if (doc == nullptr) {
-    spdlog::error("[FlatpakPlugin] Failed to parse XML: {}", xpathExpr);
-  }
-
-  // Create XPath context
-  auto xpathCtx = xmlXPathNewContext(doc);
-  if (!xpathCtx) {
-    spdlog::error("[FlatpakPlugin] Failed to create XPath context: {}",
-                  xpathExpr);
-    xmlFreeDoc(doc);
-    return {};
-  }
-
-  // Evaluate the XPath expression
-  auto xpathObj = xmlXPathEvalExpression((const xmlChar*)xpathExpr, xpathCtx);
-  if (!xpathObj) {
-    spdlog::error("[FlatpakPlugin] Failed to evaluate XPath expression: {}",
-                  xpathExpr);
-    xmlXPathFreeContext(xpathCtx);
-    xmlFreeDoc(doc);
-    return {};
-  }
-
-  // Print the result nodes
-  xmlNodeSet* nodes = xpathObj->nodesetval;
-  if (nodes == nullptr) {
-    spdlog::info("[FlatpakPlugin] No results found for the XPath query: {}",
-                 xpathExpr);
-    return {};
-  } else {
-    for (int i = 0; i < nodes->nodeNr; ++i) {
-      xmlNode* node = nodes->nodeTab[i];
-      if (node->type == XML_ELEMENT_NODE || node->type == XML_ATTRIBUTE_NODE) {
-        xmlChar* content = xmlNodeGetContent(node);
-        if (content) {
-          result = reinterpret_cast<const char*>(content);
-          xmlFree(content);
-        }
-      }
-    }
-  }
-
-  // Cleanup
-  xmlXPathFreeObject(xpathObj);
-  xmlXPathFreeContext(xpathCtx);
-  return result;
-}
-
-void FlatpakPlugin::parse_appstream_xml_string(const std::string& buffer) {
-  spdlog::debug("[FlatpakPlugin] parsing {} byte XML doc", buffer.size());
-  xmlDoc* doc = xmlReadMemory(buffer.data(), static_cast<int>(buffer.size()),
-                              "noname.xml", nullptr, 0);
-  if (doc == nullptr) {
-    spdlog::error("[FlatpakPlugin] xmlReadMemory failure");
-    return;
-  }
-
-  xmlFreeDoc(doc);
-  xmlCleanupParser();
-}
-
-inipp::Ini<char> FlatpakPlugin::get_ini_file(
-    const std::filesystem::path& filepath) {
-  if (!exists(filepath)) {
-    spdlog::error("[FlatpakPlugin] {}: file does not exist: {}", __FUNCTION__,
-                  filepath.c_str());
-    return {};
-  }
-
-  // open file as input file stream
-  std::ifstream file(filepath, std::ios::binary);
-  if (!file.is_open()) {
-    spdlog::error("[FlatpakPlugin] {}: Failed to open file: {}", __FUNCTION__,
-                  filepath.c_str());
-    return {};
-  }
-
-  inipp::Ini<char> ini;
-  ini.parse(file);
-  return std::move(ini);
-}
-
-std::vector<char> FlatpakPlugin::read_file_to_vector(
-    const std::filesystem::path& filepath) {
-  if (!exists(filepath)) {
-    spdlog::error("[FlatpakPlugin] {}: file does not exist: {}", __FUNCTION__,
-                  filepath.c_str());
-    return {};
-  }
-
-  // open file as input file stream
-  std::ifstream file(filepath, std::ios::binary);
-  if (!file.is_open()) {
-    spdlog::error("[FlatpakPlugin] {}: Failed to open file: {}", __FUNCTION__,
-                  filepath.c_str());
-    return {};
-  }
-
-  // Get the file size
-  file.seekg(0, std::ios::end);
-  std::streampos fileSize = file.tellg();
-  file.seekg(0, std::ios::beg);
-
-  // Create a vector to store the data
-  std::vector<char> rawFile(static_cast<unsigned long>(fileSize));
-
-  // Read the entire file into the vector
-  file.read(rawFile.data(), fileSize);
-  if (!file) {
-    spdlog::error("[FlatpakPlugin] {}: Error reading file: {}", __FUNCTION__,
-                  filepath.c_str());
-    return {};
-  }
-
-  file.close();
-
-  return std::move(rawFile);
-}
-
-void FlatpakPlugin::parse_repo_appstream_xml(const char* appstream_xml) {
-  // try un-compressed file first
-  bool compressed = false;
-  std::filesystem::path path = appstream_xml;
-  if (!exists(path / "appstream.xml")) {
-    path /= "appstream.xml.gz";
-    if (!exists(path)) {
-      spdlog::error("[FlatpakPlugin] file does not exist: {}", path.c_str());
-      return;
-    } else {
-      compressed = true;
-    }
-  } else {
-    path /= "appstream.xml";
-  }
-
-  // Create a vector to store the data
-  std::vector<char> rawFile = read_file_to_vector(path);
-
-  // this backs decompressedString
-  std::vector<char> decompressedXml;
-
-  if (compressed) {
-    decompressGzip(rawFile, decompressedXml);
-    if (decompressedXml.empty()) {
-      spdlog::error("[FlatpakPlugin] failed to decompress: {}", path.c_str());
-      return;
-    }
-    std::string decompressedString(decompressedXml.begin(),
-                                   decompressedXml.end());
-    parse_appstream_xml_string(decompressedString);
-  } else {
-    std::string decompressedString(rawFile.begin(), rawFile.end());
-    parse_appstream_xml_string(decompressedString);
-  }
-}
-
-void FlatpakPlugin::parse_desktop_file(const std::filesystem::path& filepath,
-                                       struct desktop_file& desktop) {
-  auto ini = get_ini_file(filepath);
-  if (ini.sections.empty()) {
-    return;
-  }
-  static constexpr char kDesktopEntrySection[] = "Desktop Entry";
-  inipp::get_value(ini.sections[kDesktopEntrySection], "Name", desktop.name);
-  inipp::get_value(ini.sections[kDesktopEntrySection], "Comment",
-                   desktop.comment);
-  inipp::get_value(ini.sections[kDesktopEntrySection], "Exec", desktop.exec);
-  inipp::get_value(ini.sections[kDesktopEntrySection], "Icon", desktop.icon);
-  inipp::get_value(ini.sections[kDesktopEntrySection], "Terminal",
-                   desktop.terminal);
-  inipp::get_value(ini.sections[kDesktopEntrySection], "Type", desktop.type);
-  inipp::get_value(ini.sections[kDesktopEntrySection], "StartupNotify",
-                   desktop.startupNotify);
-  inipp::get_value(ini.sections[kDesktopEntrySection], "Categories",
-                   desktop.categories);
-  inipp::get_value(ini.sections[kDesktopEntrySection], "Keywords",
-                   desktop.keywords);
-  inipp::get_value(ini.sections[kDesktopEntrySection], "DBusActivatable",
-                   desktop.dbus_activatable);
-}
-
-std::filesystem::path get_desktop_id_filepath(const std::string& desktop_id) {
-  auto xdg_data_dirs = getenv("XDG_DATA_DIRS");
-  if (!xdg_data_dirs) {
-    spdlog::error("[FlatpakPlugin] XDG_DATA_DIRS is not set!");
-    return {};
-  }
-  auto dirs = plugin_common::StringTools::split(xdg_data_dirs, ":");
-  for (const auto& dir : dirs) {
-    std::filesystem::path path = dir;
-    path /= "applications";
-    path /= desktop_id;
-    if (exists(path)) {
-      return std::move(path);
-    }
-  }
-  return {};
-}
-
-void FlatpakPlugin::parse_appstream_xml(FlatpakInstalledRef* installed_ref,
-                                        const char* deploy_dir,
-                                        bool print_raw_xml) {
-  GError* error = nullptr;
-  GCancellable* cancellable = nullptr;
-
-  cancellable = g_cancellable_new();
-  auto g_bytes =
-      flatpak_installed_ref_load_appdata(installed_ref, cancellable, &error);
-  g_cancellable_cancel(cancellable);
-  g_object_unref(cancellable);
-
-  if (!g_bytes) {
-    if (error != nullptr) {
-      spdlog::error("[FlatpakPlugin] Failed loading appdata: {}",
-                    error->message);
-      g_clear_error(&error);
-    }
-    return;
-  }
-
-  gsize size;
-  auto data = static_cast<const uint8_t*>(g_bytes_get_data(g_bytes, &size));
-  std::vector<char> compressedData(data, data + size);
-  std::vector<char> decompressedData;
-  decompressGzip(compressedData, decompressedData);
-  std::string decompressedString(decompressedData.begin(),
-                                 decompressedData.end());
-  if (print_raw_xml) {
-    std::cout << decompressedString.data() << std::endl;
-  }
-
-  xmlDoc* doc = xmlReadMemory(decompressedString.data(),
-                              static_cast<int>(decompressedString.size()),
-                              "noname.xml", nullptr, 0);
-  if (doc == nullptr) {
-    spdlog::error("[FlatpakPlugin] xmlReadMemory failure");
-    return;
-  }
-
-  auto origin = executeXPathQuery(doc, "//components[1]/@origin");
-  auto version = executeXPathQuery(doc, "//components[1]/@version");
-  auto type = executeXPathQuery(doc, "//components[1]/component[1]/@type");
-
-  auto id = executeXPathQuery(doc, "//components[1]/component[1]/id");
-  auto pkgname = executeXPathQuery(doc, "//components[1]/component[1]/pkgname");
-  auto source_pkgname =
-      executeXPathQuery(doc, "//components[1]/component[1]/source_pkgname");
-  auto name =
-      executeXPathQuery(doc, "//components[1]/component[1]/name[not(@*)]");
-  auto project_license =
-      executeXPathQuery(doc, "//components[1]/component[1]/project_license");
-  auto summary =
-      executeXPathQuery(doc, "//components[1]/component[1]/summary[not(@*)]");
-  auto description = executeXPathQuery(
-      doc, "//components[1]/component[1]/description[not(@*)]");
-
-  std::string launchable;
-  std::string icon;
-  std::string desktop_id;
-  desktop_file desktop{};
-
-  if (type == "desktop" || type == "desktop-application") {
-    std::filesystem::path icon_path = deploy_dir;
-    icon_path /= kIconPathSuffix;
-    icon_path /= executeXPathQuery(doc, kIconXpathQuery);
-    if (!exists(icon_path)) {
-      spdlog::error("[FlatpakPlugin] icon path does not exist: {}",
-                    icon_path.c_str());
-    }
-
-    icon = "\n\ticon: ";
-    icon.append(icon_path);
-
-    desktop_id = executeXPathQuery(
-        doc, "//components[1]/component[1]/launchable[@type='desktop-id']");
-
-    launchable = "\n\tlaunchable: ";
-    launchable.append(desktop_id);
-
-    auto desktop_id_filepath = get_desktop_id_filepath(desktop_id);
-    if (!desktop_id_filepath.empty()) {
-      parse_desktop_file(desktop_id_filepath, desktop);
-    }
-  }
-
-  xmlFreeDoc(doc);
-
-  auto appdata_name = flatpak_installed_ref_get_appdata_name(installed_ref);
-
-  spdlog::info(
-      "[FlatpakPlugin] [{}] appstream XML\n\torigin: \"{}\"\n\tversion: "
-      "\"{}\"\n\ttype: \"{}\"\n\tid: \"{}\"\n\tpkgname: "
-      "\"{}\"\n\tsource_pkgname: "
-      "\"{}\"\n\tname: \"{}\"\n\tproject_license: \"{}\"\n\tsummary: "
-      "\"{}\"\n\tdescription: "
-      "\"{}\"{}{}",
-      appdata_name ? appdata_name : "", origin.empty() ? "" : origin,
-      version.empty() ? "" : version, type.empty() ? "" : type,
-      id.empty() ? "" : id, pkgname.empty() ? "" : pkgname,
-      source_pkgname.empty() ? "" : source_pkgname, name.empty() ? "" : name,
-      project_license.empty() ? "" : project_license,
-      summary.empty() ? "" : summary, description.empty() ? "" : description,
-      icon.empty() ? "" : icon, launchable.empty() ? "" : launchable);
-
-  if (type == "desktop" || type == "desktop-application") {
-    spdlog::info(
-        "[FlatpakPlugin] {}\n\tname: \"{}\"\n\tcomment: \"{}\"\n\texec: "
-        "{}\n\ticon: \"{}\"\n\ttype: \"{}\"\n\tstartupNotify: "
-        "\"{}\"\n\tcategories: \"{}\"\n\tkeywords: \"{}\"\n\tdbus_activatable: "
-        "\"{}\"",
-        desktop_id, desktop.name.empty() ? "" : desktop.name,
-        desktop.comment.empty() ? "" : desktop.comment,
-        desktop.exec.empty() ? "" : desktop.exec,
-        desktop.icon.empty() ? "" : desktop.icon, desktop.terminal,
-        desktop.type.empty() ? "" : desktop.type, desktop.startupNotify,
-        desktop.categories.empty() ? "" : desktop.categories,
-        desktop.keywords.empty() ? "" : desktop.keywords,
-        desktop.dbus_activatable.empty() ? "" : desktop.dbus_activatable);
-  }
-
-  g_bytes_unref(g_bytes);
-}
-
-std::string FlatpakPlugin::get_application_id(
+std::string FlatpakPlugin::get_metadata_as_string(
     FlatpakInstalledRef* installed_ref) {
-  std::string result;
   GError* error = nullptr;
 
   auto g_bytes =
@@ -909,25 +454,38 @@ std::string FlatpakPlugin::get_application_id(
                     error->message);
       g_clear_error(&error);
     }
-    return std::move(result);
+    return {};
   }
 
   gsize size;
   auto data = static_cast<const char*>(g_bytes_get_data(g_bytes, &size));
-  std::string str(data, size);
-  std::stringstream ss(str);
-
-  inipp::Ini<char> metadata;
-  metadata.parse(ss);
-
-  inipp::get_value(metadata.sections["Runtime"], "name", result);
-  // If Runtime section is not present, look for Application section
-  if (result.empty()) {
-    inipp::get_value(metadata.sections["Application"], "name", result);
-  }
-
+  std::string result(data, size);
   g_bytes_unref(g_bytes);
   return std::move(result);
+}
+
+std::string FlatpakPlugin::get_appdata_as_string(
+    FlatpakInstalledRef* installed_ref) {
+  GError* error = nullptr;
+  auto g_bytes =
+      flatpak_installed_ref_load_appdata(installed_ref, nullptr, &error);
+  if (!g_bytes) {
+    if (error != nullptr) {
+      spdlog::error("[FlatpakPlugin] Error loading appdata: {}",
+                    error->message);
+      g_clear_error(&error);
+    }
+    return {};
+  }
+
+  gsize size;
+  auto data = static_cast<const uint8_t*>(g_bytes_get_data(g_bytes, &size));
+  std::vector<char> compressedData(data, data + size);
+  std::vector<char> decompressedData;
+  decompress_gzip(compressedData, decompressedData);
+  std::string decompressedString(decompressedData.begin(),
+                                 decompressedData.end());
+  return std::move(decompressedString);
 }
 
 #if 0   // TODO

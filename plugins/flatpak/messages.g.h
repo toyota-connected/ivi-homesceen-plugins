@@ -25,6 +25,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <utility>
 
 namespace flatpak_plugin {
 
@@ -32,17 +33,21 @@ namespace flatpak_plugin {
 
 class FlutterError {
  public:
-  explicit FlutterError(const std::string& code) : code_(code) {}
-  explicit FlutterError(const std::string& code, const std::string& message)
-      : code_(code), message_(message) {}
-  explicit FlutterError(const std::string& code,
-                        const std::string& message,
-                        const flutter::EncodableValue& details)
-      : code_(code), message_(message), details_(details) {}
+  explicit FlutterError(std::string code) : code_(std::move(code)) {}
+  explicit FlutterError(std::string code, std::string message)
+      : code_(std::move(code)), message_(std::move(message)) {}
+  explicit FlutterError(std::string code,
+                        std::string message,
+                        flutter::EncodableValue details)
+      : code_(std::move(code)),
+        message_(std::move(message)),
+        details_(std::move(details)) {}
 
-  const std::string& code() const { return code_; }
-  const std::string& message() const { return message_; }
-  const flutter::EncodableValue& details() const { return details_; }
+  [[nodiscard]] const std::string& code() const { return code_; }
+  [[nodiscard]] const std::string& message() const { return message_; }
+  [[nodiscard]] const flutter::EncodableValue& details() const {
+    return details_;
+  }
 
  private:
   std::string code_;
@@ -53,14 +58,18 @@ class FlutterError {
 template <class T>
 class ErrorOr {
  public:
-  ErrorOr(const T& rhs) : v_(rhs) {}
+  explicit ErrorOr(const T& rhs) : v_(rhs) {}
   ErrorOr(const T&& rhs) : v_(std::move(rhs)) {}
-  ErrorOr(const FlutterError& rhs) : v_(rhs) {}
-  ErrorOr(const FlutterError&& rhs) : v_(std::move(rhs)) {}
+  explicit ErrorOr(const FlutterError& rhs) : v_(rhs) {}
+  explicit ErrorOr(const FlutterError&& rhs) : v_(std::move(rhs)) {}
 
-  bool has_error() const { return std::holds_alternative<FlutterError>(v_); }
+  [[nodiscard]] bool has_error() const {
+    return std::holds_alternative<FlutterError>(v_);
+  }
   const T& value() const { return std::get<T>(v_); };
-  const FlutterError& error() const { return std::get<FlutterError>(v_); };
+  [[nodiscard]] const FlutterError& error() const {
+    return std::get<FlutterError>(v_);
+  };
 
  private:
   friend class FlatpakApi;
@@ -94,66 +103,66 @@ class Remote {
                   bool disabled,
                   int64_t prio);
 
-  const std::string& name() const;
+  [[nodiscard]] const std::string& name() const;
   void set_name(std::string_view value_arg);
 
-  const std::string& url() const;
+  [[nodiscard]] const std::string& url() const;
   void set_url(std::string_view value_arg);
 
-  const std::string& collection_id() const;
+  [[nodiscard]] const std::string& collection_id() const;
   void set_collection_id(std::string_view value_arg);
 
-  const std::string& title() const;
+  [[nodiscard]] const std::string& title() const;
   void set_title(std::string_view value_arg);
 
-  const std::string& comment() const;
+  [[nodiscard]] const std::string& comment() const;
   void set_comment(std::string_view value_arg);
 
-  const std::string& description() const;
+  [[nodiscard]] const std::string& description() const;
   void set_description(std::string_view value_arg);
 
-  const std::string& homepage() const;
+  [[nodiscard]] const std::string& homepage() const;
   void set_homepage(std::string_view value_arg);
 
-  const std::string& icon() const;
+  [[nodiscard]] const std::string& icon() const;
   void set_icon(std::string_view value_arg);
 
-  const std::string& default_branch() const;
+  [[nodiscard]] const std::string& default_branch() const;
   void set_default_branch(std::string_view value_arg);
 
-  const std::string& main_ref() const;
+  [[nodiscard]] const std::string& main_ref() const;
   void set_main_ref(std::string_view value_arg);
 
-  const std::string& remote_type() const;
+  [[nodiscard]] const std::string& remote_type() const;
   void set_remote_type(std::string_view value_arg);
 
-  const std::string& filter() const;
+  [[nodiscard]] const std::string& filter() const;
   void set_filter(std::string_view value_arg);
 
-  const std::string& appstream_timestamp() const;
+  [[nodiscard]] const std::string& appstream_timestamp() const;
   void set_appstream_timestamp(std::string_view value_arg);
 
-  const std::string& appstream_dir() const;
+  [[nodiscard]] const std::string& appstream_dir() const;
   void set_appstream_dir(std::string_view value_arg);
 
-  bool gpg_verify() const;
+  [[nodiscard]] bool gpg_verify() const;
   void set_gpg_verify(bool value_arg);
 
-  bool no_enumerate() const;
+  [[nodiscard]] bool no_enumerate() const;
   void set_no_enumerate(bool value_arg);
 
-  bool no_deps() const;
+  [[nodiscard]] bool no_deps() const;
   void set_no_deps(bool value_arg);
 
-  bool disabled() const;
+  [[nodiscard]] bool disabled() const;
   void set_disabled(bool value_arg);
 
-  int64_t prio() const;
+  [[nodiscard]] int64_t prio() const;
   void set_prio(int64_t value_arg);
 
  private:
   static Remote FromEncodableList(const flutter::EncodableList& list);
-  flutter::EncodableList ToEncodableList() const;
+  [[nodiscard]] flutter::EncodableList ToEncodableList() const;
   friend class FlatpakApi;
   friend class PigeonInternalCodecSerializer;
   std::string name_;
@@ -194,53 +203,61 @@ class Application {
                        std::string latest_commit,
                        std::string eol,
                        std::string eol_rebase,
-                       flutter::EncodableList subpaths);
+                       flutter::EncodableList subpaths,
+                       std::string metadata,
+                       std::string appdata);
 
-  const std::string& name() const;
+  [[nodiscard]] const std::string& name() const;
   void set_name(std::string_view value_arg);
 
-  const std::string& id() const;
+  [[nodiscard]] const std::string& id() const;
   void set_id(std::string_view value_arg);
 
-  const std::string& summary() const;
+  [[nodiscard]] const std::string& summary() const;
   void set_summary(std::string_view value_arg);
 
-  const std::string& version() const;
+  [[nodiscard]] const std::string& version() const;
   void set_version(std::string_view value_arg);
 
-  const std::string& origin() const;
+  [[nodiscard]] const std::string& origin() const;
   void set_origin(std::string_view value_arg);
 
-  const std::string& license() const;
+  [[nodiscard]] const std::string& license() const;
   void set_license(std::string_view value_arg);
 
-  int64_t installed_size() const;
+  [[nodiscard]] int64_t installed_size() const;
   void set_installed_size(int64_t value_arg);
 
-  const std::string& deploy_dir() const;
+  [[nodiscard]] const std::string& deploy_dir() const;
   void set_deploy_dir(std::string_view value_arg);
 
-  bool is_current() const;
+  [[nodiscard]] bool is_current() const;
   void set_is_current(bool value_arg);
 
-  const std::string& content_rating_type() const;
+  [[nodiscard]] const std::string& content_rating_type() const;
   void set_content_rating_type(std::string_view value_arg);
 
-  const std::string& latest_commit() const;
+  [[nodiscard]] const std::string& latest_commit() const;
   void set_latest_commit(std::string_view value_arg);
 
-  const std::string& eol() const;
+  [[nodiscard]] const std::string& eol() const;
   void set_eol(std::string_view value_arg);
 
-  const std::string& eol_rebase() const;
+  [[nodiscard]] const std::string& eol_rebase() const;
   void set_eol_rebase(std::string_view value_arg);
 
-  const flutter::EncodableList& subpaths() const;
+  [[nodiscard]] const flutter::EncodableList& subpaths() const;
   void set_subpaths(const flutter::EncodableList& value_arg);
+
+  [[nodiscard]] const std::string& metadata() const;
+  void set_metadata(std::string_view value_arg);
+
+  [[nodiscard]] const std::string& appdata() const;
+  void set_appdata(std::string_view value_arg);
 
  private:
   static Application FromEncodableList(const flutter::EncodableList& list);
-  flutter::EncodableList ToEncodableList() const;
+  [[nodiscard]] flutter::EncodableList ToEncodableList() const;
   friend class FlatpakApi;
   friend class PigeonInternalCodecSerializer;
   std::string name_;
@@ -257,6 +274,8 @@ class Application {
   std::string eol_;
   std::string eol_rebase_;
   flutter::EncodableList subpaths_;
+  std::string metadata_;
+  std::string appdata_;
 };
 
 // Generated class from Pigeon that represents data sent in messages.
@@ -273,36 +292,36 @@ class Installation {
                         flutter::EncodableList default_locale,
                         flutter::EncodableList remotes);
 
-  const std::string& id() const;
+  [[nodiscard]] const std::string& id() const;
   void set_id(std::string_view value_arg);
 
-  const std::string& display_name() const;
+  [[nodiscard]] const std::string& display_name() const;
   void set_display_name(std::string_view value_arg);
 
-  const std::string& path() const;
+  [[nodiscard]] const std::string& path() const;
   void set_path(std::string_view value_arg);
 
-  bool no_interaction() const;
+  [[nodiscard]] bool no_interaction() const;
   void set_no_interaction(bool value_arg);
 
-  bool is_user() const;
+  [[nodiscard]] bool is_user() const;
   void set_is_user(bool value_arg);
 
-  int64_t priority() const;
+  [[nodiscard]] int64_t priority() const;
   void set_priority(int64_t value_arg);
 
-  const flutter::EncodableList& default_lanaguages() const;
+  [[nodiscard]] const flutter::EncodableList& default_lanaguages() const;
   void set_default_lanaguages(const flutter::EncodableList& value_arg);
 
-  const flutter::EncodableList& default_locale() const;
+  [[nodiscard]] const flutter::EncodableList& default_locale() const;
   void set_default_locale(const flutter::EncodableList& value_arg);
 
-  const flutter::EncodableList& remotes() const;
+  [[nodiscard]] const flutter::EncodableList& remotes() const;
   void set_remotes(const flutter::EncodableList& value_arg);
 
  private:
   static Installation FromEncodableList(const flutter::EncodableList& list);
-  flutter::EncodableList ToEncodableList() const;
+  [[nodiscard]] flutter::EncodableList ToEncodableList() const;
   friend class FlatpakApi;
   friend class PigeonInternalCodecSerializer;
   std::string id_;
@@ -339,7 +358,7 @@ class FlatpakApi {
  public:
   FlatpakApi(const FlatpakApi&) = delete;
   FlatpakApi& operator=(const FlatpakApi&) = delete;
-  virtual ~FlatpakApi() {}
+  virtual ~FlatpakApi() = default;
   // Get Flatpak version.
   virtual ErrorOr<std::string> GetVersion() = 0;
   // Get the default flatpak arch

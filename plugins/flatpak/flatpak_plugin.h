@@ -25,32 +25,16 @@
 #include <future>
 #include <thread>
 
-#include <libxml2/libxml/tree.h>
-
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar.h>
 #include <asio/io_context_strand.hpp>
 
-#include "inipp.h"
 #include "messages.g.h"
 
 namespace flatpak_plugin {
 
 class FlatpakPlugin final : public flutter::Plugin, public FlatpakApi {
  public:
-  struct desktop_file {
-    std::string name;
-    std::string comment;
-    std::string exec;
-    std::string icon;
-    bool terminal;
-    std::string type;
-    bool startupNotify;
-    std::string categories;
-    std::string keywords;
-    std::string dbus_activatable;
-  };
-
   static void RegisterWithRegistrar(flutter::PluginRegistrar* registrar);
 
   FlatpakPlugin();
@@ -99,9 +83,6 @@ class FlatpakPlugin final : public flutter::Plugin, public FlatpakApi {
   // Stop application with given id.
   ErrorOr<bool> ApplicationStop(const std::string& id) override;
 
-  static flutter::EncodableList GetApplicationList(
-      FlatpakInstallation* installation);
-
   static std::string FlatpakRemoteTypeToString(FlatpakRemoteType type) {
     switch (type) {
       case FLATPAK_REMOTE_TYPE_STATIC:
@@ -132,11 +113,9 @@ class FlatpakPlugin final : public flutter::Plugin, public FlatpakApi {
 
   static GPtrArray* get_remotes(FlatpakInstallation* installation);
 
-  static std::vector<char> decompressGzip(
+  static std::vector<char> decompress_gzip(
       const std::vector<char>& compressedData,
       std::vector<char>& decompressedData);
-
-  static std::string executeXPathQuery(xmlDoc* doc, const char* xpathExpr);
 
   static std::time_t get_appstream_timestamp(
       const std::filesystem::path& timestamp_filepath);
@@ -149,23 +128,12 @@ class FlatpakPlugin final : public flutter::Plugin, public FlatpakApi {
   static flutter::EncodableList installation_get_default_locales(
       FlatpakInstallation* installation);
 
-  static std::string get_application_id(FlatpakInstalledRef* installed_ref);
+  static std::string get_metadata_as_string(FlatpakInstalledRef* installed_ref);
 
-  static void parse_appstream_xml(FlatpakInstalledRef* installed_ref,
-                                  const char* deploy_dir,
-                                  bool print_raw_xml = false);
+  static std::string get_appdata_as_string(FlatpakInstalledRef* installed_ref);
 
-  static void parse_appstream_xml_string(const std::string& buffer);
-
-  static inipp::Ini<char> get_ini_file(const std::filesystem::path& filepath);
-
-  static void parse_repo_appstream_xml(const char* appstream_xml);
-
-  static void parse_desktop_file(const std::filesystem::path& filepath,
-                                 struct desktop_file& desktop);
-
-  static std::vector<char> read_file_to_vector(
-      const std::filesystem::path& filepath);
+  static void get_application_list(FlatpakInstallation* installation,
+                                   flutter::EncodableList& application_list);
 };
 }  // namespace flatpak_plugin
 

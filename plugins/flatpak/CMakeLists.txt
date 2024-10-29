@@ -16,7 +16,6 @@
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(FLATPAK IMPORTED_TARGET REQUIRED flatpak)
-pkg_check_modules(XML2 IMPORTED_TARGET REQUIRED libxml-2.0)
 pkg_check_modules(ZLIB IMPORTED_TARGET REQUIRED zlib)
 
 add_library(plugin_flatpak STATIC
@@ -31,6 +30,5 @@ target_link_libraries(plugin_flatpak PUBLIC
         flutter
         platform_homescreen
         PkgConfig::FLATPAK
-        PkgConfig::XML2
         PkgConfig::ZLIB
 )
