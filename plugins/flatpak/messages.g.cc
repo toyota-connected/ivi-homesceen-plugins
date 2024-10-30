@@ -288,6 +288,7 @@ Application::Application(std::string name,
                          std::string deploy_dir,
                          bool is_current,
                          std::string content_rating_type,
+                         EncodableMap content_rating,
                          std::string latest_commit,
                          std::string eol,
                          std::string eol_rebase,
@@ -304,6 +305,7 @@ Application::Application(std::string name,
       deploy_dir_(std::move(deploy_dir)),
       is_current_(is_current),
       content_rating_type_(std::move(content_rating_type)),
+      content_rating_(std::move(content_rating)),
       latest_commit_(std::move(latest_commit)),
       eol_(std::move(eol)),
       eol_rebase_(std::move(eol_rebase)),
@@ -391,6 +393,14 @@ void Application::set_content_rating_type(std::string_view value_arg) {
   content_rating_type_ = value_arg;
 }
 
+const EncodableMap& Application::content_rating() const {
+  return content_rating_;
+}
+
+void Application::set_content_rating(const EncodableMap& value_arg) {
+  content_rating_ = value_arg;
+}
+
 const std::string& Application::latest_commit() const {
   return latest_commit_;
 }
@@ -441,7 +451,7 @@ void Application::set_appdata(std::string_view value_arg) {
 
 EncodableList Application::ToEncodableList() const {
   EncodableList list;
-  list.reserve(16);
+  list.reserve(17);
   list.emplace_back(name_);
   list.emplace_back(id_);
   list.emplace_back(summary_);
@@ -452,6 +462,7 @@ EncodableList Application::ToEncodableList() const {
   list.emplace_back(deploy_dir_);
   list.emplace_back(is_current_);
   list.emplace_back(content_rating_type_);
+  list.emplace_back(content_rating_);
   list.emplace_back(latest_commit_);
   list.emplace_back(eol_);
   list.emplace_back(eol_rebase_);
@@ -468,9 +479,10 @@ Application Application::FromEncodableList(const EncodableList& list) {
       std::get<std::string>(list[4]), std::get<std::string>(list[5]),
       std::get<int64_t>(list[6]), std::get<std::string>(list[7]),
       std::get<bool>(list[8]), std::get<std::string>(list[9]),
-      std::get<std::string>(list[10]), std::get<std::string>(list[11]),
-      std::get<std::string>(list[12]), std::get<EncodableList>(list[13]),
-      std::get<std::string>(list[14]), std::get<std::string>(list[15]));
+      std::get<EncodableMap>(list[10]), std::get<std::string>(list[11]),
+      std::get<std::string>(list[12]), std::get<std::string>(list[13]),
+      std::get<EncodableList>(list[14]), std::get<std::string>(list[15]),
+      std::get<std::string>(list[16]));
   return decoded;
 }
 

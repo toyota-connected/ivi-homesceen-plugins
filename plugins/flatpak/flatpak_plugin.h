@@ -134,6 +134,8 @@ class FlatpakPlugin final : public flutter::Plugin, public FlatpakApi {
 
   static void get_application_list(FlatpakInstallation* installation,
                                    flutter::EncodableList& application_list);
+
+  static flutter::EncodableMap get_content_rating_map(FlatpakInstalledRef* ref);
 };
 }  // namespace flatpak_plugin
 

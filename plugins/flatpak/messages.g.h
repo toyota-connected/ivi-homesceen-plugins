@@ -200,6 +200,7 @@ class Application {
                        std::string deploy_dir,
                        bool is_current,
                        std::string content_rating_type,
+                       flutter::EncodableMap content_rating,
                        std::string latest_commit,
                        std::string eol,
                        std::string eol_rebase,
@@ -237,6 +238,9 @@ class Application {
   [[nodiscard]] const std::string& content_rating_type() const;
   void set_content_rating_type(std::string_view value_arg);
 
+  [[nodiscard]] const flutter::EncodableMap& content_rating() const;
+  void set_content_rating(const flutter::EncodableMap& value_arg);
+
   [[nodiscard]] const std::string& latest_commit() const;
   void set_latest_commit(std::string_view value_arg);
 
@@ -270,6 +274,7 @@ class Application {
   std::string deploy_dir_;
   bool is_current_;
   std::string content_rating_type_;
+  flutter::EncodableMap content_rating_;
   std::string latest_commit_;
   std::string eol_;
   std::string eol_rebase_;
