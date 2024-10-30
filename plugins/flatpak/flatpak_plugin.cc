@@ -305,10 +305,7 @@ void FlatpakPlugin::get_application_list(
     auto appdata_version = flatpak_installed_ref_get_appdata_version(ref);
     auto appdata_origin = flatpak_installed_ref_get_origin(ref);
     auto appdata_license = flatpak_installed_ref_get_appdata_license(ref);
-    auto installed_size =
-        static_cast<int64_t>(flatpak_installed_ref_get_installed_size(ref));
     auto deploy_dir = flatpak_installed_ref_get_deploy_dir(ref);
-    auto is_current = flatpak_installed_ref_get_is_current(ref);
     auto content_rating_type =
         flatpak_installed_ref_get_appdata_content_rating_type(ref);
     auto latest_commit = flatpak_installed_ref_get_latest_commit(ref);
@@ -328,12 +325,13 @@ void FlatpakPlugin::get_application_list(
         appdata_summary ? appdata_summary : "",
         appdata_version ? appdata_version : "",
         appdata_origin ? appdata_origin : "",
-        appdata_license ? appdata_license : "", installed_size,
-        deploy_dir ? deploy_dir : "", is_current,
+        appdata_license ? appdata_license : "",
+        static_cast<int64_t>(flatpak_installed_ref_get_installed_size(ref)),
+        deploy_dir ? deploy_dir : "", flatpak_installed_ref_get_is_current(ref),
         content_rating_type ? content_rating_type : "",
-        latest_commit ? latest_commit : "", eol ? eol : "",
-        eol_rebase ? eol_rebase : "", subpath_list, get_metadata_as_string(ref),
-        get_appdata_as_string(ref))));
+        get_content_rating_map(ref), latest_commit ? latest_commit : "",
+        eol ? eol : "", eol_rebase ? eol_rebase : "", subpath_list,
+        get_metadata_as_string(ref), get_appdata_as_string(ref))));
   }
   g_ptr_array_unref(refs);
 }
@@ -471,8 +469,7 @@ std::string FlatpakPlugin::get_appdata_as_string(
       flatpak_installed_ref_load_appdata(installed_ref, nullptr, &error);
   if (!g_bytes) {
     if (error != nullptr) {
-      spdlog::error("[FlatpakPlugin] Error loading appdata: {}",
-                    error->message);
+      SPDLOG_ERROR("[FlatpakPlugin] {}", error->message);
       g_clear_error(&error);
     }
     return {};
@@ -488,17 +485,22 @@ std::string FlatpakPlugin::get_appdata_as_string(
   return std::move(decompressedString);
 }
 
-#if 0   // TODO
-void print_content_rating(GHashTable* content_rating) {
+flutter::EncodableMap FlatpakPlugin::get_content_rating_map(
+    FlatpakInstalledRef* ref) {
+  flutter::EncodableMap result;
+  auto content_rating = flatpak_installed_ref_get_appdata_content_rating(ref);
+  if (!content_rating) {
+    return result;
+  }
+
   GHashTableIter iter;
   gpointer key, value;
-
   g_hash_table_iter_init(&iter, content_rating);
   while (g_hash_table_iter_next(&iter, &key, &value)) {
-    spdlog::debug("[FlatpakPlugin] content_rating: Key: {}, Value: {}",
-                  static_cast<char*>(key), static_cast<char*>(value));
+    result[flutter::EncodableValue(static_cast<char*>(key))] =
+        flutter::EncodableValue(static_cast<char*>(value));
   }
+  return result;
 }
-#endif  // TODO
 
 }  // namespace flatpak_plugin
