@@ -185,7 +185,6 @@ void BaseShape::vLoadMaterialDefinitionsToMaterialInstance() {
 
     if (m_poMaterialInstance.getStatus() != Status::Success) {
       spdlog::error("Failed to get material instance.");
-      return;
     }
   }
 }
@@ -323,7 +322,7 @@ void BaseShape::vChangeMaterialDefinitions(
   // setMaterialInstanceAt for each primitive you want to update.
   auto& renderManager =
       filamentSystem->getFilamentEngine()->getRenderableManager();
-  auto instanceToChange = renderManager.getInstance(*m_poEntity);
+  const auto instanceToChange = renderManager.getInstance(*m_poEntity);
   renderManager.setMaterialInstanceAt(instanceToChange, 0,
                                       *m_poMaterialInstance.getData());
 }
