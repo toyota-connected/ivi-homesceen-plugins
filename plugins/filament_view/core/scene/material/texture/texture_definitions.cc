@@ -37,7 +37,9 @@ TextureDefinitions::TextureDefinitions(const TextureType type,
 
 ////////////////////////////////////////////////////////////////////////////
 TextureDefinitions::~TextureDefinitions() {
-  delete sampler_;
+  // We don't own this once its been 'created'
+  // This should be moved to a smart pointer perhaps?
+  // delete sampler_;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -48,4 +48,13 @@ class Resource {
   [[nodiscard]] std::string_view getMessage() const { return message_; }
 
   [[nodiscard]] std::optional<T> getData() const { return data_; }
+
+  void vReset() {
+    if (getStatus() == Status::Success) {
+      getData().reset();
+    }
+
+    message_ = "";
+    status_ = Status::Loading;
+  }
 };

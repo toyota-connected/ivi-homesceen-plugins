@@ -248,11 +248,22 @@ void FilamentViewPlugin::ChangeAnimationByIndex(
     int32_t /* index */,
     std::function<void(std::optional<FlutterError> reply)> /* result */) {}
 
+//////////////////////////////////////////////////////////////////////////////////////////
 void FilamentViewPlugin::ChangeMaterialParameter(
     const flutter::EncodableMap& params,
     const EntityGUID& guid) {
   ECSMessage materialData;
   materialData.addData(ECSMessageType::ChangeMaterialParameter, params);
+  materialData.addData(ECSMessageType::ChangeMaterialEntity, guid);
+  ECSystemManager::GetInstance()->vRouteMessage(materialData);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+void FilamentViewPlugin::ChangeMaterialDefinition(
+    const flutter::EncodableMap& params,
+    const EntityGUID& guid) {
+  ECSMessage materialData;
+  materialData.addData(ECSMessageType::ChangeMaterialDefinitions, params);
   materialData.addData(ECSMessageType::ChangeMaterialEntity, guid);
   ECSystemManager::GetInstance()->vRouteMessage(materialData);
 }

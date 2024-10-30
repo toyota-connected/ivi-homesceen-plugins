@@ -109,6 +109,8 @@ class BaseShape : public EntityObject {
   // CollisionManager when created debug wireframe models for seeing collidable
   // shapes.
   bool m_bIsWireframe = false;
+
+  void vLoadMaterialDefinitionsToMaterialInstance();
 };
 
 }  // namespace shapes

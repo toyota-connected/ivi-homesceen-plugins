@@ -73,6 +73,14 @@ class EntityObject {
     components_.emplace_back(std::move(component));
   }
 
+  void vRemoveComponent(size_t staticTypeID) {
+    components_.erase(std::remove_if(components_.begin(), components_.end(),
+                                     [&](auto& item) {
+                                       return item->GetTypeID() == staticTypeID;
+                                     }),
+                      components_.end());
+  }
+
   // Pass in the <DerivedClass>::StaticGetTypeID()
   // Returns component if valid, nullptr if not found.
   [[nodiscard]] std::shared_ptr<Component> GetComponentByStaticTypeID(

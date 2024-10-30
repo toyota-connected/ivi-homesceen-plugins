@@ -148,6 +148,26 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
 
           result->Success();
           // ChangeMaterialParameter
+        } else if (methodCall.method_name() == kChangeMaterialDefinition) {
+          const auto& args = std::get_if<EncodableMap>(methodCall.arguments());
+          EntityGUID objectGuid;
+          EncodableMap paramData;
+
+          for (const auto& [fst, snd] : *args) {
+            if (kChangeMaterialDefinitionData == std::get<std::string>(fst)) {
+              paramData = std::get<EncodableMap>(snd);
+            } else if (kChangeMaterialDefinitionEntityGuid ==
+                       std::get<std::string>(fst)) {
+              objectGuid = std::get<std::string>(snd);
+            } else {
+              auto key = std::get<std::string>(fst);
+              plugin_common::Encodable::PrintFlutterEncodableValue(key.c_str(),
+                                                                   snd);
+            }
+          }
+
+          api->ChangeMaterialDefinition(paramData, objectGuid);
+          result->Success();
         } else if (methodCall.method_name() == kCollisionRayRequest) {
           const auto& args = std::get_if<EncodableMap>(methodCall.arguments());
           filament::math::float3 origin(0);

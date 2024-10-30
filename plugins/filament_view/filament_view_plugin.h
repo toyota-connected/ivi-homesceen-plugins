@@ -69,6 +69,9 @@ class FilamentViewPlugin : public flutter::Plugin,
   void ChangeMaterialParameter(const flutter::EncodableMap& params,
                                const EntityGUID& guid) override;
 
+  void ChangeMaterialDefinition(const flutter::EncodableMap& params,
+                                const EntityGUID& guid) override;
+
   void ChangeDirectLightByIndex(
       int32_t index,
       std::string color,

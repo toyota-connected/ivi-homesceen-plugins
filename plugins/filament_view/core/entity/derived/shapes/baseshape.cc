@@ -164,6 +164,31 @@ void BaseShape::CloneToOther(BaseShape& other) const {
   other.m_poCommonRenderable =
       std::weak_ptr<CommonRenderable>(commonRenderablePtr);
 }
+////////////////////////////////////////////////////////////////////////////
+void BaseShape::vLoadMaterialDefinitionsToMaterialInstance() {
+  const auto materialSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<MaterialSystem>(
+          MaterialSystem::StaticGetTypeID(), "BaseShape::vBuildRenderable");
+
+  if (materialSystem == nullptr) {
+    spdlog::error("Failed to get material system.");
+  } else {
+    // this will also set all the default values of the material instance from
+    // the material param list
+
+    const auto materialDefinitions =
+        GetComponentByStaticTypeID(MaterialDefinitions::StaticGetTypeID());
+    if (materialDefinitions != nullptr) {
+      m_poMaterialInstance = materialSystem->getMaterialInstance(
+          dynamic_cast<const MaterialDefinitions*>(materialDefinitions.get()));
+    }
+
+    if (m_poMaterialInstance.getStatus() != Status::Success) {
+      spdlog::error("Failed to get material instance.");
+      return;
+    }
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////
 void BaseShape::vBuildRenderable(filament::Engine* engine_) {
@@ -183,29 +208,7 @@ void BaseShape::vBuildRenderable(filament::Engine* engine_) {
         .castShadows(false)
         .build(*engine_, *m_poEntity);
   } else {
-    const auto materialSystem =
-        ECSystemManager::GetInstance()->poGetSystemAs<MaterialSystem>(
-            MaterialSystem::StaticGetTypeID(), "BaseShape::vBuildRenderable");
-
-    if (materialSystem == nullptr) {
-      spdlog::error("Failed to get material system.");
-    } else {
-      // this will also set all the default values of the material instance from
-      // the material param list
-
-      const auto materialDefinitions =
-          GetComponentByStaticTypeID(MaterialDefinitions::StaticGetTypeID());
-      if (materialDefinitions != nullptr) {
-        m_poMaterialInstance = materialSystem->getMaterialInstance(
-            dynamic_cast<const MaterialDefinitions*>(
-                materialDefinitions.get()));
-      }
-
-      if (m_poMaterialInstance.getStatus() != Status::Success) {
-        spdlog::error("Failed to get material instance.");
-        return;
-      }
-    }
+    vLoadMaterialDefinitionsToMaterialInstance();
 
     RenderableManager::Builder(1)
         .boundingBox({{}, m_poBaseTransform.lock()->GetExtentsSize()})
@@ -281,8 +284,49 @@ void BaseShape::DebugPrint(const char* tag) const {
 
 ////////////////////////////////////////////////////////////////////////////
 void BaseShape::vChangeMaterialDefinitions(
-    const flutter::EncodableMap& /*params*/,
-    const TextureMap& /*loadedTextures*/) {}
+    const flutter::EncodableMap& params,
+    const TextureMap& /*loadedTextures*/) {
+  // if we have a materialdefinitions component, we need to remove it
+  // and remake / add a new one.
+  if (HasComponentByStaticTypeID(MaterialDefinitions::StaticGetTypeID())) {
+    vRemoveComponent(MaterialDefinitions::StaticGetTypeID());
+  }
+
+  // If you want to inspect the params coming in.
+  /*for (const auto& [fst, snd] : params) {
+      auto key = std::get<std::string>(fst);
+      plugin_common::Encodable::PrintFlutterEncodableValue(key.c_str(), snd);
+  }*/
+
+  auto materialDefinitions = std::make_shared<MaterialDefinitions>(params);
+  vAddComponent(std::move(materialDefinitions));
+
+  m_poMaterialInstance.vReset();
+
+  // then tell material system to load us the correct way once
+  // we're deserialized.
+  vLoadMaterialDefinitionsToMaterialInstance();
+
+  if (m_poMaterialInstance.getStatus() != Status::Success) {
+    spdlog::error(
+        "Unable to load material definition to instance, bailing out.");
+    return;
+  }
+
+  // now, reload / rebuild the material?
+  const auto filamentSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
+          FilamentSystem::StaticGetTypeID(),
+          "BaseShape::vChangeMaterialDefinitions");
+
+  // If your entity has multiple primitives, you’ll need to call
+  // setMaterialInstanceAt for each primitive you want to update.
+  auto& renderManager =
+      filamentSystem->getFilamentEngine()->getRenderableManager();
+  auto instanceToChange = renderManager.getInstance(*m_poEntity);
+  renderManager.setMaterialInstanceAt(instanceToChange, 0,
+                                      *m_poMaterialInstance.getData());
+}
 
 ////////////////////////////////////////////////////////////////////////////
 void BaseShape::vChangeMaterialInstanceProperty(

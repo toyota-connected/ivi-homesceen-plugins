@@ -190,8 +190,6 @@ void MaterialSystem::vInitSystem() {
                 objectLocatorSystem->poGetEntityObjectById(guid);
             entityObject != nullptr) {
           spdlog::debug("ChangeMaterialParameter valid entity found.");
-          // When we change the full material definitions
-          // entityObject->vChangeMaterialDefinitions(params, loadedTextures_);
 
           const auto parameter = MaterialParameter::Deserialize("", params);
 
@@ -200,6 +198,34 @@ void MaterialSystem::vInitSystem() {
         }
 
         spdlog::debug("ChangeMaterialParameter Complete");
+      });
+
+  vRegisterMessageHandler(
+      ECSMessageType::ChangeMaterialDefinitions, [this](const ECSMessage& msg) {
+        spdlog::debug("ChangeMaterialDefinitions");
+
+        const flutter::EncodableMap& params =
+            msg.getData<flutter::EncodableMap>(
+                ECSMessageType::ChangeMaterialDefinitions);
+
+        const EntityGUID& guid =
+            msg.getData<EntityGUID>(ECSMessageType::ChangeMaterialEntity);
+
+        const auto objectLocatorSystem =
+            ECSystemManager::GetInstance()
+                ->poGetSystemAs<EntityObjectLocatorSystem>(
+                    EntityObjectLocatorSystem::StaticGetTypeID(),
+                    "ChangeMaterialDefinitions");
+
+        if (const auto entityObject =
+                objectLocatorSystem->poGetEntityObjectById(guid);
+            entityObject != nullptr) {
+          spdlog::debug("ChangeMaterialDefinitions valid entity found.");
+
+          entityObject->vChangeMaterialDefinitions(params, loadedTextures_);
+        }
+
+        spdlog::debug("ChangeMaterialDefinitions Complete");
       });
 }
 
