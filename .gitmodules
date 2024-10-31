@@ -1,0 +1,3 @@
+[submodule "plugins/camera/third_party/libyuv"]
+	path = plugins/camera/third_party/libyuv
+	url = https://chromium.googlesource.com/libyuv/libyuv

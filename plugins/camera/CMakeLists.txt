@@ -17,6 +17,8 @@
 pkg_check_modules(CAMERA IMPORTED_TARGET REQUIRED libcamera)
 include(FindJPEG)
 
+add_subdirectory(third_party/libyuv)
+
 add_library(plugin_camera STATIC
         camera_plugin_c_api.cc
         camera_plugin.cc
@@ -43,6 +45,7 @@ target_link_libraries(plugin_camera PUBLIC
         plugin_common
         PkgConfig::CAMERA
         ${JPEG_LIBRARIES}
+        yuv
 )
 
 if (JPEG_FOUND)
