@@ -19,7 +19,7 @@
 #include <filament/math/vec3.h>
 #include <flutter/encodable_value.h>
 
-#include <core/scene/material/material_definitions.h>
+#include <core/components/derived/material_definitions.h>
 
 namespace plugin_filament_view {
 
@@ -79,8 +79,7 @@ class Deserialize {
   static void DecodeParameterWithDefault(
       const char* key,
       std::optional<std::unique_ptr<MaterialDefinitions>>& out_value,
-      const flutter::EncodableMap& params,
-      const std::string& flutter_assets_path);
+      const flutter::EncodableMap& params);
 
   static void DecodeParameterWithDefault(
       const char* key,

@@ -18,6 +18,7 @@
 #ifndef FILAMENT_VIEW_MESSAGES_G_H_
 #define FILAMENT_VIEW_MESSAGES_G_H_
 
+#include <core/entity/base/entityobject.h>
 #include <flutter/binary_messenger.h>
 #include <flutter/encodable_value.h>
 #include <flutter/standard_method_codec.h>
@@ -102,6 +103,12 @@ class FilamentViewApi {
   FilamentViewApi& operator=(const FilamentViewApi&) = delete;
 
   virtual ~FilamentViewApi() = default;
+
+  virtual void ChangeMaterialParameter(const flutter::EncodableMap& params,
+                                       const EntityGUID& guid) = 0;
+
+  virtual void ChangeMaterialDefinition(const flutter::EncodableMap& params,
+                                        const EntityGUID& guid) = 0;
 
   virtual void ChangeDirectLightByIndex(
       int32_t index,

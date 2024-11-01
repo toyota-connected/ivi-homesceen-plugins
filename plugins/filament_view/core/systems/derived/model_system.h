@@ -35,11 +35,11 @@ class ModelSystem : public ECSystem {
   void destroyAllAssetsOnModels();
   void destroyAsset(const filament::gltfio::FilamentAsset* asset) const;
 
-  void loadModelGlb(Model* poOurModel,
+  void loadModelGlb(std::unique_ptr<Model> oOurModel,
                     const std::vector<uint8_t>& buffer,
                     const std::string& assetName);
 
-  void loadModelGltf(Model* poOurModel,
+  void loadModelGltf(std::unique_ptr<Model> oOurModel,
                      const std::vector<uint8_t>& buffer,
                      std::function<const ::filament::backend::BufferDescriptor&(
                          std::string uri)>& callback);
@@ -49,22 +49,24 @@ class ModelSystem : public ECSystem {
   void updateAsyncAssetLoading();
 
   std::future<Resource<std::string_view>> loadGlbFromAsset(
-      Model* poOurModel,
+      std::unique_ptr<Model> oOurModel,
       const std::string& path,
       bool isFallback = false);
 
-  std::future<Resource<std::string_view>>
-  loadGlbFromUrl(Model* poOurModel, std::string url, bool isFallback = false);
+  std::future<Resource<std::string_view>> loadGlbFromUrl(
+      std::unique_ptr<Model> oOurModel,
+      std::string url,
+      bool isFallback = false);
 
   static std::future<Resource<std::string_view>> loadGltfFromAsset(
-      Model* poOurModel,
+      std::unique_ptr<Model> oOurModel,
       const std::string& path,
       const std::string& pre_path,
       const std::string& post_path,
       bool isFallback = false);
 
   static std::future<Resource<std::string_view>> loadGltfFromUrl(
-      Model* poOurModel,
+      std::unique_ptr<Model> oOurModel,
       const std::string& url,
       bool isFallback = false);
 
@@ -85,7 +87,7 @@ class ModelSystem : public ECSystem {
   ::filament::gltfio::ResourceLoader* resourceLoader_{};
 
   // This is the EntityObject guids to model instantiated.
-  std::map<EntityGUID, Model*> m_mapszpoAssets;  // NOLINT
+  std::map<EntityGUID, std::shared_ptr<Model>> m_mapszoAssets;  // NOLINT
 
   // This will be needed for a list of prefab instances to load from
   // std::map<Model*> <name>models_;
@@ -103,7 +105,7 @@ class ModelSystem : public ECSystem {
 
   using PromisePtr = std::shared_ptr<std::promise<Resource<std::string_view>>>;
   void handleFile(
-      Model* poOurModel,
+      std::unique_ptr<Model>&& oOurModel,
       const std::vector<uint8_t>& buffer,
       const std::string& fileSource,
       bool isFallback,

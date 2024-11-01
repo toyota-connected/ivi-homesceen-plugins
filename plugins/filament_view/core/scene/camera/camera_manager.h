@@ -180,8 +180,8 @@ class CameraManager {
   ViewTarget* m_poOwner;
 
   void endGesture();
-  bool isOrbitGesture() const;
-  bool isPanGesture() const;
-  bool isZoomGesture();
+  [[nodiscard]] bool isOrbitGesture() const;
+  [[nodiscard]] bool isPanGesture() const;
+  [[nodiscard]] bool isZoomGesture();
 };
 }  // namespace plugin_filament_view

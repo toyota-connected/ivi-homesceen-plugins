@@ -22,7 +22,7 @@
 #include <filament_view_plugin.h>
 
 void FilamentViewPluginCApiRegisterWithRegistrar(
-    const FlutterDesktopPluginRegistrarRef registrar,
+    FlutterDesktopPluginRegistrarRef registrar,
     const int32_t id,
     std::string viewType,
     const int32_t direction,
@@ -32,7 +32,7 @@ void FilamentViewPluginCApiRegisterWithRegistrar(
     const double height,
     const std::vector<uint8_t>& params,
     const std::string& assetDirectory,
-    const FlutterDesktopEngineRef engine,
+    FlutterDesktopEngineRef engine,
     const PlatformViewAddListener addListener,
     const PlatformViewRemoveListener removeListener,
     void* platform_view_context) {

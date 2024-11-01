@@ -106,7 +106,7 @@ add_library(plugin_filament_view STATIC
         core/scene/material/loader/material_loader.cc
         core/scene/material/loader/texture_loader.cc
         core/systems/derived/material_system.cc
-        core/scene/material/material_definitions.cc
+        core/components/derived/material_definitions.cc
         core/scene/material/material_parameter.cc
         core/scene/material/texture/texture_definitions.cc
         core/scene/material/texture/texture_sampler.cc
@@ -120,6 +120,7 @@ add_library(plugin_filament_view STATIC
         core/utils/deserialize.cc
         core/scene/view_target.cc
         core/systems/derived/view_target_system.cc
+        core/systems/derived/entityobject_locator_system.cc
 )
 
 target_include_directories(plugin_filament_view PUBLIC

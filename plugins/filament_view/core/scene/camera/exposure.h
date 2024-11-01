@@ -31,11 +31,7 @@ class Exposure {
 
   void DebugPrint(const char* tag);
 
-  Exposure(const Exposure& other)
-      : aperture_(other.aperture_),
-        shutterSpeed_(other.shutterSpeed_),
-        sensitivity_(other.sensitivity_),
-        exposure_(other.exposure_) {}
+  Exposure(const Exposure& other) = default;
 
   Exposure& operator=(const Exposure& other) {
     if (this == &other) {

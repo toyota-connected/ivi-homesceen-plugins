@@ -35,16 +35,12 @@ class TextureDefinitions {
                      std::string url,
                      TextureSampler* sampler);
 
-  ~TextureDefinitions();
+  ~TextureDefinitions() = default;
 
   static std::unique_ptr<TextureDefinitions> Deserialize(
       const flutter::EncodableMap& params);
 
   void DebugPrint(const char* tag);
-
-  // Disallow copy and assign.
-  TextureDefinitions(const TextureDefinitions&) = delete;
-  TextureDefinitions& operator=(const TextureDefinitions&) = delete;
 
   static TextureType getType(const std::string& type);
 
@@ -58,6 +54,11 @@ class TextureDefinitions {
   [[nodiscard]] std::string szGetTextureDefinitionLookupName() const;
 
   TextureSampler* getSampler() { return sampler_; }
+
+  [[nodiscard]] std::unique_ptr<TextureDefinitions> clone() const {
+    return std::make_unique<TextureDefinitions>(type_, assetPath_, url_,
+                                                sampler_);
+  }
 
  private:
   std::string assetPath_;

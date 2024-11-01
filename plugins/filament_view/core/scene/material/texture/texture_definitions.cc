@@ -36,11 +36,6 @@ TextureDefinitions::TextureDefinitions(const TextureType type,
       sampler_(sampler) {}
 
 ////////////////////////////////////////////////////////////////////////////
-TextureDefinitions::~TextureDefinitions() {
-  delete sampler_;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 std::string TextureDefinitions::szGetTextureDefinitionLookupName() const {
   if (!assetPath_.empty()) {
     return assetPath_;

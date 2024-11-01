@@ -18,8 +18,13 @@
 
 #include <core/components/derived/collidable.h>
 #include <core/include/literals.h>
+#include <core/systems/derived/filament_system.h>
+#include <core/systems/derived/material_system.h>
+#include <core/systems/ecsystems_manager.h>
 #include <core/utils/deserialize.h>
+#include <filament/RenderableManager.h>
 #include <plugins/common/common.h>
+#include <utils/Slice.h>
 #include <utility>
 
 namespace plugin_filament_view {
@@ -158,6 +163,108 @@ std::unique_ptr<Model> Model::Deserialize(const std::string& flutterAssetsPath,
 ////////////////////////////////////////////////////////////////////////////
 void Model::DebugPrint() const {
   vDebugPrintComponents();
+}
+
+////////////////////////////////////////////////////////////////////////////
+void Model::vLoadMaterialDefinitionsToMaterialInstance() {
+  const auto materialSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<MaterialSystem>(
+          MaterialSystem::StaticGetTypeID(), "BaseShape::vBuildRenderable");
+
+  if (materialSystem == nullptr) {
+    spdlog::error("Failed to get material system.");
+  } else {
+    // this will also set all the default values of the material instance from
+    // the material param list
+    const auto materialDefinitions =
+        GetComponentByStaticTypeID(MaterialDefinitions::StaticGetTypeID());
+    if (materialDefinitions != nullptr) {
+      m_poMaterialInstance = materialSystem->getMaterialInstance(
+          dynamic_cast<const MaterialDefinitions*>(materialDefinitions.get()));
+    }
+
+    if (m_poMaterialInstance.getStatus() != Status::Success) {
+      spdlog::error("Failed to get material instance.");
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////
+void Model::vChangeMaterialDefinitions(const flutter::EncodableMap& params,
+                                       const TextureMap& /*loadedTextures*/) {
+  // if we have a materialdefinitions component, we need to remove it
+  // and remake / add a new one.
+  if (HasComponentByStaticTypeID(MaterialDefinitions::StaticGetTypeID())) {
+    vRemoveComponent(MaterialDefinitions::StaticGetTypeID());
+  }
+
+  // If you want to inspect the params coming in.
+  /*for (const auto& [fst, snd] : params) {
+      auto key = std::get<std::string>(fst);
+      plugin_common::Encodable::PrintFlutterEncodableValue(key.c_str(), snd);
+  }*/
+
+  auto materialDefinitions = std::make_shared<MaterialDefinitions>(params);
+  vAddComponent(std::move(materialDefinitions));
+
+  m_poMaterialInstance.vReset();
+
+  // then tell material system to load us the correct way once
+  // we're deserialized.
+  vLoadMaterialDefinitionsToMaterialInstance();
+
+  if (m_poMaterialInstance.getStatus() != Status::Success) {
+    spdlog::error(
+        "Unable to load material definition to instance, bailing out.");
+    return;
+  }
+
+  // now, reload / rebuild the material?
+  const auto filamentSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
+          FilamentSystem::StaticGetTypeID(),
+          "BaseShape::vChangeMaterialDefinitions");
+
+  // If your entity has multiple primitives, you’ll need to call
+  // setMaterialInstanceAt for each primitive you want to update.
+  auto& renderManager =
+      filamentSystem->getFilamentEngine()->getRenderableManager();
+
+  utils::Slice const listOfRenderables{getAsset()->getRenderableEntities(),
+                                       getAsset()->getRenderableEntityCount()};
+
+  // Note this will apply to EVERYTHING currently. You might want a custom <only
+  // effect these pieces> type functionality.
+  for (const auto entity : listOfRenderables) {
+    const auto ri = renderManager.getInstance(entity);
+
+    // I dont know about primitive index being non zero if our tree has multiple
+    // nodes getting from the asset.
+    renderManager.setMaterialInstanceAt(ri, 0, *m_poMaterialInstance.getData());
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////
+void Model::vChangeMaterialInstanceProperty(
+    const MaterialParameter* materialParam,
+    const TextureMap& loadedTextures) {
+  if (m_poMaterialInstance.getStatus() != Status::Success) {
+    spdlog::error(
+        "No material definition set for model, set one first that's not the "
+        "uber shader.");
+    return;
+  }
+
+  const auto data = m_poMaterialInstance.getData().value();
+
+  const auto matDefs = dynamic_cast<MaterialDefinitions*>(
+      GetComponentByStaticTypeID(MaterialDefinitions::StaticGetTypeID()).get());
+  if (matDefs == nullptr) {
+    return;
+  }
+
+  MaterialDefinitions::vApplyMaterialParameterToInstance(data, materialParam,
+                                                         loadedTextures);
 }
 
 }  // namespace plugin_filament_view

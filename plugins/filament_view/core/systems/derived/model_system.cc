@@ -33,6 +33,8 @@
 #include <asio/post.hpp>
 #include <sstream>
 
+#include "entityobject_locator_system.h"
+
 namespace plugin_filament_view {
 
 using filament::gltfio::AssetConfiguration;
@@ -42,11 +44,10 @@ using filament::gltfio::ResourceLoader;
 
 ////////////////////////////////////////////////////////////////////////////////////
 void ModelSystem::destroyAllAssetsOnModels() {
-  for (const auto& [fst, snd] : m_mapszpoAssets) {
+  for (const auto& [fst, snd] : m_mapszoAssets) {
     destroyAsset(snd->getAsset());  // NOLINT
-    delete snd;                     // NOLINT
   }
-  m_mapszpoAssets.clear();
+  m_mapszoAssets.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -68,8 +69,8 @@ void ModelSystem::destroyAsset(
 ////////////////////////////////////////////////////////////////////////////////////
 filament::gltfio::FilamentAsset* ModelSystem::poFindAssetByGuid(
     const std::string& szGUID) {
-  const auto iter = m_mapszpoAssets.find(szGUID);
-  if (iter == m_mapszpoAssets.end()) {
+  const auto iter = m_mapszoAssets.find(szGUID);
+  if (iter == m_mapszoAssets.end()) {
     return nullptr;
   }
 
@@ -77,7 +78,7 @@ filament::gltfio::FilamentAsset* ModelSystem::poFindAssetByGuid(
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-void ModelSystem::loadModelGlb(Model* poOurModel,
+void ModelSystem::loadModelGlb(std::unique_ptr<Model> oOurModel,
                                const std::vector<uint8_t>& buffer,
                                const std::string& /*assetName*/) {
   if (assetLoader_ == nullptr) {
@@ -120,28 +121,35 @@ void ModelSystem::loadModelGlb(Model* poOurModel,
   for (const auto entity : listOfRenderables) {
     const auto ri = rcm.getInstance(entity);
     rcm.setCastShadows(
-        ri, poOurModel->GetCommonRenderable()->IsCastShadowsEnabled());
+        ri, oOurModel->GetCommonRenderable()->IsCastShadowsEnabled());
     rcm.setReceiveShadows(
-        ri, poOurModel->GetCommonRenderable()->IsReceiveShadowsEnabled());
+        ri, oOurModel->GetCommonRenderable()->IsReceiveShadowsEnabled());
     // Investigate this more before making it a property on common renderable
     // component.
     rcm.setScreenSpaceContactShadows(ri, false);
   }
 
-  poOurModel->setAsset(asset);
+  oOurModel->setAsset(asset);
 
-  EntityTransforms::vApplyTransform(poOurModel->getAsset(),
-                                    *poOurModel->GetBaseTransform());
+  EntityTransforms::vApplyTransform(oOurModel->getAsset(),
+                                    *oOurModel->GetBaseTransform());
 
   // todo
   // setUpAnimation(poCurrModel->GetAnimation());
 
-  m_mapszpoAssets.insert(std::pair(poOurModel->GetGlobalGuid(), poOurModel));
+  std::shared_ptr<Model> sharedPtr = std::move(oOurModel);
+  m_mapszoAssets.insert(std::pair(sharedPtr->GetGlobalGuid(), sharedPtr));
+
+  const auto objectLocatorSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
+          EntityObjectLocatorSystem::StaticGetTypeID(), "loadModelGlb");
+
+  objectLocatorSystem->vRegisterEntityObject(sharedPtr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 void ModelSystem::loadModelGltf(
-    Model* poOurModel,
+    std::unique_ptr<Model> oOurModel,
     const std::vector<uint8_t>& buffer,
     std::function<const filament::backend::BufferDescriptor&(
         std::string uri)>& /* callback */) {
@@ -183,16 +191,24 @@ void ModelSystem::loadModelGltf(
   for (const auto entity : listOfRenderables) {
     const auto ri = rcm.getInstance(entity);
     rcm.setCastShadows(
-        ri, poOurModel->GetCommonRenderable()->IsCastShadowsEnabled());
+        ri, oOurModel->GetCommonRenderable()->IsCastShadowsEnabled());
     rcm.setReceiveShadows(
-        ri, poOurModel->GetCommonRenderable()->IsReceiveShadowsEnabled());
+        ri, oOurModel->GetCommonRenderable()->IsReceiveShadowsEnabled());
     // Investigate this more before making it a property on common renderable
     // component.
     rcm.setScreenSpaceContactShadows(ri, false);
   }
 
-  poOurModel->setAsset(asset);
-  m_mapszpoAssets.insert(std::pair(poOurModel->GetGlobalGuid(), poOurModel));
+  oOurModel->setAsset(asset);
+
+  std::shared_ptr<Model> sharedPtr = std::move(oOurModel);
+  m_mapszoAssets.insert(std::pair(sharedPtr->GetGlobalGuid(), sharedPtr));
+
+  const auto objectLocatorSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
+          EntityObjectLocatorSystem::StaticGetTypeID(), "loadModelGltf");
+
+  objectLocatorSystem->vRegisterEntityObject(sharedPtr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -255,8 +271,8 @@ void ModelSystem::updateAsyncAssetLoading() {
   // eventually settle
   const float percentComplete = resourceLoader_->asyncGetLoadProgress();
 
-  for (const auto& [fst, snd] : m_mapszpoAssets) {
-    populateSceneWithAsyncLoadedAssets(snd);
+  for (const auto& [fst, snd] : m_mapszoAssets) {
+    populateSceneWithAsyncLoadedAssets(snd.get());
 
     if (percentComplete != 1.0f) {
       continue;
@@ -279,14 +295,14 @@ void ModelSystem::updateAsyncAssetLoading() {
       // I don't think this needs to become a message; as an async load
       // gives us un-deterministic throughput; it can't be replicated with a
       // messaging structure, and we have to wait till the load is done.
-      collisionSystem->vAddCollidable(snd);
+      collisionSystem->vAddCollidable(snd.get());
     }  // end make collision
   }  // end foreach
 }  // end method
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>> ModelSystem::loadGlbFromAsset(
-    Model* poOurModel,
+    std::unique_ptr<Model> oOurModel,
     const std::string& path,
     bool isFallback) {
   const auto promise(
@@ -299,10 +315,11 @@ std::future<Resource<std::string_view>> ModelSystem::loadGlbFromAsset(
     const auto assetPath =
         ECSystemManager::GetInstance()->getConfigValue<std::string>(kAssetPath);
 
-    post(strand_, [&, poOurModel, promise, path, isFallback, assetPath] {
+    post(strand_, [&, model = std::move(oOurModel), promise, path, isFallback,
+                   assetPath]() mutable {
       try {
         const auto buffer = readBinaryFile(path, assetPath);
-        handleFile(poOurModel, buffer, path, isFallback, promise);
+        handleFile(std::move(model), buffer, path, isFallback, promise);
       } catch (const std::exception& e) {
         std::cerr << "Lambda Exception " << e.what() << '\n';
         promise->set_exception(std::make_exception_ptr(e));
@@ -319,33 +336,34 @@ std::future<Resource<std::string_view>> ModelSystem::loadGlbFromAsset(
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>> ModelSystem::loadGlbFromUrl(
-    Model* poOurModel,
+    std::unique_ptr<Model> oOurModel,
     std::string url,
     bool isFallback) {
   const auto promise(
       std::make_shared<std::promise<Resource<std::string_view>>>());
   auto promise_future(promise->get_future());
   post(*ECSystemManager::GetInstance()->GetStrand(),
-       [&, poOurModel, promise, url = std::move(url), isFallback] {
+       [&, model = std::move(oOurModel), promise, url = std::move(url),
+        isFallback]() mutable {
          plugin_common_curl::CurlClient client;
          const auto buffer = client.RetrieveContentAsVector();
          if (client.GetCode() != CURLE_OK) {
            promise->set_value(Resource<std::string_view>::Error(
                "Couldn't load Glb from " + url));
          }
-         handleFile(poOurModel, buffer, url, isFallback, promise);
+         handleFile(std::move(model), buffer, url, isFallback, promise);
        });
   return promise_future;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-void ModelSystem::handleFile(Model* poOurModel,
+void ModelSystem::handleFile(std::unique_ptr<Model>&& oOurModel,
                              const std::vector<uint8_t>& buffer,
                              const std::string& fileSource,
                              bool /*isFallback*/,
                              const PromisePtr& promise) {
   if (!buffer.empty()) {
-    loadModelGlb(poOurModel, buffer, fileSource);
+    loadModelGlb(std::move(oOurModel), buffer, fileSource);
     promise->set_value(Resource<std::string_view>::Success(
         "Loaded glb model successfully from " + fileSource));
   } else {
@@ -356,7 +374,7 @@ void ModelSystem::handleFile(Model* poOurModel,
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>> ModelSystem::loadGltfFromAsset(
-    Model* /*poOurModel*/,
+    std::unique_ptr<Model> /*oOurModel*/,
     const std::string& /* path */,
     const std::string& /* pre_path */,
     const std::string& /* post_path */,
@@ -370,7 +388,7 @@ std::future<Resource<std::string_view>> ModelSystem::loadGltfFromAsset(
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>> ModelSystem::loadGltfFromUrl(
-    Model* /*poOurModel*/,
+    std::unique_ptr<Model> /*oOurModel*/,
     const std::string& /* url */,
     bool /* isFallback */) {
   const auto promise(

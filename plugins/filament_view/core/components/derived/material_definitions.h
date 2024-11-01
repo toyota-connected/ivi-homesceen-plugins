@@ -16,10 +16,11 @@
 
 #pragma once
 
-#include "material_parameter.h"
 #include "shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
 
+#include <core/components/base/component.h>
 #include <core/include/resource.h>
+#include <core/scene/material/material_parameter.h>
 #include <filament/MaterialInstance.h>
 #include <map>
 #include <memory>
@@ -27,18 +28,28 @@
 using TextureMap = std::map<std::string, Resource<::filament::Texture*>>;
 
 namespace plugin_filament_view {
-class MaterialDefinitions {
+
+class MaterialDefinitions : public Component {
  public:
-  MaterialDefinitions(const std::string& flutter_assets_path,
-                      const flutter::EncodableMap& params);
+  explicit MaterialDefinitions(const flutter::EncodableMap& params);
 
-  ~MaterialDefinitions();
+  MaterialDefinitions(const MaterialDefinitions& other)
+      : Component(std::string(__FUNCTION__)),
+        assetPath_(other.assetPath_),
+        url_(other.url_) {
+    for (const auto& [key, value] : other.parameters_) {
+      if (value) {
+        parameters_.emplace(key, value->clone());
+      }
+    }
+  }
 
-  void DebugPrint(const char* tag);
+  ~MaterialDefinitions() override;
 
-  // Disallow copy and assign.
-  MaterialDefinitions(const MaterialDefinitions&) = delete;
-  MaterialDefinitions& operator=(const MaterialDefinitions&) = delete;
+  static void vApplyMaterialParameterToInstance(
+      filament::MaterialInstance* materialInstance,
+      const MaterialParameter* param,
+      const TextureMap& loadedTextures);
 
   void vSetMaterialInstancePropertiesFromMyPropertyMap(
       const ::filament::Material* materialResult,
@@ -60,9 +71,21 @@ class MaterialDefinitions {
   }
   [[nodiscard]] std::string szGetMaterialURLPath() const { return url_; }
 
- private:
-  const std::string& flutterAssetsPath_;
+  void DebugPrint(const std::string& tabPrefix) const override;
 
+  static size_t StaticGetTypeID() {
+    return typeid(MaterialDefinitions).hash_code();
+  }
+
+  [[nodiscard]] size_t GetTypeID() const override { return StaticGetTypeID(); }
+
+  [[nodiscard]] Component* Clone() const override {
+    auto* cloned =
+        new MaterialDefinitions(*this);  // Copy constructor is called here
+    return cloned;
+  }
+
+ private:
   std::string assetPath_;
   std::string url_;
   std::map<std::string, std::unique_ptr<MaterialParameter>> parameters_;

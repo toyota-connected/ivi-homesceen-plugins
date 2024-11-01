@@ -66,6 +66,12 @@ class FilamentViewPlugin : public flutter::Plugin,
 
   ~FilamentViewPlugin() override;
 
+  void ChangeMaterialParameter(const flutter::EncodableMap& params,
+                               const EntityGUID& guid) override;
+
+  void ChangeMaterialDefinition(const flutter::EncodableMap& params,
+                                const EntityGUID& guid) override;
+
   void ChangeDirectLightByIndex(
       int32_t index,
       std::string color,
@@ -167,7 +173,6 @@ class FilamentViewPlugin : public flutter::Plugin,
   int32_t id_;
   void* platformViewsContext_;
   PlatformViewRemoveListener removeListener_;
-  const std::string flutterAssetsPath_;
 
   static void on_resize(double width, double height, void* data);
   static void on_set_direction(int32_t direction, void* data);

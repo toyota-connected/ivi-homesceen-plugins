@@ -17,9 +17,12 @@
 #include "material_system.h"
 #include "filament_system.h"
 
-#include <core/scene/material/material_definitions.h>
+#include <core/components/derived/material_definitions.h>
+#include <core/entity/base/entityobject.h>
 #include <core/systems/ecsystems_manager.h>
 #include <plugins/common/common.h>
+
+#include "entityobject_locator_system.h"
 
 namespace plugin_filament_view {
 
@@ -166,7 +169,66 @@ Resource<filament::MaterialInstance*> MaterialSystem::getMaterialInstance(
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void MaterialSystem::vInitSystem() {}
+void MaterialSystem::vInitSystem() {
+  vRegisterMessageHandler(
+      ECSMessageType::ChangeMaterialParameter, [this](const ECSMessage& msg) {
+        spdlog::debug("ChangeMaterialParameter");
+
+        const flutter::EncodableMap& params =
+            msg.getData<flutter::EncodableMap>(
+                ECSMessageType::ChangeMaterialParameter);
+        const EntityGUID& guid =
+            msg.getData<EntityGUID>(ECSMessageType::ChangeMaterialEntity);
+
+        const auto objectLocatorSystem =
+            ECSystemManager::GetInstance()
+                ->poGetSystemAs<EntityObjectLocatorSystem>(
+                    EntityObjectLocatorSystem::StaticGetTypeID(),
+                    "ChangeMaterialParameter");
+
+        if (const auto entityObject =
+                objectLocatorSystem->poGetEntityObjectById(guid);
+            entityObject != nullptr) {
+          spdlog::debug("ChangeMaterialParameter valid entity found.");
+
+          const auto parameter = MaterialParameter::Deserialize("", params);
+
+          entityObject->vChangeMaterialInstanceProperty(parameter.get(),
+                                                        loadedTextures_);
+        }
+
+        spdlog::debug("ChangeMaterialParameter Complete");
+      });
+
+  vRegisterMessageHandler(
+      ECSMessageType::ChangeMaterialDefinitions, [this](const ECSMessage& msg) {
+        spdlog::debug("ChangeMaterialDefinitions");
+
+        const flutter::EncodableMap& params =
+            msg.getData<flutter::EncodableMap>(
+                ECSMessageType::ChangeMaterialDefinitions);
+
+        const EntityGUID& guid =
+            msg.getData<EntityGUID>(ECSMessageType::ChangeMaterialEntity);
+
+        const auto objectLocatorSystem =
+            ECSystemManager::GetInstance()
+                ->poGetSystemAs<EntityObjectLocatorSystem>(
+                    EntityObjectLocatorSystem::StaticGetTypeID(),
+                    "ChangeMaterialDefinitions");
+
+        if (const auto entityObject =
+                objectLocatorSystem->poGetEntityObjectById(guid);
+            entityObject != nullptr) {
+          spdlog::debug("ChangeMaterialDefinitions valid entity found.");
+
+          entityObject->vChangeMaterialDefinitions(params, loadedTextures_);
+        }
+
+        spdlog::debug("ChangeMaterialDefinitions Complete");
+      });
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 void MaterialSystem::vUpdate(float /*fElapsedTime*/) {}
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -176,11 +238,11 @@ void MaterialSystem::vShutdownSystem() {
           FilamentSystem::StaticGetTypeID(), "CameraManager::setDefaultCamera");
   const auto engine = filamentSystem->getFilamentEngine();
 
-  for (auto [fst, snd] : loadedTemplateMaterials_) {
+  for (const auto& [fst, snd] : loadedTemplateMaterials_) {
     engine->destroy(*snd.getData());
   }
 
-  for (auto [fst, snd] : loadedTextures_) {
+  for (const auto& [fst, snd] : loadedTextures_) {
     engine->destroy(*snd.getData());
   }
 

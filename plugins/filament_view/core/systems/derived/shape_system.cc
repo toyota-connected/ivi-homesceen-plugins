@@ -26,6 +26,8 @@
 #include <filament/Scene.h>
 #include <plugins/common/common.h>
 
+#include "entityobject_locator_system.h"
+
 namespace plugin_filament_view {
 
 using shapes::BaseShape;
@@ -47,12 +49,19 @@ void ShapeSystem::vToggleAllShapesInScene(const bool bValue) const {
 ////////////////////////////////////////////////////////////////////////////////////
 void ShapeSystem::vRemoveAllShapesInScene() {
   vToggleAllShapesInScene(false);
+
+  const auto objectLocatorSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
+          EntityObjectLocatorSystem::StaticGetTypeID(), "addShapesToScene");
+  for (auto& shape : shapes_) {
+    objectLocatorSystem->vUnregisterEntityObject(shape);
+  }
+
   shapes_.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::unique_ptr<BaseShape> ShapeSystem::poDeserializeShapeFromData(
-    const std::string& flutter_assets_path,
     const flutter::EncodableMap& mapData) {
   ShapeType type;
 
@@ -76,11 +85,11 @@ std::unique_ptr<BaseShape> ShapeSystem::poDeserializeShapeFromData(
   // Based on the type_, create the corresponding shape
   switch (type) {
     case ShapeType::Plane:
-      return std::make_unique<shapes::Plane>(flutter_assets_path, mapData);
+      return std::make_unique<shapes::Plane>(mapData);
     case ShapeType::Cube:
-      return std::make_unique<shapes::Cube>(flutter_assets_path, mapData);
+      return std::make_unique<shapes::Cube>(mapData);
     case ShapeType::Sphere:
-      return std::make_unique<shapes::Sphere>(flutter_assets_path, mapData);
+      return std::make_unique<shapes::Sphere>(mapData);
     default:
       // Handle unknown shape type
       spdlog::error("Unknown shape type: {}", static_cast<int32_t>(type));
@@ -111,6 +120,10 @@ void ShapeSystem::addShapesToScene(
   // needed
   // oEntitymanager.create(shapes.size(), lstEntities);
 
+  const auto objectLocatorSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
+          EntityObjectLocatorSystem::StaticGetTypeID(), "addShapesToScene");
+
   for (auto& shape : *shapes) {
     auto oEntity = std::make_shared<Entity>(oEntitymanager.create());
 
@@ -125,7 +138,10 @@ void ShapeSystem::addShapesToScene(
     // To investigate
     // rcm.setLayerMask(instance, 0xff, 0x00);
 
-    shapes_.emplace_back(shape.release());
+    std::shared_ptr<BaseShape> sharedPtr = std::move(shape);
+
+    shapes_.push_back(sharedPtr);
+    objectLocatorSystem->vRegisterEntityObject(sharedPtr);
   }
 
   SPDLOG_TRACE("--{} {}", __FILE__, __FUNCTION__);

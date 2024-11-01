@@ -33,7 +33,7 @@ class Resource {
            std::optional<T> data = std::nullopt)
       : status_(status), message_(message), data_(std::move(data)) {}
 
-  Resource() : status_(Status::Success), message_("") {}
+  Resource() : status_(Status::Success), message_() {}
 
   static Resource Success(T data) {
     return Resource(Status::Success, "", data);
@@ -48,4 +48,13 @@ class Resource {
   [[nodiscard]] std::string_view getMessage() const { return message_; }
 
   [[nodiscard]] std::optional<T> getData() const { return data_; }
+
+  void vReset() {
+    if (getStatus() == Status::Success) {
+      getData().reset();
+    }
+
+    message_ = "";
+    status_ = Status::Loading;
+  }
 };

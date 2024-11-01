@@ -19,6 +19,7 @@
 #include <core/scene/serialization/scene_text_deserializer.h>
 #include <core/systems/derived/collision_system.h>
 #include <core/systems/derived/debug_lines_system.h>
+#include <core/systems/derived/entityobject_locator_system.h>
 #include <core/systems/derived/filament_system.h>
 #include <core/systems/derived/indirect_light_system.h>
 #include <core/systems/derived/light_system.h>
@@ -68,6 +69,10 @@ void RunOnceCheckAndInitializeECSystems() {
     ecsManager->vAddSystem(std::move(std::make_unique<SkyboxSystem>()));
     ecsManager->vAddSystem(std::move(std::make_unique<LightSystem>()));
     ecsManager->vAddSystem(std::move(std::make_unique<ViewTargetSystem>()));
+    // Internal debate whether we auto subscribe to systems on entity creation
+    // or not.
+    ecsManager->vAddSystem(
+        std::move(std::make_unique<EntityObjectLocatorSystem>()));
 
     ecsManager->vInitSystems();
 
@@ -131,7 +136,7 @@ void FilamentViewPlugin::RegisterWithRegistrar(
     double height,
     const std::vector<uint8_t>& params,
     const std::string& assetDirectory,
-    const FlutterDesktopEngineRef engine,
+    FlutterDesktopEngineRef engine,
     PlatformViewAddListener addListener,
     PlatformViewRemoveListener removeListener,
     void* platform_view_context) {
@@ -242,6 +247,26 @@ FilamentViewPlugin::~FilamentViewPlugin() {
 void FilamentViewPlugin::ChangeAnimationByIndex(
     int32_t /* index */,
     std::function<void(std::optional<FlutterError> reply)> /* result */) {}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+void FilamentViewPlugin::ChangeMaterialParameter(
+    const flutter::EncodableMap& params,
+    const EntityGUID& guid) {
+  ECSMessage materialData;
+  materialData.addData(ECSMessageType::ChangeMaterialParameter, params);
+  materialData.addData(ECSMessageType::ChangeMaterialEntity, guid);
+  ECSystemManager::GetInstance()->vRouteMessage(materialData);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+void FilamentViewPlugin::ChangeMaterialDefinition(
+    const flutter::EncodableMap& params,
+    const EntityGUID& guid) {
+  ECSMessage materialData;
+  materialData.addData(ECSMessageType::ChangeMaterialDefinitions, params);
+  materialData.addData(ECSMessageType::ChangeMaterialEntity, guid);
+  ECSystemManager::GetInstance()->vRouteMessage(materialData);
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 void FilamentViewPlugin::ChangeDirectLightByIndex(
