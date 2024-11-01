@@ -233,8 +233,8 @@ void Model::vChangeMaterialDefinitions(const flutter::EncodableMap& params,
   utils::Slice const listOfRenderables{getAsset()->getRenderableEntities(),
                                        getAsset()->getRenderableEntityCount()};
 
-  // Note this will apply to EVERYTHING currently. You might want a custom <only effect these pieces>
-  // type functionality.
+  // Note this will apply to EVERYTHING currently. You might want a custom <only
+  // effect these pieces> type functionality.
   for (const auto entity : listOfRenderables) {
     const auto ri = renderManager.getInstance(entity);
 
