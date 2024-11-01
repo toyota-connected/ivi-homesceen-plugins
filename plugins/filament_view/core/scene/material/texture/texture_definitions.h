@@ -35,7 +35,7 @@ class TextureDefinitions {
                      std::string url,
                      TextureSampler* sampler);
 
-  ~TextureDefinitions();
+  ~TextureDefinitions() = default;
 
   static std::unique_ptr<TextureDefinitions> Deserialize(
       const flutter::EncodableMap& params);

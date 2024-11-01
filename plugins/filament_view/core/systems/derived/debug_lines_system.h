@@ -51,7 +51,7 @@ class DebugLine {
 
 class DebugLinesSystem : public ECSystem {
  public:
-  DebugLinesSystem();
+  DebugLinesSystem() = default;
 
   void DebugPrint() override;
 

@@ -34,7 +34,7 @@ class SceneTextDeserializer {
   explicit SceneTextDeserializer(const std::vector<uint8_t>& params);
   void vRunPostSetupLoad();
 
-  virtual ~SceneTextDeserializer() {}
+  virtual ~SceneTextDeserializer() = default;
 
  private:
   // These get released to the Model_system / obj locator

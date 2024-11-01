@@ -28,7 +28,7 @@ namespace shapes {
 
 class Cube : public BaseShape {
  public:
-  Cube(const flutter::EncodableMap& params);
+  explicit Cube(const flutter::EncodableMap& params);
   Cube() = default;
   ~Cube() override = default;
 

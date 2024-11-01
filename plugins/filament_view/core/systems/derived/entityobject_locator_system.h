@@ -45,7 +45,8 @@ class EntityObjectLocatorSystem : public ECSystem {
   void vRegisterEntityObject(std::shared_ptr<EntityObject> entity);
   void vUnregisterEntityObject(std::shared_ptr<EntityObject> entity);
 
-  std::shared_ptr<EntityObject> poGetEntityObjectById(EntityGUID id) const;
+  [[nodiscard]] std::shared_ptr<EntityObject> poGetEntityObjectById(
+      EntityGUID id) const;
 
  private:
   std::map<EntityGUID, std::shared_ptr<EntityObject>> _entities;

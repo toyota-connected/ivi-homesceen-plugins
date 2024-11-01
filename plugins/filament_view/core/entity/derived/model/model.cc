@@ -263,8 +263,8 @@ void Model::vChangeMaterialInstanceProperty(
     return;
   }
 
-  matDefs->vApplyMaterialParameterToInstance(data, materialParam,
-                                             loadedTextures);
+  MaterialDefinitions::vApplyMaterialParameterToInstance(data, materialParam,
+                                                         loadedTextures);
 }
 
 }  // namespace plugin_filament_view

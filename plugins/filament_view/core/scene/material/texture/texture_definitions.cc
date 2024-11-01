@@ -36,13 +36,6 @@ TextureDefinitions::TextureDefinitions(const TextureType type,
       sampler_(sampler) {}
 
 ////////////////////////////////////////////////////////////////////////////
-TextureDefinitions::~TextureDefinitions() {
-  // We don't own this once its been 'created'
-  // This should be moved to a smart pointer perhaps?
-  // delete sampler_;
-}
-
-////////////////////////////////////////////////////////////////////////////
 std::string TextureDefinitions::szGetTextureDefinitionLookupName() const {
   if (!assetPath_.empty()) {
     return assetPath_;

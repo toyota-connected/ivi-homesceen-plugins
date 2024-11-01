@@ -53,8 +53,8 @@ void ShapeSystem::vRemoveAllShapesInScene() {
   const auto objectLocatorSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
           EntityObjectLocatorSystem::StaticGetTypeID(), "addShapesToScene");
-  for (auto it = shapes_.begin(); it != shapes_.end(); ++it) {
-    objectLocatorSystem->vUnregisterEntityObject(*it);
+  for (auto& shape : shapes_) {
+    objectLocatorSystem->vUnregisterEntityObject(shape);
   }
 
   shapes_.clear();

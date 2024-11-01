@@ -238,11 +238,11 @@ void MaterialSystem::vShutdownSystem() {
           FilamentSystem::StaticGetTypeID(), "CameraManager::setDefaultCamera");
   const auto engine = filamentSystem->getFilamentEngine();
 
-  for (auto [fst, snd] : loadedTemplateMaterials_) {
+  for (const auto& [fst, snd] : loadedTemplateMaterials_) {
     engine->destroy(*snd.getData());
   }
 
-  for (auto [fst, snd] : loadedTextures_) {
+  for (const auto& [fst, snd] : loadedTextures_) {
     engine->destroy(*snd.getData());
   }
 

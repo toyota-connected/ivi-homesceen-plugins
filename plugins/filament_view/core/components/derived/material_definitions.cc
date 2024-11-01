@@ -134,7 +134,7 @@ MaterialDefinitions::vecGetTextureMaterialParameters() const {
 void MaterialDefinitions::vApplyMaterialParameterToInstance(
     filament::MaterialInstance* materialInstance,
     const MaterialParameter* param,
-    const TextureMap& loadedTextures) const {
+    const TextureMap& loadedTextures) {
   const std::string paramName = param->szGetParameterName();
   const char* szParamName = paramName.c_str();
 

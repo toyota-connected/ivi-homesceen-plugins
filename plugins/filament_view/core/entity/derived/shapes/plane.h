@@ -27,7 +27,7 @@ namespace shapes {
 
 class Plane : public BaseShape {
  public:
-  Plane(const flutter::EncodableMap& params);
+  explicit Plane(const flutter::EncodableMap& params);
   Plane() = default;
   ~Plane() override = default;
 

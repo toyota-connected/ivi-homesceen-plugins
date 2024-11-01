@@ -33,7 +33,7 @@ class Resource {
            std::optional<T> data = std::nullopt)
       : status_(status), message_(message), data_(std::move(data)) {}
 
-  Resource() : status_(Status::Success), message_("") {}
+  Resource() : status_(Status::Success), message_() {}
 
   static Resource Success(T data) {
     return Resource(Status::Success, "", data);

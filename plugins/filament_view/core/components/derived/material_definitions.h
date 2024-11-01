@@ -46,10 +46,10 @@ class MaterialDefinitions : public Component {
 
   ~MaterialDefinitions() override;
 
-  void vApplyMaterialParameterToInstance(
+  static void vApplyMaterialParameterToInstance(
       filament::MaterialInstance* materialInstance,
       const MaterialParameter* param,
-      const TextureMap& loadedTextures) const;
+      const TextureMap& loadedTextures);
 
   void vSetMaterialInstancePropertiesFromMyPropertyMap(
       const ::filament::Material* materialResult,

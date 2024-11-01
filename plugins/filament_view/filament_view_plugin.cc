@@ -136,7 +136,7 @@ void FilamentViewPlugin::RegisterWithRegistrar(
     double height,
     const std::vector<uint8_t>& params,
     const std::string& assetDirectory,
-    const FlutterDesktopEngineRef engine,
+    FlutterDesktopEngineRef engine,
     PlatformViewAddListener addListener,
     PlatformViewRemoveListener removeListener,
     void* platform_view_context) {
