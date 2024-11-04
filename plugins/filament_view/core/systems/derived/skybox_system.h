@@ -63,8 +63,6 @@ class SkyboxSystem : public ECSystem {
       bool shouldUpdateLight,
       float intensity);
 
-  void destroySkybox();
-
   // Disallow copy and assign.
   SkyboxSystem(const SkyboxSystem&) = delete;
   SkyboxSystem& operator=(const SkyboxSystem&) = delete;
