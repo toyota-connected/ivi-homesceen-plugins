@@ -36,7 +36,7 @@ void EntityObjectLocatorSystem::DebugPrint() {
 
 ////////////////////////////////////////////////////////////////////////////////////
 void EntityObjectLocatorSystem::vRegisterEntityObject(
-    std::shared_ptr<EntityObject> entity) {
+    const std::shared_ptr<EntityObject>& entity) {
   if (_entities.find(entity->GetGlobalGuid()) != _entities.end()) {
     spdlog::error("{}::{}: Entity {} already registered", __FILE__,
                   __FUNCTION__, entity->GetGlobalGuid());
@@ -48,7 +48,7 @@ void EntityObjectLocatorSystem::vRegisterEntityObject(
 
 ////////////////////////////////////////////////////////////////////////////////////
 void EntityObjectLocatorSystem::vUnregisterEntityObject(
-    std::shared_ptr<EntityObject> entity) {
+    const std::shared_ptr<EntityObject>& entity) {
   _entities.erase(entity->GetGlobalGuid());
 }
 

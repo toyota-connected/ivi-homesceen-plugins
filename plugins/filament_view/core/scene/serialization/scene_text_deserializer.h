@@ -49,9 +49,9 @@ class SceneTextDeserializer {
   void vDeserializeSceneLevel(const flutter::EncodableValue& params);
 
   void setUpLoadingModels();
-  void setUpSkybox();
-  void setUpLight();
-  void setUpIndirectLight();
+  void setUpSkybox() const;
+  void setUpLight() const;
+  void setUpIndirectLight() const;
   void setUpShapes();
 
   static void loadModel(std::unique_ptr<Model>& model);

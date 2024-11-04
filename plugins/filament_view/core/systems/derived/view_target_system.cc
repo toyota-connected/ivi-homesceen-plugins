@@ -99,9 +99,11 @@ void ViewTargetSystem::vInitSystem() {
   vRegisterMessageHandler(
       ECSMessageType::ResizeWindow, [this](const ECSMessage& msg) {
         spdlog::debug("ResizeWindow");
-        auto nWhich = msg.getData<size_t>(ECSMessageType::ResizeWindow);
-        auto fWidth = msg.getData<double>(ECSMessageType::ResizeWindowWidth);
-        auto fHeight = msg.getData<double>(ECSMessageType::ResizeWindowHeight);
+        const auto nWhich = msg.getData<size_t>(ECSMessageType::ResizeWindow);
+        const auto fWidth =
+            msg.getData<double>(ECSMessageType::ResizeWindowWidth);
+        const auto fHeight =
+            msg.getData<double>(ECSMessageType::ResizeWindowHeight);
 
         vResizeViewTarget(nWhich, fWidth, fHeight);
 
@@ -113,9 +115,9 @@ void ViewTargetSystem::vInitSystem() {
   vRegisterMessageHandler(
       ECSMessageType::MoveWindow, [this](const ECSMessage& msg) {
         spdlog::debug("MoveWindow");
-        auto nWhich = msg.getData<size_t>(ECSMessageType::ResizeWindow);
-        auto fLeft = msg.getData<double>(ECSMessageType::MoveWindowLeft);
-        auto fTop = msg.getData<double>(ECSMessageType::MoveWindowTop);
+        const auto nWhich = msg.getData<size_t>(ECSMessageType::ResizeWindow);
+        const auto fLeft = msg.getData<double>(ECSMessageType::MoveWindowLeft);
+        const auto fTop = msg.getData<double>(ECSMessageType::MoveWindowTop);
 
         vSetViewTargetOffSet(nWhich, fLeft, fTop);
 

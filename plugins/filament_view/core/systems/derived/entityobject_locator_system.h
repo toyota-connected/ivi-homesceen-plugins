@@ -42,8 +42,8 @@ class EntityObjectLocatorSystem : public ECSystem {
   void vShutdownSystem() override;
   void DebugPrint() override;
 
-  void vRegisterEntityObject(std::shared_ptr<EntityObject> entity);
-  void vUnregisterEntityObject(std::shared_ptr<EntityObject> entity);
+  void vRegisterEntityObject(const std::shared_ptr<EntityObject>& entity);
+  void vUnregisterEntityObject(const std::shared_ptr<EntityObject>& entity);
 
   [[nodiscard]] std::shared_ptr<EntityObject> poGetEntityObjectById(
       EntityGUID id) const;
