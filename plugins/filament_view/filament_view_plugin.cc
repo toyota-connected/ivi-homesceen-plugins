@@ -419,8 +419,8 @@ void FilamentViewPlugin::on_resize(const double width,
 
   ECSMessage resizeMessage;
   resizeMessage.addData(ECSMessageType::ResizeWindow, static_cast<size_t>(0));
-  resizeMessage.addData(ECSMessageType::ResizeWindowWidth, (double)1024);
-  resizeMessage.addData(ECSMessageType::ResizeWindowHeight, (double)768);
+  resizeMessage.addData(ECSMessageType::ResizeWindowWidth, width);
+  resizeMessage.addData(ECSMessageType::ResizeWindowHeight, height);
   ECSystemManager::GetInstance()->vRouteMessage(resizeMessage);
 }
 
