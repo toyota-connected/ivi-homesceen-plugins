@@ -24,7 +24,7 @@
 void FilamentViewPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar,
     const int32_t id,
-    std::string viewType,
+    const std::string& viewType,
     const int32_t direction,
     const double top,
     const double left,
@@ -39,9 +39,8 @@ void FilamentViewPluginCApiRegisterWithRegistrar(
   plugin_filament_view::FilamentViewPlugin::RegisterWithRegistrar(
       flutter::PluginRegistrarManager::GetInstance()
           ->GetRegistrar<flutter::PluginRegistrar>(registrar),
-      id, std::move(viewType), direction, top, left, width, height, params,
-      assetDirectory, engine, addListener, removeListener,
-      platform_view_context);
+      id, viewType, direction, top, left, width, height, params, assetDirectory,
+      engine, addListener, removeListener, platform_view_context);
 
   // Uncomment if you want two views.
   /*plugin_filament_view::FilamentViewPlugin::RegisterWithRegistrar(

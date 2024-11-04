@@ -272,7 +272,7 @@ void SceneTextDeserializer::loadModel(std::unique_ptr<Model>& model) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-void SceneTextDeserializer::setUpSkybox() {
+void SceneTextDeserializer::setUpSkybox() const {
   // Todo move to a message.
 
   auto skyboxSystem =
@@ -315,7 +315,7 @@ void SceneTextDeserializer::setUpSkybox() {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-void SceneTextDeserializer::setUpLight() {
+void SceneTextDeserializer::setUpLight() const {
   // Todo move to a message.
 
   const auto lightSystem =
@@ -332,7 +332,7 @@ void SceneTextDeserializer::setUpLight() {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-void SceneTextDeserializer::setUpIndirectLight() {
+void SceneTextDeserializer::setUpIndirectLight() const {
   // Todo move to a message.
   auto indirectlightSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<IndirectLightSystem>(

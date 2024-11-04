@@ -83,7 +83,7 @@ std::future<Resource<std::string_view>> IndirectLightSystem::setIndirectLight(
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>>
-IndirectLightSystem::setIndirectLightFromKtxAsset(std::string path,
+IndirectLightSystem::setIndirectLightFromKtxAsset(const std::string& /*path*/,
                                                   double /*intensity*/) {
   const auto promise(
       std::make_shared<std::promise<Resource<std::string_view>>>());
@@ -92,7 +92,7 @@ IndirectLightSystem::setIndirectLightFromKtxAsset(std::string path,
   const asio::io_context::strand& strand_(
       *ECSystemManager::GetInstance()->GetStrand());
 
-  post(strand_, [&, promise, path = std::move(path) /*, intensity*/] {
+  post(strand_, [&, promise /*, intensity*/] {
     promise->set_value(Resource<std::string_view>::Error("Not implemented"));
   });
   return future;
@@ -100,7 +100,7 @@ IndirectLightSystem::setIndirectLightFromKtxAsset(std::string path,
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>>
-IndirectLightSystem::setIndirectLightFromKtxUrl(std::string url,
+IndirectLightSystem::setIndirectLightFromKtxUrl(const std::string& /*url*/,
                                                 double /*intensity*/) {
   const auto promise(
       std::make_shared<std::promise<Resource<std::string_view>>>());
@@ -109,7 +109,7 @@ IndirectLightSystem::setIndirectLightFromKtxUrl(std::string url,
   const asio::io_context::strand& strand_(
       *ECSystemManager::GetInstance()->GetStrand());
 
-  post(strand_, [&, promise, url = std::move(url) /*, intensity*/] {
+  post(strand_, [&, promise /*, intensity*/] {
     promise->set_value(Resource<std::string_view>::Error("Not implemented"));
   });
   return future;
@@ -156,7 +156,7 @@ Resource<std::string_view> IndirectLightSystem::loadIndirectLightHdrFromFile(
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>>
-IndirectLightSystem::setIndirectLightFromHdrAsset(std::string path,
+IndirectLightSystem::setIndirectLightFromHdrAsset(const std::string& path,
                                                   double intensity) {
   const auto promise(
       std::make_shared<std::promise<Resource<std::string_view>>>());
@@ -167,7 +167,7 @@ IndirectLightSystem::setIndirectLightFromHdrAsset(std::string path,
   const auto assetPath =
       ECSystemManager::GetInstance()->getConfigValue<std::string>(kAssetPath);
 
-  post(strand_, [&, promise, path = std::move(path), intensity, assetPath] {
+  post(strand_, [&, promise, path = path, intensity, assetPath] {
     std::filesystem::path asset_path(assetPath);
     asset_path /= path;
 
@@ -188,7 +188,7 @@ IndirectLightSystem::setIndirectLightFromHdrAsset(std::string path,
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>>
-IndirectLightSystem::setIndirectLightFromHdrUrl(std::string url,
+IndirectLightSystem::setIndirectLightFromHdrUrl(const std::string& /*url*/,
                                                 double /*intensity*/) {
   const auto promise(
       std::make_shared<std::promise<Resource<std::string_view>>>());
@@ -197,7 +197,7 @@ IndirectLightSystem::setIndirectLightFromHdrUrl(std::string url,
       *ECSystemManager::GetInstance()->GetStrand());
 
   auto future(promise->get_future());
-  post(strand_, [&, promise, url = std::move(url) /*, intensity*/] {
+  post(strand_, [&, promise /*, intensity*/] {
     promise->set_value(Resource<std::string_view>::Error("Not implemented"));
   });
   return future;

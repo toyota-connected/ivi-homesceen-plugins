@@ -38,7 +38,7 @@ extern "C" {
 FLUTTER_PLUGIN_EXPORT void FilamentViewPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrar* registrar,
     int32_t id,
-    std::string viewType,
+    const std::string& viewType,
     int32_t direction,
     double top,
     double left,

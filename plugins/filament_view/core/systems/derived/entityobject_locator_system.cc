@@ -36,7 +36,7 @@ void EntityObjectLocatorSystem::DebugPrint() {
 
 ////////////////////////////////////////////////////////////////////////////////////
 void EntityObjectLocatorSystem::vRegisterEntityObject(
-    std::shared_ptr<EntityObject> entity) {
+    const std::shared_ptr<EntityObject>& entity) {
   if (_entities.find(entity->GetGlobalGuid()) != _entities.end()) {
     spdlog::error("{}::{}: Entity {} already registered", __FILE__,
                   __FUNCTION__, entity->GetGlobalGuid());
@@ -48,14 +48,14 @@ void EntityObjectLocatorSystem::vRegisterEntityObject(
 
 ////////////////////////////////////////////////////////////////////////////////////
 void EntityObjectLocatorSystem::vUnregisterEntityObject(
-    std::shared_ptr<EntityObject> entity) {
+    const std::shared_ptr<EntityObject>& entity) {
   _entities.erase(entity->GetGlobalGuid());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<EntityObject> EntityObjectLocatorSystem::poGetEntityObjectById(
     EntityGUID id) const {
-  auto it = _entities.find(id);
+  const auto it = _entities.find(id);
   if (it == _entities.end()) {
     spdlog::debug("Unable to find entity with id {}", id);
     return nullptr;

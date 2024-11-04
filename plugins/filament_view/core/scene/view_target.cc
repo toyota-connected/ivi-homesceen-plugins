@@ -54,6 +54,7 @@ ViewTarget::ViewTarget(const int32_t top,
     : state_(state),
       left_(left),
       top_(top),
+      frameViewCallback_(nullptr),
       callback_(nullptr),
       fanimator_(nullptr),
       cameraManager_(nullptr) {
@@ -165,7 +166,6 @@ void ViewTarget::InitializeFilamentInternals(const uint32_t width,
 
   native_window_ = {.display = display_,
                     .surface = surface_,
-                    // TODO as params
                     .width = width,
                     .height = height};
 
@@ -510,8 +510,9 @@ void ViewTarget::setOffset(const double left, const double top) {
 
 ////////////////////////////////////////////////////////////////////////////
 void ViewTarget::resize(const double width, const double height) {
-  fview_->setViewport({left_, top_, static_cast<uint32_t>(width),
-                       static_cast<uint32_t>(height)});
+  // Will need to determine what bottom should be
+  fview_->setViewport(
+      {left_, 0, static_cast<uint32_t>(width), static_cast<uint32_t>(height)});
 
   cameraManager_->updateCameraOnResize(static_cast<uint32_t>(width),
                                        static_cast<uint32_t>(height));

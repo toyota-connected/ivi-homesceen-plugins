@@ -35,19 +35,19 @@ class IndirectLightSystem : public ECSystem {
   void setDefaultIndirectLight();
 
   static std::future<Resource<std::string_view>> setIndirectLightFromKtxAsset(
-      std::string path,
+      const std::string& path,
       double intensity);
 
   static std::future<Resource<std::string_view>> setIndirectLightFromKtxUrl(
-      std::string url,
+      const std::string& url,
       double intensity);
 
   static std::future<Resource<std::string_view>> setIndirectLightFromHdrAsset(
-      std::string path,
+      const std::string& path,
       double intensity);
 
   static std::future<Resource<std::string_view>> setIndirectLightFromHdrUrl(
-      std::string url,
+      const std::string& url,
       double intensity);
 
   static Resource<std::string_view> loadIndirectLightHdrFromFile(

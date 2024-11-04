@@ -35,10 +35,6 @@
 namespace plugin_filament_view {
 
 ////////////////////////////////////////////////////////////////////////////////////
-/// TODO Need to look into destruction between here and scene deserializer
-void SkyboxSystem::destroySkybox() {}
-
-////////////////////////////////////////////////////////////////////////////////////
 std::future<void> SkyboxSystem::Initialize() {
   const auto promise(std::make_shared<std::promise<void>>());
   auto future(promise->get_future());
@@ -180,12 +176,6 @@ std::future<Resource<std::string_view>> SkyboxSystem::setSkyboxFromKTXAsset(
     std::vector<uint8_t> buffer((std::istreambuf_iterator(stream)),
                                 std::istreambuf_iterator<char>());
     if (!buffer.empty()) {
-#if 0  // TODO
-                auto skybox = KTX1Loader.createSkybox(*engine, buffer);
-                modelViewer_->destroySkybox();
-                modelViewer_->getFilamentScene()->setSkybox(skybox);
-                modelViewer_->setSkyboxState(SceneState::LOADED);
-#endif
       std::stringstream ss;
       ss << "Loaded environment successfully from " << asset_path;
       promise->set_value(Resource<std::string_view>::Success(ss.str()));
@@ -225,12 +215,6 @@ std::future<Resource<std::string_view>> SkyboxSystem::setSkyboxFromKTXUrl(
     }
 
     if (!buffer.empty()) {
-#if 0  // TODO
-                auto skybox = KTX1Loader.createSkybox(*engine, buffer);
-                modelViewer_->destroySkybox();
-                modelViewer_->getFilamentScene()->setSkybox(skybox);
-                modelViewer_->setSkyboxState(SceneState::LOADED);
-#endif
       std::stringstream ss;
       ss << "Loaded skybox successfully from " << url;
       promise->set_value(Resource<std::string_view>::Success(ss.str()));
