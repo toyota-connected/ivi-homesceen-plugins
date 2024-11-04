@@ -55,7 +55,7 @@ void EntityObjectLocatorSystem::vUnregisterEntityObject(
 ////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<EntityObject> EntityObjectLocatorSystem::poGetEntityObjectById(
     EntityGUID id) const {
-  auto it = _entities.find(id);
+  const auto it = _entities.find(id);
   if (it == _entities.end()) {
     spdlog::debug("Unable to find entity with id {}", id);
     return nullptr;
