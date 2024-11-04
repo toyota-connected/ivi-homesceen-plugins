@@ -95,6 +95,34 @@ void ViewTargetSystem::vInitSystem() {
 
         vSetCameraFromSerializedData();
       });
+
+  vRegisterMessageHandler(
+      ECSMessageType::ResizeWindow, [this](const ECSMessage& msg) {
+        spdlog::debug("ResizeWindow");
+        auto nWhich = msg.getData<size_t>(ECSMessageType::ResizeWindow);
+        auto fWidth = msg.getData<double>(ECSMessageType::ResizeWindowWidth);
+        auto fHeight = msg.getData<double>(ECSMessageType::ResizeWindowHeight);
+
+        vResizeViewTarget(nWhich, fWidth, fHeight);
+
+        spdlog::debug("ResizeWindow Complete");
+
+        vSetCameraFromSerializedData();
+      });
+
+  vRegisterMessageHandler(
+      ECSMessageType::MoveWindow, [this](const ECSMessage& msg) {
+        spdlog::debug("MoveWindow");
+        auto nWhich = msg.getData<size_t>(ECSMessageType::ResizeWindow);
+        auto fLeft = msg.getData<double>(ECSMessageType::MoveWindowLeft);
+        auto fTop = msg.getData<double>(ECSMessageType::MoveWindowTop);
+
+        vSetViewTargetOffSet(nWhich, fLeft, fTop);
+
+        spdlog::debug("MoveWindow Complete");
+
+        vSetCameraFromSerializedData();
+      });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

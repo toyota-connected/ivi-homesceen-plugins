@@ -50,7 +50,15 @@ enum class ECSMessageType {
 
   ChangeMaterialParameter,
   ChangeMaterialEntity,
-  ChangeMaterialDefinitions
+  ChangeMaterialDefinitions,
+
+  ResizeWindow,
+  ResizeWindowWidth,
+  ResizeWindowHeight,
+
+  MoveWindow,
+  MoveWindowTop,
+  MoveWindowLeft
 };
 
 }

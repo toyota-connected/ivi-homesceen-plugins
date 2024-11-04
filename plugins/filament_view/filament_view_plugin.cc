@@ -412,15 +412,16 @@ void FilamentViewPlugin::ChangeToDefaultIndirectLight(
 // TODO this function will need to change to say 'which' view is being changed.
 void FilamentViewPlugin::on_resize(const double width,
                                    const double height,
-                                   void* data) {
-  if (const auto plugin = static_cast<FilamentViewPlugin*>(data); plugin) {
-    const auto viewTargetSystem =
-        ECSystemManager::GetInstance()->poGetSystemAs<ViewTargetSystem>(
-            ViewTargetSystem::StaticGetTypeID(),
-            "FilamentViewPlugin::on_resize");
-
-    viewTargetSystem->vResizeViewTarget(0, width, height);
+                                   void* /*data*/) {
+  if (width <= 0 || height <= 0) {
+    return;
   }
+
+  ECSMessage resizeMessage;
+  resizeMessage.addData(ECSMessageType::ResizeWindow, static_cast<size_t>(0));
+  resizeMessage.addData(ECSMessageType::ResizeWindowWidth, (double)1024);
+  resizeMessage.addData(ECSMessageType::ResizeWindowHeight, (double)768);
+  ECSystemManager::GetInstance()->vRouteMessage(resizeMessage);
 }
 
 void FilamentViewPlugin::on_set_direction(const int32_t direction, void* data) {
@@ -434,15 +435,12 @@ void FilamentViewPlugin::on_set_direction(const int32_t direction, void* data) {
 // TODO this function will need to change to say 'which' view is being changed.
 void FilamentViewPlugin::on_set_offset(const double left,
                                        const double top,
-                                       void* data) {
-  if (const auto plugin = static_cast<FilamentViewPlugin*>(data); plugin) {
-    const auto viewTargetSystem =
-        ECSystemManager::GetInstance()->poGetSystemAs<ViewTargetSystem>(
-            ViewTargetSystem::StaticGetTypeID(),
-            "FilamentViewPlugin::on_resize");
-
-    viewTargetSystem->vSetViewTargetOffSet(0, left, top);
-  }
+                                       void* /*data*/) {
+  ECSMessage moveMessage;
+  moveMessage.addData(ECSMessageType::MoveWindow, static_cast<size_t>(0));
+  moveMessage.addData(ECSMessageType::MoveWindowLeft, left);
+  moveMessage.addData(ECSMessageType::MoveWindowTop, top);
+  ECSystemManager::GetInstance()->vRouteMessage(moveMessage);
 }
 
 // TODO this function will need to change to say 'which' view is being changed.
