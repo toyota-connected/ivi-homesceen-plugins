@@ -54,6 +54,7 @@ ViewTarget::ViewTarget(const int32_t top,
     : state_(state),
       left_(left),
       top_(top),
+      frameViewCallback_(nullptr),
       callback_(nullptr),
       fanimator_(nullptr),
       cameraManager_(nullptr) {
