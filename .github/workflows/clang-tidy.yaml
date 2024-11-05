@@ -204,10 +204,10 @@ jobs:
             -quiet \
             -export-fixes=tidy-results-suggested-fixes.txt \
             $FILE_LIST \
-            -extra-arg='-I/home/tcna/dev/ivi-homescreen/build/third_party/waypp/waypp/protocols' \
-            -extra-arg='-I/home/tcna/dev/filament/cmake-build-release/staging/release/include' \
-            -extra-arg='-I/home/tcna/dev/filament/cmake-build-release/staging/release/include/filament' \
-            -extra-arg='-I/home/tcna/dev/filament/lib/utils/include' > tidy-results-log.txt
+            -extra-arg='-I${{github.workspace}}/ivi-homescreen/build/third_party/waypp/waypp/protocols' \
+            -extra-arg='-I${{github.workspace}}/filament/cmake-build-release/staging/release/include' \
+            -extra-arg='-I${{github.workspace}}/filament/cmake-build-release/staging/release/include/filament' \
+            -extra-arg='-I${{github.workspace}}/filament/lib/utils/include' > tidy-results-log.txt
 
       - name: Show results
         if: always()
