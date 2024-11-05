@@ -3,7 +3,6 @@ name: clang-tidy
 on:
   pull_request:
     types: [ opened, synchronize, reopened, closed ]
-  push:
 
 jobs:
   tidy:

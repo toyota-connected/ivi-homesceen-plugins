@@ -3,8 +3,7 @@ name: clang-format
 on:
   pull_request:
     types: [ opened, synchronize, reopened, closed ]
-  push:
-      
+
 jobs:
   format:
     runs-on: ubuntu-22.04
