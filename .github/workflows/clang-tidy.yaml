@@ -199,7 +199,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ${{github.workspace}}/homescreen/build/debug/*
+            ${{github.workspace}}/ivi-homescreen/build/*
           key: ${{ runner.os }}-homescreen      
 
       - name: Build Homescreen
