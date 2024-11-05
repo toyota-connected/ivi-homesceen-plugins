@@ -1,0 +1,1 @@
+../../plugins/flatpak/README.md
