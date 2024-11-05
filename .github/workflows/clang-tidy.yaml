@@ -199,7 +199,15 @@ jobs:
         run: |
           export FILE_LIST=$(find plugins -type d -name third_party -prune -o -name '*.cc' -o -name '*.hpp' -o -name '*.h')
           echo $FILE_LIST
-          clang18/bin/run-clang-tidy -warnings-as-errors='*,-bugprone-macro-parentheses' -quiet -export-fixes=tidy-results-suggested-fixes.txt $FILE_LIST > tidy-results-log.txt
+          clang18/bin/run-clang-tidy \
+            -warnings-as-errors='*,-bugprone-macro-parentheses' \
+            -quiet \
+            -export-fixes=tidy-results-suggested-fixes.txt \
+            $FILE_LIST \
+            -extra-arg='-I/home/tcna/dev/ivi-homescreen/build/third_party/waypp/waypp/protocols' \
+            -extra-arg='-I/home/tcna/dev/filament/cmake-build-release/staging/release/include' \
+            -extra-arg='-I/home/tcna/dev/filament/cmake-build-release/staging/release/include/filament' \
+            -extra-arg='-I/home/tcna/dev/filament/lib/utils/include' > tidy-results-log.txt
 
       - name: Show results
         if: always()
