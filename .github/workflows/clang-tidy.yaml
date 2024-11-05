@@ -205,7 +205,7 @@ jobs:
 
       - name: Build Homescreen
         if: steps.cache-homescreen.outputs.cache-hit != 'true'
-        working-directory: ${{github.workspace}}
+        working-directory: ${{github.workspace}}/build/debug
         run: |
           ninja homescreen
 
