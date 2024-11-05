@@ -3,7 +3,8 @@ name: clang-format
 on:
   pull_request:
     types: [ opened, synchronize, reopened, closed ]
-
+  push:
+      
 jobs:
   format:
     runs-on: ubuntu-22.04
@@ -26,7 +27,7 @@ jobs:
       - name: Run Clang-format
         working-directory: ${{github.workspace}}
         run: |
-          find plugins -type d -name third_party -prune -o -name '*.cc' -o -name '*.hpp' -o -name '*.h' > clang-format-files
+          find plugins -type d -name third_party -prune -false -o -name '*.cc' -o -name '*.hpp' -o -name '*.h' > clang-format-files
           clang18/bin/clang-format -n --Werror --files=clang-format-files 2> clang-format-results.txt
 
       - name: Show results
