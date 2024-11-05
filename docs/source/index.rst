@@ -16,6 +16,7 @@ Welcome to ivi-homescreen-plugin's documentation!
    firebase_auth
    firebase_core
    firebase_storage
+   flatpak
    go_router
    google_sign_in
    integration_test
@@ -23,9 +24,9 @@ Welcome to ivi-homescreen-plugin's documentation!
    nav_render_view
    pdf
    secure_storage
-   store
    url_launcher
    video_player_linux
+   webrtc
    webview_flutter_view
 
 Indices and tables
