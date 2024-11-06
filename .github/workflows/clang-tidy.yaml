@@ -194,10 +194,24 @@ jobs:
 
           ln -s ${{github.workspace}}/build/debug/compile_commands.json .
 
+      - name: Cache homescreen
+        id: cache-homescreen
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{github.workspace}}/ivi-homescreen/build/*
+          key: ${{ runner.os }}-homescreen      
+
+      - name: Build Homescreen
+        if: steps.cache-homescreen.outputs.cache-hit != 'true'
+        working-directory: ${{github.workspace}}/build/debug
+        run: |
+          ninja homescreen
+
       - name: clang-tidy
         working-directory: ${{github.workspace}}
         run: |
-          export FILE_LIST=$(find plugins -type d -name third_party -prune -o -name '*.cc' -o -name '*.hpp' -o -name '*.h')
+          export FILE_LIST=$(find plugins -type d -name third_party -prune -false -o -name '*.cc' -o -name '*.hpp' -o -name '*.h')
           echo $FILE_LIST
           clang18/bin/run-clang-tidy \
             -warnings-as-errors='*,-bugprone-macro-parentheses' \
