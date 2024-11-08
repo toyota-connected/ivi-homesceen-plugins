@@ -20,7 +20,7 @@ if (NOT EXISTS ${CEF_ROOT})
     message(FATAL_ERROR "CEF_ROOT: \"${CEF_ROOT}\" does not exist")
 endif ()
 
-message(STATUS "CEF_ROOT: ${CEF_ROOT}")
+message(STATUS "  CEF_ROOT: ${CEF_ROOT}")
 
 if (NOT CEF_BUILD_TYPE)
     set(CEF_BUILD_TYPE "Release")
