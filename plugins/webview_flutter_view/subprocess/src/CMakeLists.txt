@@ -23,7 +23,10 @@ set(CEF_TARGET_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
 # Executable target.
 add_executable(${CEF_TARGET} flutter_webview_subprocess.cc)
 
-target_include_directories(${CEF_TARGET} PRIVATE ${CEF_ROOT})
+target_include_directories(${CEF_TARGET} PRIVATE 
+        ${CEF_ROOT}
+        ${CEF_ROOT}/include
+)
 
 add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
 
@@ -39,6 +42,8 @@ target_link_directories(${CEF_TARGET} PUBLIC
 target_link_libraries(${CEF_TARGET} PRIVATE
         cef
         libcef_dll_wrapper
+        GLESv2
+        EGL
 )
 
 install(TARGETS ${CEF_TARGET} DESTINATION bin)

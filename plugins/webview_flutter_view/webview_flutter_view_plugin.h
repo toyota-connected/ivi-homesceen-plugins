@@ -20,12 +20,23 @@
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar.h>
 
+#include <wayland-client.h>
+#include <wayland-egl.h>
+#include <EGL/egl.h>
+#include <GLES3/gl32.h>
+
 #include "messages.g.h"
 
 #include <capi/cef_app_capi.h>
+#include <capi/cef_browser_capi.h>
 #include <cef_app.h>
 #include <cef_client.h>
 #include <cef_render_handler.h>
+#include <cef_browser_process_handler.h>
+#include <capi/views/cef_browser_view_capi.h>
+#include <capi/views/cef_browser_view_delegate_capi.h>
+#include <capi/views/cef_display_capi.h>
+#include <capi/cef_render_handler_capi.h>
 
 #include "flutter_desktop_engine_state.h"
 #include "flutter_homescreen.h"
@@ -94,6 +105,14 @@ class WebviewPlatformView final : public PlatformView {
 
   ~WebviewPlatformView() override = default;
 
+
+  void StartCef();
+  static void CefThreadMain();
+
+  static bool is_start_cef_done_;
+  static bool is_shutdown_cef_done_;
+  std::thread cef_thread_;
+
  private:
   MAYBE_UNUSED int32_t id_;
   void* platformViewsContext_;
@@ -105,6 +124,20 @@ class WebviewPlatformView final : public PlatformView {
   wl_surface* parent_surface_;
   wl_callback* callback_;
   wl_subsurface* subsurface_;
+
+  EGLDisplay egl_display_;
+  wl_egl_window* egl_window_;
+  int buffer_size_ = 32;
+  EGLContext egl_context_{};
+  EGLConfig egl_config_{};
+  GLuint programObject_{};
+  EGLSurface egl_surface_{};
+
+  // _cef_browser_t* browser_;
+  // _cef_client_t* browserClient_;
+  // std::unique_ptr<_cef_render_handler_t> renderHandler_;
+
+  void InitializeEGL();
 
   static void on_frame(void* data, wl_callback* callback, uint32_t time);
   static const wl_callback_listener frame_listener;
@@ -154,9 +187,6 @@ class WebviewFlutterPlugin final : public flutter::Plugin,
   ~WebviewFlutterPlugin() override;
 
  private:
-  _cef_browser_t* browser_;
-  _cef_client_t* browserClient_;
-  std::unique_ptr<_cef_render_handler_t> renderHandler_;
 
  public:
   std::optional<FlutterError> Clear() override;

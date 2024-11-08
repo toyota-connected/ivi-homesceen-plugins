@@ -15,12 +15,26 @@
  */
 
 #include "include/cef_app.h"
+#include "wrapper/cef_library_loader.h"
+#include <capi/cef_app_capi.h>
+#include <unistd.h>
+#include <iostream>
 
 // Entry point function for sub-processes (i.e. render, plugin, GPU, etc)
 int main(int argc, char* argv[]) {
-  CefMainArgs main_args(argc, argv);
+  cef_main_args_t main_args({argc, argv});
 
-  int exit_code = CefExecuteProcess(main_args, nullptr, nullptr);
+#if(WEBVIEW_SUBPROCESS_DEBUG)
+  std::cout << "Parent Process id : " << getpid() << std::endl; 
+  std::cout << "Child Process with parent id : " << getppid() << std::endl; 
+  std::cout << "Subprocess arg count: " << argc << std::endl;
+  for(int i = 0; i < argc; i++)
+  {
+    std::cout << "Subprocess arg " << argc << ": " << argv[i] << std::endl;
+  }
+#endif
+
+  int exit_code = cef_execute_process(&main_args, nullptr, nullptr);
   if (exit_code >= 0) {
     return exit_code;
   }

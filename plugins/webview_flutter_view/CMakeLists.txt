@@ -56,4 +56,6 @@ target_link_libraries(plugin_webview_flutter_view PRIVATE
         flutter
         platform_homescreen
         libcef_dll_wrapper
+        GLESv2
+        EGL
 )
