@@ -16,7 +16,7 @@
 
 #include "url_launcher_plugin.h"
 
-#include "messages.h"
+#include "messages.g.h"
 
 #include <flutter/plugin_registrar.h>
 
@@ -53,7 +53,7 @@ ErrorOr<bool> UrlLauncherPlugin::CanLaunchUrl(const std::string& url) {
          url.rfind("mailto:", 0) == 0 || url.rfind("tel:", 0) == 0;
 }
 
-std::optional<FlutterError> UrlLauncherPlugin::LaunchUrl(
+ErrorOr<std::optional<std::string>> UrlLauncherPlugin::LaunchUrl(
     const std::string& url) {
   const pid_t pid = fork();
   if (pid == 0) {
@@ -68,7 +68,8 @@ std::optional<FlutterError> UrlLauncherPlugin::LaunchUrl(
     return FlutterError("open_error", error_message.str());
   }
 
-  return std::nullopt;
+  ErrorOr<std::optional<std::string>> result{std::nullopt};
+  return result;
 }
 
 }  // namespace url_launcher_linux

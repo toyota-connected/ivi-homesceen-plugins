@@ -20,7 +20,7 @@
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar.h>
 
-#include "messages.h"
+#include "messages.g.h"
 
 namespace url_launcher_linux {
 
@@ -38,7 +38,8 @@ class UrlLauncherPlugin final : public flutter::Plugin, public UrlLauncherApi {
 
   // UrlLauncherApi methods.
   ErrorOr<bool> CanLaunchUrl(const std::string& url) override;
-  std::optional<FlutterError> LaunchUrl(const std::string& url) override;
+  ErrorOr<std::optional<std::string>> LaunchUrl(
+      const std::string& url) override;
 };
 
 }  // namespace url_launcher_linux
