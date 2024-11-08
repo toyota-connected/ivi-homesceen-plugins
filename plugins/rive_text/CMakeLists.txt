@@ -16,9 +16,6 @@
 
 include_guard()
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(RIVE_TEXT IMPORTED_TARGET REQUIRED rive_text)
-
 add_library(plugin_rive_text STATIC
         rive_text_plugin_c_api.cc
         rive_text_plugin.cc
@@ -33,5 +30,4 @@ target_link_libraries(plugin_rive_text PUBLIC
         flutter
         platform_homescreen
         plugin_common
-        PkgConfig::RIVE_TEXT
 )
