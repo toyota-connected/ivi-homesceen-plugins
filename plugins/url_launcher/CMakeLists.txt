@@ -17,7 +17,7 @@
 add_library(plugin_url_launcher STATIC
         url_launcher_plugin_c_api.cc
         url_launcher_plugin.cc
-        messages.cc
+        messages.g.cc
 )
 
 target_include_directories(plugin_url_launcher PRIVATE include)
