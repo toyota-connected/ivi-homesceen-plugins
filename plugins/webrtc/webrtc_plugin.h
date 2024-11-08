@@ -23,8 +23,6 @@
 #include "flutter_common.h"
 #include "flutter_webrtc.h"
 
-#include "messages.g.h"
-
 namespace flutter_webrtc_plugin {
 
 using namespace libwebrtc;

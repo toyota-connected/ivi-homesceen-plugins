@@ -24,8 +24,8 @@ if (NOT EXISTS ${LIBWEBRTC_LIB})
     message(FATAL_ERROR "LIBWEBRTC_LIB: \"${LIBWEBRTC_LIB}\" does not exist")
 endif ()
 
-message(STATUS "LIBWEBRTC_INC_DIR: ${LIBWEBRTC_INC_DIR}")
-message(STATUS "LIBWEBRTC_LIB: ${LIBWEBRTC_LIB}")
+message(STATUS "  LIBWEBRTC_INC_DIR: ${LIBWEBRTC_INC_DIR}")
+message(STATUS "  LIBWEBRTC_LIB: ${LIBWEBRTC_LIB}")
 
 add_library(plugin_webrtc STATIC
         webrtc_plugin.cc

@@ -23,6 +23,9 @@ if (NOT EXISTS ${PDFIUM_LINK_LIBRARIES_DIR})
     message(FATAL_ERROR "${PDFIUM_LINK_LIBRARIES_DIR} does not exist")
 endif ()
 
+message(STATUS "  PDFIUM_INCLUDE_DIR: ${PDFIUM_INCLUDE_DIR}")
+message(STATUS "  PDFIUM_LINK_LIBRARIES_DIR: ${PDFIUM_LINK_LIBRARIES_DIR}")
+
 add_library(plugin_pdf STATIC
         pdf_plugin_c_api.cc
         pdf_plugin.cc
