@@ -17,10 +17,7 @@
 #ifndef PLUGINS_COMMON_TOOLS_COMMAND_H_
 #define PLUGINS_COMMON_TOOLS_COMMAND_H_
 
-#include <linux/limits.h>
 #include <string>
-
-#include "config/common.h"
 
 namespace plugin_common::Command {
 
@@ -30,8 +27,7 @@ namespace plugin_common::Command {
  * @relation
  * internal
  */
-MAYBE_UNUSED
-bool Execute(const char* cmd, std::string& result);
+[[maybe_unused]] bool Execute(const char* cmd, std::string& result);
 
 }  // namespace plugin_common::Command
 

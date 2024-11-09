@@ -164,6 +164,7 @@ void ModelSystem::loadModelGltf(
   const auto uris =
       std::vector(uri_data, uri_data + asset->getResourceUriCount());
   for (const auto uri : uris) {
+    (void)uri;
     SPDLOG_DEBUG("resource uri: {}", uri);
 #if 0   // TODO
               auto resourceBuffer = callback(uri);
@@ -296,9 +297,9 @@ void ModelSystem::updateAsyncAssetLoading() {
       // gives us un-deterministic throughput; it can't be replicated with a
       // messaging structure, and we have to wait till the load is done.
       collisionSystem->vAddCollidable(snd.get());
-    }  // end make collision
-  }  // end foreach
-}  // end method
+    }
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>> ModelSystem::loadGlbFromAsset(

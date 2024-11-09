@@ -26,21 +26,22 @@ constexpr char kNaviRenderSoName[] = "libnav_render.so";
 
 LibNavRenderExports::LibNavRenderExports(void* lib) {
   if (lib != nullptr) {
-    GetFuncAddress(lib, "nav_render_version", &TextureGetInterfaceVersion);
-    GetFuncAddress(lib, "nav_render_initialize", &TextureInitialize);
-    GetFuncAddress(lib, "nav_render_initialize2", &TextureInitialize2);
-    GetFuncAddress(lib, "nav_render_de_initialize", &TextureDeInitialize);
-    GetFuncAddress(lib, "nav_render_run_task", &TextureRunTask);
-    GetFuncAddress(lib, "nav_render_render", &TextureRender);
-    GetFuncAddress(lib, "nav_render_render2", &TextureRender2);
-    GetFuncAddress(lib, "nav_render_resize", &TextureResize);
+    PluginGetFuncAddress(lib, "nav_render_version",
+                         &TextureGetInterfaceVersion);
+    PluginGetFuncAddress(lib, "nav_render_initialize", &TextureInitialize);
+    PluginGetFuncAddress(lib, "nav_render_initialize2", &TextureInitialize2);
+    PluginGetFuncAddress(lib, "nav_render_de_initialize", &TextureDeInitialize);
+    PluginGetFuncAddress(lib, "nav_render_run_task", &TextureRunTask);
+    PluginGetFuncAddress(lib, "nav_render_render", &TextureRender);
+    PluginGetFuncAddress(lib, "nav_render_render2", &TextureRender2);
+    PluginGetFuncAddress(lib, "nav_render_resize", &TextureResize);
 
-    GetFuncAddress(lib, "comp_surf_version", &SurfaceGetInterfaceVersion);
-    GetFuncAddress(lib, "comp_surf_initialize", &SurfaceInitialize);
-    GetFuncAddress(lib, "comp_surf_de_initialize", &SurfaceDeInitialize);
-    GetFuncAddress(lib, "comp_surf_run_task", &SurfaceRunTask);
-    GetFuncAddress(lib, "comp_surf_draw_frame", &SurfaceDrawFrame);
-    GetFuncAddress(lib, "comp_surf_resize", &SurfaceResize);
+    PluginGetFuncAddress(lib, "comp_surf_version", &SurfaceGetInterfaceVersion);
+    PluginGetFuncAddress(lib, "comp_surf_initialize", &SurfaceInitialize);
+    PluginGetFuncAddress(lib, "comp_surf_de_initialize", &SurfaceDeInitialize);
+    PluginGetFuncAddress(lib, "comp_surf_run_task", &SurfaceRunTask);
+    PluginGetFuncAddress(lib, "comp_surf_draw_frame", &SurfaceDrawFrame);
+    PluginGetFuncAddress(lib, "comp_surf_resize", &SurfaceResize);
   }
 }
 
@@ -52,9 +53,10 @@ LibNavRenderExports* LibNavRender::loadExports() {
   static LibNavRenderExports exports = [] {
     void* lib;
 
-    if (GetProcAddress(RTLD_DEFAULT,
-                       "comp_surf_initialize"))  // Search the global scope
-                                                 // for pre-loaded library.
+    if (PluginGetProcAddress(
+            RTLD_DEFAULT,
+            "comp_surf_initialize"))  // Search the global scope
+                                      // for pre-loaded library.
     {
       lib = RTLD_DEFAULT;
     } else {

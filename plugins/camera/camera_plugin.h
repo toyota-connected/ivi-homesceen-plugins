@@ -26,15 +26,16 @@
 
 #include "event_channel.h"
 #include "messages.h"
-#include "plugins/common/common.h"
+
+#include <flutter/plugin_registrar.h>
 
 namespace camera_plugin {
 
 class CameraPlugin final : public flutter::Plugin, public CameraApi {
  public:
-  static void RegisterWithRegistrar(flutter::PluginRegistrarDesktop* registrar);
+  static void RegisterWithRegistrar(flutter::PluginRegistrar* registrar);
 
-  CameraPlugin(flutter::PluginRegistrarDesktop* plugin_registrar,
+  CameraPlugin(flutter::PluginRegistrar* plugin_registrar,
                flutter::BinaryMessenger* messenger);
 
   ~CameraPlugin() override;
@@ -116,7 +117,7 @@ class CameraPlugin final : public flutter::Plugin, public CameraApi {
   CameraPlugin& operator=(const CameraPlugin&) = delete;
 
  private:
-  flutter::PluginRegistrarDesktop* registrar_{};
+  flutter::PluginRegistrar* registrar_{};
   flutter::BinaryMessenger* messenger_;
   std::map<std::string,
            std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>>>

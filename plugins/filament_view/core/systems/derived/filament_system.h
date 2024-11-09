@@ -18,6 +18,7 @@
 
 #include <core/systems/base/ecsystem.h>
 #include <core/utils/ibl_profiler.h>
+#include <memory>
 
 namespace plugin_filament_view {
 
@@ -59,6 +60,6 @@ class FilamentSystem : public ECSystem {
   ::filament::Renderer* frenderer_{};
   ::filament::Scene* fscene_{};
 
-  std::unique_ptr<IBLProfiler> iblProfiler_;
+  std::unique_ptr<IBLProfiler> iblProfiler_{};
 };
 }  // namespace plugin_filament_view

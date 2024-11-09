@@ -110,6 +110,7 @@ std::unique_ptr<MaterialParameter> MaterialParameter::Deserialize(
       return {};
   }
   SPDLOG_TRACE("--{}::{}", __FILE__, __FUNCTION__);
+  return {};
 }
 
 ////////////////////////////////////////////////////////////////////////////

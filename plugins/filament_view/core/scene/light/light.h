@@ -19,6 +19,7 @@
 #include "shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
 
 #include <filament/LightManager.h>
+#include <memory>
 
 namespace plugin_filament_view {
 class Light {

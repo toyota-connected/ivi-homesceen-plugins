@@ -7,7 +7,6 @@
 #include "flutter_homescreen.h"
 #include "libnav_render.h"
 #include "platform_views/platform_view.h"
-#include "view/flutter_view.h"
 #include "wayland/display.h"
 
 class Display;
@@ -54,8 +53,8 @@ class NavRenderSurface final : public PlatformView, public flutter::Plugin {
 
  private:
   struct NATIVE_WINDOW {
-    wl_display* wl_display;
-    wl_surface* wl_surface;
+    struct wl_display* wl_display;
+    struct wl_surface* wl_surface;
     EGLDisplay egl_display;
     wl_egl_window* egl_window;
     uint32_t width;

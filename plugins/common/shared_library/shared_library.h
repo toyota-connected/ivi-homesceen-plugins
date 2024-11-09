@@ -17,7 +17,6 @@
 #pragma once
 
 #include <dlfcn.h>
-#include <cassert>
 #include <iostream>
 
 #include "../logging.h"
@@ -31,7 +30,7 @@
  * @relation
  * internal
  */
-inline void* GetProcAddress(void* library, const char* name) {
+inline void* PluginGetProcAddress(void* library, const char* name) {
   void* symbol = dlsym(library, name);
 
   if (!symbol && library != RTLD_DEFAULT) {
@@ -53,9 +52,9 @@ inline void* GetProcAddress(void* library, const char* name) {
  * internal
  */
 template <typename FunctionPointer>
-inline void GetFuncAddress(void* library,
-                           const char* function_name,
-                           FunctionPointer* out) {
+void PluginGetFuncAddress(void* library,
+                          const char* function_name,
+                          FunctionPointer* out) {
   auto symbol = dlsym(library, function_name);
   if (!symbol) {
     const char* reason = dlerror();

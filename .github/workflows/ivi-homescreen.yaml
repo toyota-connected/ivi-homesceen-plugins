@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
   schedule:
     # daily
-    - cron:  '0 0 * * *'
+    - cron: '0 0 * * *'
 
 jobs:
   homescreen:
@@ -155,7 +155,7 @@ jobs:
             -D BUILD_CRASH_HANDLER=OFF \
             -D ENABLE_LTO=ON \
             \
-            -D PLUGINS_DIR=${{github.workspace}}/plugins \
+            -D PLUGINS_DIR=${{github.workspace}}/plugins/plugins \
             \
             -D DEBUG_PLATFORM_MESSAGES=OFF \
             \
@@ -231,7 +231,7 @@ jobs:
             -D BUILD_CRASH_HANDLER=OFF \
             -D ENABLE_LTO=ON \
             \
-            -D PLUGINS_DIR=${{github.workspace}}/plugins \
+            -D PLUGINS_DIR=${{github.workspace}}/plugins/plugins \
             \
             -D DEBUG_PLATFORM_MESSAGES=OFF \
             \

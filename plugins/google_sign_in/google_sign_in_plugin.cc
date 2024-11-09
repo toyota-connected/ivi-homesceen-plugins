@@ -17,63 +17,12 @@
 #include "google_sign_in_plugin.h"
 
 #include <filesystem>
-#include <sstream>
 
-#include "messages.h"
+#include "messages.g.h"
 
-#include "plugins/common/common.h"
-#include "plugins/common/curl_client/curl_client.h"
+#include "config/plugins.h"
 
 namespace google_sign_in_plugin {
-
-static constexpr auto kPeopleUrl =
-    "https://people.googleapis.com/v1/people/"
-    "me?personFields=photos,names,emailAddresses";
-
-// Key Constants
-static constexpr auto kKeyAccessToken = "access_token";
-static constexpr auto kKeyAuthCode = "auth_code";
-static constexpr auto kKeyAuthProviderX509CertUrl =
-    "auth_provider_x509_cert_url";
-static constexpr auto kKeyAuthUri = "auth_uri";
-static constexpr auto kKeyClientId = "client_id";
-static constexpr auto kKeyClientSecret = "client_secret";
-static constexpr auto kKeyCode = "code";
-static constexpr auto kKeyExpiresAt = "expires_at";
-static constexpr auto kKeyExpiresIn = "expires_in";
-static constexpr auto kKeyGrantType = "grant_type";
-static constexpr auto kKeyIdToken = "id_token";
-static constexpr auto kKeyInstalled = "installed";
-static constexpr auto kKeyProjectId = "project_id";
-static constexpr auto kKeyRefreshToken = "refresh_token";
-static constexpr auto kKeyRedirectUri = "redirect_uri";
-static constexpr auto kKeyRedirectUris = "redirect_uris";
-
-static constexpr auto kKeyScope = "scope";
-static constexpr auto kKeyTokenType = "token_type";
-static constexpr auto kKeyTokenUri = "token_uri";
-
-/// Value Constants
-static constexpr auto kValueAuthorizationCode = "authorization_code";
-static constexpr auto kValueRedirectUri = "urn:ietf:wg:oauth:2.0:oob";
-static constexpr auto kValueRefreshToken = "refresh_token";
-
-/// People Response Constants
-static constexpr auto kKeyDisplayName = "displayName";
-static constexpr auto kKeyEmailAddresses = "emailAddresses";
-static constexpr auto kKeyMetadata = "metadata";
-static constexpr auto kKeyNames = "names";
-static constexpr auto kKeyPhotos = "photos";
-static constexpr auto kKeyPrimary = "primary";
-static constexpr auto kKeyResourceName = "resourceName";
-static constexpr auto kKeySourcePrimary = "sourcePrimary";
-static constexpr auto kKeyUrl = "url";
-static constexpr auto kKeyValue = "value";
-
-static constexpr auto kClientCredentialsPathEnvironmentVariable =
-    "GOOGLE_API_OAUTH2_CLIENT_CREDENTIALS";
-static constexpr auto kClientSecretPathEnvironmentVariable =
-    "GOOGLE_API_OAUTH2_CLIENT_SECRET_JSON";
 
 // static
 void GoogleSignInPlugin::RegisterWithRegistrar(
@@ -85,6 +34,94 @@ void GoogleSignInPlugin::RegisterWithRegistrar(
   registrar->AddPlugin(std::move(plugin));
 }
 
+std::optional<FlutterError> GoogleSignInPlugin::Init(const InitParams& params) {
+  spdlog::info("[GoogleSignInPlugin] Init");
+  const auto& scopes = params.scopes();
+  for (const auto& scope : scopes) {
+    plugin_common::Encodable::PrintFlutterEncodableValue("scope", scope);
+  }
+
+  switch (params.sign_in_type()) {
+    case SignInType::kStandard:
+      spdlog::info("\tSignInType::kStandard");
+      break;
+    case SignInType::kGames:
+      spdlog::info("\tSignInType::kGames");
+      break;
+  }
+
+  if (const auto hosted_domain = params.hosted_domain();
+      !hosted_domain->empty()) {
+    spdlog::info("\thosted_domain: {}", hosted_domain->c_str());
+  }
+  if (const auto client_id = params.client_id(); !client_id->empty()) {
+    spdlog::info("\tclient_id: {}", client_id->c_str());
+  }
+  if (const auto server_client_id = params.server_client_id();
+      !server_client_id->empty()) {
+    spdlog::info("\tserver_client_id: {}", server_client_id->c_str());
+  }
+  auto force_code_for_refresh_token = params.force_code_for_refresh_token();
+  spdlog::info("\tforce_code_for_refresh_token: {}",
+               force_code_for_refresh_token);
+
+  return {};
+}
+
+void GoogleSignInPlugin::SignInSilently(
+    std::function<void(ErrorOr<UserData> reply)> result) {
+  (void)result;
+  spdlog::info("[GoogleSignInPlugin] SignInSilently");
+}
+
+void GoogleSignInPlugin::SignIn(
+    std::function<void(ErrorOr<UserData> reply)> result) {
+  (void)result;
+  spdlog::info("[GoogleSignInPlugin] SignIn");
+}
+
+void GoogleSignInPlugin::GetAccessToken(
+    const std::string& email,
+    bool should_recover_auth,
+    std::function<void(ErrorOr<std::string> reply)> result) {
+  (void)result;
+  spdlog::info(
+      "[GoogleSignInPlugin] GetAccessToken: email={}, should_recover_auth={}",
+      email, should_recover_auth);
+}
+
+void GoogleSignInPlugin::SignOut(
+    std::function<void(std::optional<FlutterError> reply)> result) {
+  (void)result;
+  spdlog::info("[GoogleSignInPlugin] SignOut");
+}
+
+void GoogleSignInPlugin::Disconnect(
+    std::function<void(std::optional<FlutterError> reply)> result) {
+  (void)result;
+  spdlog::info("[GoogleSignInPlugin] Disconnect");
+}
+
+ErrorOr<bool> GoogleSignInPlugin::IsSignedIn() {
+  spdlog::info("[GoogleSignInPlugin] IsSignedIn");
+  return false;
+}
+
+void GoogleSignInPlugin::ClearAuthCache(
+    const std::string& token,
+    std::function<void(std::optional<FlutterError> reply)> result) {
+  (void)result;
+  spdlog::info("[GoogleSignInPlugin] ClearAuthCache: token={}", token);
+}
+
+void GoogleSignInPlugin::RequestScopes(
+    const flutter::EncodableList& scopes,
+    std::function<void(ErrorOr<bool> reply)> result) {
+  (void)scopes;
+  (void)result;
+}
+
+#if 0  // TODO
 rapidjson::Document GoogleSignInPlugin::GetClientSecret() {
   std::string path;
   if (const auto env_var = getenv(kClientSecretPathEnvironmentVariable)) {
@@ -603,5 +640,6 @@ flutter::EncodableValue GoogleSignInPlugin::GetTokens(
       GetCodec().EncodeErrorEnvelope("authentication_failure", "");
   return flutter::EncodableValue(std::move(result));
 }
+#endif  // TODO
 
 }  // namespace google_sign_in_plugin

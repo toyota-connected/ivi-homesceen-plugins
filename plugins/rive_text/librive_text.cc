@@ -19,6 +19,7 @@
 #include <iostream>
 
 #include <dlfcn.h>
+#include <shared_library/shared_library.h>
 
 #include "shared_library.h"
 
@@ -26,9 +27,9 @@ namespace plugin_rive_text {
 
 LibRiveTextExports::LibRiveTextExports(void* lib) {
   if (lib != nullptr) {
-    GetFuncAddress(lib, "init", &Initialize);
-    GetFuncAddress(lib, "disableFallbackFonts", &DisableFallbackFonts);
-    GetFuncAddress(lib, "enableFallbackFonts", &EnableFallbackFonts);
+    PluginGetFuncAddress(lib, "init", &Initialize);
+    PluginGetFuncAddress(lib, "disableFallbackFonts", &DisableFallbackFonts);
+    PluginGetFuncAddress(lib, "enableFallbackFonts", &EnableFallbackFonts);
   }
 }
 

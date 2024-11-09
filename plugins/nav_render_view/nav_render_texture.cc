@@ -5,8 +5,7 @@
 
 namespace nav_render_view_plugin {
 
-MAYBE_UNUSED
-static constexpr int kExpectedRenderApiVersion = 0x00010002;
+[[maybe_unused]] static constexpr int kExpectedRenderApiVersion = 0x00010002;
 
 void NavRenderTexture::RegisterWithRegistrar(
     flutter::PluginRegistrar* registrar) {
@@ -114,8 +113,7 @@ ErrorOr<flutter::EncodableMap> NavRenderTexture::Create(
   config.pfn_gl_loader = nullptr;
   config.native_window = nullptr;
 
-  MAYBE_UNUSED
-  auto ctx = LibNavRender->TextureInitialize2(&config);
+  [[maybe_unused]] auto ctx = LibNavRender->TextureInitialize2(&config);
 
   return ErrorOr(flutter::EncodableMap{});
 }

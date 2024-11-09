@@ -22,24 +22,25 @@
 #include <math/vec3.h>
 #include <utils/EntityManager.h>
 #include <list>
+#include <memory>
 #include <vector>
 
 using ::utils::Entity;
 
 namespace plugin_filament_view {
 
-class DebugLine {
+class DebugLine final {
  public:
   DebugLine(filament::math::float3 startingPoint,
             filament::math::float3 endingPoint,
             filament::Engine* engine,
-            std::shared_ptr<utils::Entity> entity,
+            std::shared_ptr<Entity> entity,
             float fTimeToLive);
-  virtual ~DebugLine() = default;
+  ~DebugLine() = default;
   void vCleanup(filament::Engine* engine);
 
   float m_fRemainingTime;
-  std::shared_ptr<utils::Entity> m_poEntity;
+  std::shared_ptr<Entity> m_poEntity;
 
   filament::VertexBuffer* m_poVertexBuffer = nullptr;
   filament::IndexBuffer* m_poIndexBuffer = nullptr;
@@ -49,7 +50,7 @@ class DebugLine {
   filament::Aabb boundingBox_;
 };
 
-class DebugLinesSystem : public ECSystem {
+class DebugLinesSystem final : public ECSystem {
  public:
   DebugLinesSystem() = default;
 

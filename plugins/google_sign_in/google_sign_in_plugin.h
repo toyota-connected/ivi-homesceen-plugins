@@ -20,9 +20,58 @@
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar.h>
 
-#include "messages.h"
+#include "messages.g.h"
 
 namespace google_sign_in_plugin {
+
+static constexpr auto kPeopleUrl =
+    "https://people.googleapis.com/v1/people/"
+    "me?personFields=photos,names,emailAddresses";
+
+// Key Constants
+static constexpr auto kKeyAccessToken = "access_token";
+static constexpr auto kKeyAuthCode = "auth_code";
+static constexpr auto kKeyAuthProviderX509CertUrl =
+    "auth_provider_x509_cert_url";
+static constexpr auto kKeyAuthUri = "auth_uri";
+static constexpr auto kKeyClientId = "client_id";
+static constexpr auto kKeyClientSecret = "client_secret";
+static constexpr auto kKeyCode = "code";
+static constexpr auto kKeyExpiresAt = "expires_at";
+static constexpr auto kKeyExpiresIn = "expires_in";
+static constexpr auto kKeyGrantType = "grant_type";
+static constexpr auto kKeyIdToken = "id_token";
+static constexpr auto kKeyInstalled = "installed";
+static constexpr auto kKeyProjectId = "project_id";
+static constexpr auto kKeyRefreshToken = "refresh_token";
+static constexpr auto kKeyRedirectUri = "redirect_uri";
+static constexpr auto kKeyRedirectUris = "redirect_uris";
+
+static constexpr auto kKeyScope = "scope";
+static constexpr auto kKeyTokenType = "token_type";
+static constexpr auto kKeyTokenUri = "token_uri";
+
+/// Value Constants
+static constexpr auto kValueAuthorizationCode = "authorization_code";
+static constexpr auto kValueRedirectUri = "urn:ietf:wg:oauth:2.0:oob";
+static constexpr auto kValueRefreshToken = "refresh_token";
+
+/// People Response Constants
+static constexpr auto kKeyDisplayName = "displayName";
+static constexpr auto kKeyEmailAddresses = "emailAddresses";
+static constexpr auto kKeyMetadata = "metadata";
+static constexpr auto kKeyNames = "names";
+static constexpr auto kKeyPhotos = "photos";
+static constexpr auto kKeyPrimary = "primary";
+static constexpr auto kKeyResourceName = "resourceName";
+static constexpr auto kKeySourcePrimary = "sourcePrimary";
+static constexpr auto kKeyUrl = "url";
+static constexpr auto kKeyValue = "value";
+
+static constexpr auto kClientCredentialsPathEnvironmentVariable =
+    "GOOGLE_API_OAUTH2_CLIENT_CREDENTIALS";
+static constexpr auto kClientSecretPathEnvironmentVariable =
+    "GOOGLE_API_OAUTH2_CLIENT_SECRET_JSON";
 
 class GoogleSignInPlugin final : public flutter::Plugin,
                                  public GoogleSignInApi {
@@ -33,151 +82,42 @@ class GoogleSignInPlugin final : public flutter::Plugin,
 
   ~GoogleSignInPlugin() override = default;
 
-  /**
-   * @brief Function to return client secret object
-   * @return rapidjson::Document
-   * @retval Returns document of client secret file, empty object if error
-   * @relation
-   * google_sign_in
-   */
-  static rapidjson::Document GetClientSecret();
+  // Initializes a sign in request with the given parameters.
+  std::optional<FlutterError> Init(const InitParams& params) override;
 
-  /**
-   * @brief Function to update client credential file
-   * @return rapidjson::Document
-   * @retval Returns document of client credentials file, empty object if error
-   * @relation
-   * google_sign_in
-   */
-  static rapidjson::Document GetClientCredentials();
+  // Starts a silent sign in.
+  void SignInSilently(
+      std::function<void(ErrorOr<UserData> reply)> result) override;
 
-  /**
-   * @brief Function to update client credential file
-   * @param client_credential_doc document of credential object
-   * @return bool
-   * @retval Returns true if file has been updated, false otherwise
-   * @relation
-   * google_sign_in
-   */
-  static bool UpdateClientCredentialFile(
-      const rapidjson::Document& client_credential_doc);
+  // Starts a sign in with user interaction.
+  void SignIn(std::function<void(ErrorOr<UserData> reply)> result) override;
 
-  /**
-   * @brief Function to swap authorization code for OAuth2 token
-   * @param client_secret_doc document of secret object
-   * @param client_credential_doc document of credential object
-   * @return rapidjson::Document
-   * @retval Returns empty object if failed, or populated object if refreshed
-   * @relation
-   * google_sign_in
-   */
-  static rapidjson::Document SwapAuthCodeForToken(
-      rapidjson::Document& client_secret_doc,
-      rapidjson::Document& client_credential_doc);
+  // Requests the access token for the current sign in.
+  void GetAccessToken(
+      const std::string& email,
+      bool should_recover_auth,
+      std::function<void(ErrorOr<std::string> reply)> result) override;
 
-  /**
-   * @brief Function to refresh the OAuth2 token
-   * @param client_secret_doc document of secret object
-   * @param client_credential_doc document of credential object
-   * @return rapidjson::Document
-   * @retval Returns credential object. empty object if failed
-   * @relation
-   * google_sign_in
-   */
-  static rapidjson::Document RefreshToken(
-      rapidjson::Document& client_secret_doc,
-      rapidjson::Document& client_credential_doc);
+  // Signs out the current user.
+  void SignOut(
+      std::function<void(std::optional<FlutterError> reply)> result) override;
 
-  /**
-   * @brief Function to create the default credential file
-   * @return bool
-   * @retval Returns true if file has been created, otherwise false
-   * @relation
-   * google_sign_in
-   */
-  static bool CreateDefaultClientCredentialFile();
+  // Revokes scope grants to the application.
+  void Disconnect(
+      std::function<void(std::optional<FlutterError> reply)> result) override;
 
-  /**
-   * @brief Function to construct Authorization URL
-   * @param[in] secret_doc rapidjson document pointer to credentials
-   * @param[in] scopes vector of strings containing desired scopes
-   * @return std::string
-   * @relation
-   * google_sign_in
-   */
-  static std::string GetAuthUrl(rapidjson::Document& secret_doc,
-                                const std::vector<std::string>& scopes);
+  // Returns whether the user is currently signed in.
+  ErrorOr<bool> IsSignedIn() override;
 
-  /**
-   * @brief Function to determine if auth_code key is present in document
-   * @param[in] credentials_doc rapidjson document pointer to credentials
-   * @return bool
-   * @relation
-   * google_sign_in
-   */
-  static bool AuthCodeValuePresent(rapidjson::Document& credentials_doc);
+  // Clears the authentication caching for the given token, requiring a
+  // new sign in.
+  void ClearAuthCache(
+      const std::string& token,
+      std::function<void(std::optional<FlutterError> reply)> result) override;
 
-  /**
-   * @brief Function to validate secret object
-   * @param secret_doc document of secret object
-   * @return bool
-   * @retval Returns true if secret object is valid, false if not
-   * @relation
-   * google_sign_in
-   */
-  static bool SecretJsonPopulated(rapidjson::Document& secret_doc);
-
-  /**
-   * @brief Function to validate credentials object
-   * @param credentials_doc document of credentials object
-   * @return bool
-   * @retval Returns true if secret object is valid, false if not
-   * @relation
-   * google_sign_in
-   */
-  static bool CredentialsJsonPopulated(rapidjson::Document& credentials_doc);
-
-  /**
-   * @brief GetTokens
-   * @param requestedScopes vector of strings - requested scopes to authorize
-   * with
-   * @param hostedDomain hosted domain
-   * @param signInOption sign in option
-   * @param clientId client id
-   * @param serverClientId server client id
-   * @param forceCodeForRefreshToken boot
-   * @return void
-   * @relation
-   * google_sign_in
-   */
-  void Init(const std::vector<std::string>& requestedScopes,
-            std::string hostedDomain,
-            std::string signInOption,
-            std::string clientId,
-            std::string serverClientId,
-            bool forceCodeForRefreshToken) override;
-
-  /**
-   * @brief GetUserData
-   * @return std::unique_ptr<std::vector<uint8_t>>
-   * @retval Returns value suitable to send to engine
-   * @relation
-   * google_sign_in
-   */
-  flutter::EncodableValue GetUserData() override;
-
-  /**
-   * @brief GetTokens
-   * @param email
-   * @param shouldRecoverAuth
-   * @param shouldRecoverAuth flag to recover auth
-   * @return flutter::EncodableValue
-   * @retval Returns value suitable to send to engine
-   * @relation
-   * google_sign_in
-   */
-  flutter::EncodableValue GetTokens(const std::string& email,
-                                    bool shouldRecoverAuth) override;
+  // Requests access to the given scopes.
+  void RequestScopes(const flutter::EncodableList& scopes,
+                     std::function<void(ErrorOr<bool> reply)> result) override;
 
   // Disallow copy and assign.
   GoogleSignInPlugin(const GoogleSignInPlugin&) = delete;

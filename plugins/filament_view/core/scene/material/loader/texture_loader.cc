@@ -15,12 +15,12 @@
  */
 #include "texture_loader.h"
 
+#include <common/curl_client/curl_client.h>
 #include <core/include/file_utils.h>
 #include <core/include/literals.h>
 #include <core/systems/derived/filament_system.h>
 #include <core/systems/ecsystems_manager.h>
 #include <imageio/ImageDecoder.h>
-#include <plugins/common/curl_client/curl_client.h>
 #include <stb_image.h>
 #include <memory>
 
@@ -135,6 +135,10 @@ filament::Texture* TextureLoader::loadTextureFromStream(
 filament::Texture* TextureLoader::loadTextureFromUrl(
     const std::string& url,
     const TextureDefinitions::TextureType type) {
+  (void)url;
+  (void)type;
+  spdlog::error("[{}] Not implemented!", __FUNCTION__);
+#if 0  // TODO
   plugin_common_curl::CurlClient client;
   client.Init(url, {}, {});
   std::vector<uint8_t> buffer = client.RetrieveContentAsVector();
@@ -144,6 +148,8 @@ filament::Texture* TextureLoader::loadTextureFromUrl(
   }
   const std::string str(buffer.begin(), buffer.end());
   return loadTextureFromStream(str, type);
+#endif
+  return nullptr;
 }
 
 }  // namespace plugin_filament_view
