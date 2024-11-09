@@ -4,7 +4,6 @@
 
 #include "flutter_frame_capturer.h"
 
-#include <utility>
 #include "svpng.hpp"
 
 namespace flutter_webrtc_plugin {

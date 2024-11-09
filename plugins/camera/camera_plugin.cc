@@ -41,15 +41,14 @@ static std::unique_ptr<libcamera::CameraManager> g_camera_manager;
 static std::vector<std::shared_ptr<CameraContext>> g_cameras;
 
 // static
-void CameraPlugin::RegisterWithRegistrar(
-    flutter::PluginRegistrarDesktop* registrar) {
+void CameraPlugin::RegisterWithRegistrar(flutter::PluginRegistrar* registrar) {
   auto plugin =
       std::make_unique<CameraPlugin>(registrar, registrar->messenger());
   SetUp(registrar->messenger(), plugin.get());
   registrar->AddPlugin(std::move(plugin));
 }
 
-CameraPlugin::CameraPlugin(flutter::PluginRegistrarDesktop* plugin_registrar,
+CameraPlugin::CameraPlugin(flutter::PluginRegistrar* plugin_registrar,
                            flutter::BinaryMessenger* messenger)
     : registrar_(plugin_registrar), messenger_(messenger) {
   g_camera_manager = std::make_unique<libcamera::CameraManager>();

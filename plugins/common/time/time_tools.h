@@ -20,8 +20,6 @@
 #include <cstdint>
 #include <string>
 
-#include "config/common.h"
-
 namespace plugin_common::TimeTools {
 
 /**
@@ -30,11 +28,9 @@ namespace plugin_common::TimeTools {
  * @relation
  * internal
  */
-MAYBE_UNUSED
-int64_t GetEpochTimeInSeconds();
+[[maybe_unused]] int64_t GetEpochTimeInSeconds();
 
-MAYBE_UNUSED
-std::string GetCurrentTimeString();
+[[maybe_unused]] std::string GetCurrentTimeString();
 
 }  // namespace plugin_common::TimeTools
 

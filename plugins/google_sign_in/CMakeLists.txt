@@ -17,7 +17,7 @@
 add_library(plugin_google_sign_in STATIC
         google_sign_in_plugin_c_api.cc
         google_sign_in_plugin.cc
-        messages.cc
+        messages.g.cc
 )
 
 target_include_directories(plugin_google_sign_in PRIVATE include)

@@ -17,10 +17,6 @@
 #ifndef PLUGINS_COMMON_JSON_JSON_UTILS_H_
 #define PLUGINS_COMMON_JSON_JSON_UTILS_H_
 
-#include "config/common.h"
-
-#include "rapidjson/rapidjson.h"
-
 #include "rapidjson/document.h"
 
 namespace plugin_common::JsonUtils {

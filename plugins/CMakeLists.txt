@@ -47,9 +47,9 @@ macro(ENABLE_PLUGIN plugin)
     endif ()
 
 
-    target_link_libraries(plugins INTERFACE plugin_${plugin})
+    target_link_libraries(plugins PUBLIC plugin_${plugin})
 
-    target_compile_definitions(plugins INTERFACE ENABLE_PLUGIN_${ucase_plugin})
+    target_compile_definitions(plugins PUBLIC ENABLE_PLUGIN_${ucase_plugin})
 
     #print_target_properties(plugin_${plugin})
 
@@ -59,7 +59,11 @@ macro(PLUGIN_OPTION plugin description default)
 
     string(TOUPPER ${plugin} ucase_plugin)
 
-    option(BUILD_PLUGIN_${ucase_plugin} ${description} ${default})
+    if (ENABLE_PLUGINS)
+        option(BUILD_PLUGIN_${ucase_plugin} ${description} ${default})
+    else ()
+        set(BUILD_PLUGIN_${ucase_plugin} OFF)
+    endif ()
 
     set(ENABLE_PLUGIN_${ucase_plugin} OFF)
     if (BUILD_PLUGIN_${ucase_plugin})
@@ -69,11 +73,12 @@ macro(PLUGIN_OPTION plugin description default)
 endmacro(PLUGIN_OPTION)
 
 # target used at top level
-add_library(plugins INTERFACE)
+add_library(plugins generated_plugin_registrant.cc)
+target_include_directories(plugins PUBLIC . ${CMAKE_BINARY_DIR} ${PLUGINS_DIR})
+target_link_libraries(plugins PUBLIC rapidjson spdlog flutter)
 
 # Plugins
-
-add_subdirectory(common)
+PLUGIN_OPTION(common "Includes Common Plugin" ON)
 
 PLUGIN_OPTION(audioplayers_linux "Include Audioplayers Linux plugin" OFF)
 

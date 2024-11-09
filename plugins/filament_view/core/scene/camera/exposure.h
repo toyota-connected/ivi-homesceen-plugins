@@ -19,6 +19,7 @@
 #include "shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
 
 #include <core/scene/camera/camera_manager.h>
+#include <memory>
 #include <optional>
 
 namespace plugin_filament_view {

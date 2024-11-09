@@ -157,7 +157,7 @@ jobs:
             -D BUILD_CRASH_HANDLER=OFF \
             -D ENABLE_LTO=ON \
             \
-            -D PLUGINS_DIR=${{github.workspace}}/plugins \
+            -D PLUGINS_DIR=${{github.workspace}}/plugins/plugins \
             \
             -D DEBUG_PLATFORM_MESSAGES=OFF \
             \
@@ -200,7 +200,7 @@ jobs:
         with:
           path: |
             ${{github.workspace}}/ivi-homescreen/build/*
-          key: ${{ runner.os }}-homescreen      
+          key: ${{ runner.os }}-homescreen
 
       - name: Build Homescreen
         if: steps.cache-homescreen.outputs.cache-hit != 'true'
@@ -233,5 +233,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-            name: clang-tidy-results
-            path: tidy-results-*
+          name: clang-tidy-results
+          path: tidy-results-*

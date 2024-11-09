@@ -80,9 +80,9 @@ class WebviewFlutterPlugin final : public flutter::Plugin,
     ~WebviewPlatformView() override = default;
 
    private:
-    MAYBE_UNUSED int32_t id_;
+    [[maybe_unused]] int32_t id_;
     void* platformViewsContext_;
-    MAYBE_UNUSED PlatformViewRemoveListener removeListener_;
+    [[maybe_unused]] PlatformViewRemoveListener removeListener_;
     const std::string flutterAssetsPath_;
 
     wl_display* display_;

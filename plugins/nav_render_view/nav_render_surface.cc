@@ -255,7 +255,11 @@ void NavRenderSurface::on_set_direction(int32_t direction, void* data) {
   static_cast<NavRenderSurface*>(data)->direction_ = direction;
 }
 
-void NavRenderSurface::on_set_offset(double left, double top, void* data) {
+void NavRenderSurface::on_set_offset(const double left,
+                                     const double top,
+                                     void* data) {
+  (void)left;
+  (void)top;
   SPDLOG_TRACE("[NavRenderSurface] on_set_offset: left: {}, top: {}", left,
                top);
   if (!data) {
@@ -265,11 +269,14 @@ void NavRenderSurface::on_set_offset(double left, double top, void* data) {
                                                   static_cast<int32_t>(top));
 }
 
-void NavRenderSurface::on_touch(int32_t action,
-                                int32_t point_count,
+void NavRenderSurface::on_touch(const int32_t action,
+                                const int32_t point_count,
                                 const size_t point_data_size,
                                 const double* /* point_data */,
                                 void* /* data */) {
+  (void)action;
+  (void)point_count;
+  (void)point_data_size;
   SPDLOG_TRACE(
       "[NavRenderSurface] on_touch: action: {}, point_count: {}, "
       "point_data_size: {}",

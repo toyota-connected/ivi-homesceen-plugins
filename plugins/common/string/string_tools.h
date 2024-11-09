@@ -20,8 +20,6 @@
 #include <string>
 #include <vector>
 
-#include "config/common.h"
-
 namespace plugin_common::StringTools {
 
 /**

@@ -44,14 +44,15 @@ add_library(plugin_webrtc STATIC
 
 target_compile_definitions(plugin_webrtc PRIVATE -DRTC_DESKTOP_DEVICE)
 
+target_compile_options(plugin_webrtc PRIVATE -isystem${CMAKE_CURRENT_SOURCE_DIR}/third_party/svpng)
+
 target_include_directories(plugin_webrtc PRIVATE
         include
-        third_party/svpng
         third_party/flutter-webrtc/common/cpp/include
 )
 
 # mask third party header warnings
-target_compile_options(plugin_webrtc INTERFACE -isystem${LIBWEBRTC_INC_DIR})
+target_compile_options(plugin_webrtc PRIVATE -isystem${LIBWEBRTC_INC_DIR})
 
 target_link_libraries(plugin_webrtc PUBLIC
         flutter

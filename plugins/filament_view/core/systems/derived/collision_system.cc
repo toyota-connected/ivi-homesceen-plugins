@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 #include "collision_system.h"
+
+#include <standard_method_codec.h>
+
 #include "filament_system.h"
 
 #include <core/entity/derived/model/model.h>

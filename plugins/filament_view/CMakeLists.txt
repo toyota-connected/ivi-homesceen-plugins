@@ -32,7 +32,7 @@ include(FindThreads)
 add_library(filament INTERFACE
         core/include/shapetypes.h)
 target_compile_options(filament INTERFACE -isystem${FILAMENT_INCLUDE_DIR} -isystem${FILAMENT_INCLUDE_DIR}/filament)
-target_link_directories(filament INTERFACE ${FILAMENT_LINK_LIBRARIES_DIR})
+target_link_options(filament INTERFACE -L${FILAMENT_LINK_LIBRARIES_DIR})
 target_link_libraries(filament INTERFACE
         libbackend.a
         libbluevk.a
@@ -132,12 +132,12 @@ target_include_directories(plugin_filament_view PUBLIC
 )
 
 target_link_libraries(plugin_filament_view PUBLIC
-        asio
-        filament
-        flutter
         platform_homescreen
         plugin_common
         plugin_common_curl
+        filament
+        flutter
+        asio
 )
 
 #

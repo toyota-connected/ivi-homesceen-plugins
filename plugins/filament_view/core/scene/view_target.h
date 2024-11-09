@@ -85,7 +85,7 @@ class ViewTarget {
  private:
   void setupWaylandSubsurface();
 
-  [[maybe_unused]] FlutterDesktopEngineState* state_;
+  FlutterDesktopEngineState* state_;
   filament::viewer::Settings settings_;
   filament::gltfio::FilamentAsset* asset_{};
   int32_t left_;

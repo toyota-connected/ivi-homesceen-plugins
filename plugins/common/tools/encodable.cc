@@ -16,7 +16,7 @@
 
 #include "encodable.h"
 
-#include "../common.h"
+#include "../logging.h"
 
 namespace plugin_common::Encodable {
 

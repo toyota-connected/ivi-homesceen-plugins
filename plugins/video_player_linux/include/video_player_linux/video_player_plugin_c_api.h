@@ -17,7 +17,7 @@
 #ifndef PLUGINS_VIDEO_PLAYER_LINUX_INCLUDE_VIDEO_PLAYER_LINUX_VIDEO_PLAYER_PLUGIN_C_API_H_
 #define PLUGINS_VIDEO_PLAYER_LINUX_INCLUDE_VIDEO_PLAYER_LINUX_VIDEO_PLAYER_PLUGIN_C_API_H_
 
-#include "flutter_desktop_plugin_registrar.h"
+#include "flutter_homescreen.h"
 
 #ifdef FLUTTER_PLUGIN_IMPL
 #define FLUTTER_PLUGIN_EXPORT __attribute__((visibility("default")))
