@@ -25,6 +25,7 @@ namespace plugin_filament_view {
 class TextureDefinitions {
  public:
   enum TextureType {
+    UNKNOWN,
     COLOR,
     NORMAL,
     DATA,

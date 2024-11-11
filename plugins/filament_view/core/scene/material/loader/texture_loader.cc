@@ -38,9 +38,9 @@ inline filament::backend::TextureFormat internalFormat(
     case TextureDefinitions::TextureType::NORMAL:
     case TextureDefinitions::TextureType::DATA:
       return filament::backend::TextureFormat::RGBA8;
+    default:
+      throw std::runtime_error("Invalid texture type");
   }
-
-  throw std::runtime_error("Invalid texture type");
 }
 
 ////////////////////////////////////////////////////////////////////////////

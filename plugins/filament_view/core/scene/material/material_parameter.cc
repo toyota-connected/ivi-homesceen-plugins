@@ -109,8 +109,6 @@ std::unique_ptr<MaterialParameter> MaterialParameter::Deserialize(
                     getTextForType(type.value()));
       return {};
   }
-  SPDLOG_TRACE("--{}::{}", __FILE__, __FUNCTION__);
-  return {};
 }
 
 ////////////////////////////////////////////////////////////////////////////

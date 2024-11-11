@@ -31,7 +31,6 @@
 #include <filament/utils/Slice.h>
 #include <algorithm>  // for max
 #include <asio/post.hpp>
-#include <sstream>
 
 #include "entityobject_locator_system.h"
 
