@@ -65,7 +65,10 @@ std::unique_ptr<TextureDefinitions> TextureDefinitions::Deserialize(
     } else if (key == "url" && std::holds_alternative<std::string>(snd)) {
       url = std::get<std::string>(snd);
     } else if (key == "type" && std::holds_alternative<std::string>(snd)) {
-      type = getType(std::get<std::string>(snd));
+      if (auto decodedType = getType(std::get<std::string>(snd));
+          decodedType != UNKNOWN) {
+        type = decodedType;
+      }
     } else if (key == "sampler" &&
                std::holds_alternative<flutter::EncodableMap>(snd)) {
       sampler = std::make_unique<TextureSampler>(
@@ -117,7 +120,10 @@ TextureDefinitions::TextureType TextureDefinitions::getType(
   if (type == kTypeData) {
     return DATA;
   }
-  assert(false);
+
+  spdlog::warn("{}::{}::{} - unknown type {}", __FILE__, __FUNCTION__, __LINE__,
+               type.c_str());
+  return UNKNOWN;
 }
 
 ////////////////////////////////////////////////////////////////////////////
