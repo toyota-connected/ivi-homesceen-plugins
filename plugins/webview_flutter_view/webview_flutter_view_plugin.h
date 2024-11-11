@@ -138,6 +138,7 @@ class WebviewPlatformView final : public PlatformView {
   // std::unique_ptr<_cef_render_handler_t> renderHandler_;
 
   void InitializeEGL();
+  void InitializeScene();
 
   static void on_frame(void* data, wl_callback* callback, uint32_t time);
   static const wl_callback_listener frame_listener;
@@ -155,45 +156,26 @@ class WebviewPlatformView final : public PlatformView {
   static const platform_view_listener platform_view_listener_;
 };
 
-class WebviewFlutterPlugin final : public flutter::Plugin,
-                                   public InstanceManagerHostApi,
-                                   public WebStorageHostApi,
-                                   public WebViewHostApi,
-                                   public WebSettingsHostApi,
-                                   public WebChromeClientHostApi,
-                                   public WebViewClientHostApi,
-                                   public DownloadListenerHostApi,
-                                   public JavaScriptChannelHostApi,
-                                   public CookieManagerHostApi {
+class WebviewFlutterInstanceManagerHostApi : public InstanceManagerHostApi {
  public:
-  static void RegisterWithRegistrar(flutter::PluginRegistrar* registrar);
+  ~WebviewFlutterInstanceManagerHostApi() override;
 
-  static void PlatformViewCreate(int32_t id,
-                                 std::string viewType,
-                                 int32_t direction,
-                                 double top,
-                                 double left,
-                                 double width,
-                                 double height,
-                                 const std::vector<uint8_t>& params,
-                                 std::string assetDirectory,
-                                 FlutterDesktopEngineRef engine,
-                                 PlatformViewAddListener addListener,
-                                 PlatformViewRemoveListener removeListener,
-                                 void* platform_view_context);
-
-  WebviewFlutterPlugin();
-
-  ~WebviewFlutterPlugin() override;
-
- private:
-
- public:
   std::optional<FlutterError> Clear() override;
+};
+class WebviewFlutterWebStorageHostApi : public WebStorageHostApi {
+ public:
+  ~WebviewFlutterWebStorageHostApi() override;
 
   std::optional<FlutterError> Create(int64_t instance_id) override;
 
   std::optional<FlutterError> DeleteAllData(int64_t instance_id) override;
+};
+
+class WebviewFlutterWebViewHostApi : public WebViewHostApi {
+ public:
+  ~WebviewFlutterWebViewHostApi() override;
+  
+  std::optional<FlutterError> Create(int64_t instance_id) override;
 
   std::optional<FlutterError> LoadData(int64_t instance_id,
                                        const std::string& data,
@@ -239,8 +221,6 @@ class WebviewFlutterPlugin final : public flutter::Plugin,
       std::function<void(ErrorOr<std::optional<std::string>> reply)> result)
       override;
 
-  std::optional<FlutterError> Create(int64_t instance_id,
-                                     const std::string& channel_name) override;
 
   ErrorOr<std::optional<std::string>> GetTitle(int64_t instance_id) override;
 
@@ -284,6 +264,13 @@ class WebviewFlutterPlugin final : public flutter::Plugin,
   std::optional<FlutterError> SetBackgroundColor(int64_t instance_id,
                                                  int64_t color) override;
 
+};
+
+
+class WebviewFlutterWebSettingsHostApi : public WebSettingsHostApi {
+ public:
+  ~WebviewFlutterWebSettingsHostApi() override;
+
   std::optional<FlutterError> Create(int64_t instance_id,
                                      int64_t web_view_instance_id) override;
 
@@ -317,6 +304,13 @@ class WebviewFlutterPlugin final : public flutter::Plugin,
   std::optional<FlutterError> SetTextZoom(int64_t instance_id,
                                           int64_t text_zoom) override;
   ErrorOr<std::string> GetUserAgentString(int64_t instance_id) override;
+};
+
+class WebviewFlutterWebChromeClientHostApi : public WebChromeClientHostApi {
+ public:
+  ~WebviewFlutterWebChromeClientHostApi() override;
+  
+  std::optional<FlutterError> Create(int64_t instance_id) override;
 
   std::optional<FlutterError> SetSynchronousReturnValueForOnShowFileChooser(
       int64_t instance_id,
@@ -324,10 +318,6 @@ class WebviewFlutterPlugin final : public flutter::Plugin,
   std::optional<FlutterError> SetSynchronousReturnValueForOnConsoleMessage(
       int64_t instance_id,
       bool value) override;
-
-  std::optional<FlutterError>
-  SetSynchronousReturnValueForShouldOverrideUrlLoading(int64_t instance_id,
-                                                       bool value) override;
 
   std::optional<FlutterError> SetSynchronousReturnValueForOnJsAlert(
       int64_t instance_id,
@@ -338,6 +328,43 @@ class WebviewFlutterPlugin final : public flutter::Plugin,
   std::optional<FlutterError> SetSynchronousReturnValueForOnJsPrompt(
       int64_t instance_id,
       bool value) override;
+};
+
+
+class WebviewFlutterWebViewClientHostApi : public WebViewClientHostApi {
+ public:
+  ~WebviewFlutterWebViewClientHostApi() override;
+  
+  std::optional<FlutterError> Create(int64_t instance_id) override;
+
+  std::optional<FlutterError>
+  SetSynchronousReturnValueForShouldOverrideUrlLoading(int64_t instance_id,
+                                                       bool value) override;
+};
+
+
+class WebviewFlutterDownloadListenerHostApi : public DownloadListenerHostApi {
+ public:
+  ~WebviewFlutterDownloadListenerHostApi() override;
+  
+  std::optional<FlutterError> Create(int64_t instance_id) override;
+
+};
+
+
+class WebviewFlutterJavaScriptChannelHostApi : public JavaScriptChannelHostApi {
+ public:
+  ~WebviewFlutterJavaScriptChannelHostApi() override;
+
+  std::optional<FlutterError> Create(int64_t instance_id,
+                                     const std::string& channel_name) override;
+};
+
+
+class WebviewFlutterCookieManagerHostApi : public CookieManagerHostApi {
+ public:
+  ~WebviewFlutterCookieManagerHostApi() override;
+
 
   std::optional<FlutterError> AttachInstance(
       int64_t instance_identifier) override;
@@ -355,9 +382,43 @@ class WebviewFlutterPlugin final : public flutter::Plugin,
       int64_t web_view_identifier,
       bool accept) override;
 
+};
+
+class WebviewFlutterPlugin final : public flutter::Plugin {
+ public:
+  static void RegisterWithRegistrar(flutter::PluginRegistrar* registrar);
+
+  static void PlatformViewCreate(int32_t id,
+                                 std::string viewType,
+                                 int32_t direction,
+                                 double top,
+                                 double left,
+                                 double width,
+                                 double height,
+                                 const std::vector<uint8_t>& params,
+                                 std::string assetDirectory,
+                                 FlutterDesktopEngineRef engine,
+                                 PlatformViewAddListener addListener,
+                                 PlatformViewRemoveListener removeListener,
+                                 void* platform_view_context);
+
+  WebviewFlutterPlugin();
+
+  ~WebviewFlutterPlugin() override;
+
   // Disallow copy and assign.
   WebviewFlutterPlugin(const WebviewFlutterPlugin&) = delete;
   WebviewFlutterPlugin& operator=(const WebviewFlutterPlugin&) = delete;
+
+  WebviewFlutterInstanceManagerHostApi    m_InstanceManagerHostApi;
+  WebviewFlutterWebStorageHostApi         m_WebStorageHostApi;
+  WebviewFlutterWebViewHostApi            m_WebViewHostApi;
+  WebviewFlutterWebSettingsHostApi        m_WebSettingsHostApi;
+  WebviewFlutterWebChromeClientHostApi    m_WebChromeClientHostApi;
+  WebviewFlutterWebViewClientHostApi      m_WebViewClientHostApi;
+  WebviewFlutterDownloadListenerHostApi   m_DownloadListenerHostApi;
+  WebviewFlutterJavaScriptChannelHostApi  m_JavaScriptChannelHostApi;
+  WebviewFlutterCookieManagerHostApi      m_CookieManagerHostApi;
 };
 
 }  // namespace plugin_webview_flutter
