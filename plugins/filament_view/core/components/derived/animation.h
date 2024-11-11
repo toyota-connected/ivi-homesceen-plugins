@@ -13,32 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include <string>
-#include <vector>
+#include "shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
+
+#include <core/components/base/component.h>
+#include <filament/math/quat.h>
+
 namespace plugin_filament_view {
 
-class AnimationManager {
+class Animation : public Component {
  public:
-  AnimationManager();
+  // Constructor
+  explicit Animation(const flutter::EncodableMap& params);
 
-  [[nodiscard]] std::vector<std::string> getAnimationNames() const {
-    return animationNames_;
+  void DebugPrint(const std::string& tabPrefix) const override;
+
+  static size_t StaticGetTypeID() { return typeid(Animation).hash_code(); }
+
+  [[nodiscard]] size_t GetTypeID() const override { return StaticGetTypeID(); }
+
+ [[nodiscard]] Component* Clone() const override {
+   return new Animation(*this);
   }
 
-  [[nodiscard]] int32_t getAnimationCount() const { return animationCount_; }
-
-  // Disallow copy and assign.
-  AnimationManager(const AnimationManager&) = delete;
-
-  AnimationManager& operator=(const AnimationManager&) = delete;
-
-  friend class SceneController;
-
  private:
-  int32_t animationCount_ = 0;
-  std::vector<std::string> animationNames_;
+  int32_t index_{};
+  std::string name_;
+  bool auto_play_{};
+  std::string asset_path_;
 };
+
 }  // namespace plugin_filament_view

@@ -132,6 +132,9 @@ static constexpr char kRight[] = "right";
 static constexpr char kBottom[] = "bottom";
 static constexpr char kTop[] = "top";
 static constexpr char kFovInDegrees[] = "fovInDegrees";
+static constexpr char kAutoPlay[] = "autoPlay";
+static constexpr char kIndex[] = "index";
+static constexpr char kAnimation[] = "animation";
 
 // specific collidable values:
 static constexpr char kCollidable[] = "collidable";

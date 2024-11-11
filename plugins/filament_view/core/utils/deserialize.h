@@ -98,6 +98,11 @@ class Deserialize {
                                          const flutter::EncodableMap& params,
                                          const double& default_value);
 
+  static void DecodeParameterWithDefault(const char* key,
+                                       std::string* out_value,
+                                       const flutter::EncodableMap& params,
+                                       const std::string& default_value);
+
   static void DecodeParameterWithDefaultInt64(
       const char* key,
       int64_t* out_value,
