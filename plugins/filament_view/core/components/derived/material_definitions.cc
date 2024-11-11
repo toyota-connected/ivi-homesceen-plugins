@@ -211,7 +211,9 @@ void MaterialDefinitions::vSetMaterialInstancePropertiesFromMyPropertyMap(
   const auto count = materialResult->getParameterCount();
   std::vector<filament::Material::ParameterInfo> parameters(count);
 
-  if (const auto actual = materialResult->getParameters(parameters.data(), count); count != actual || actual != parameters.size()) {
+  if (const auto actual =
+          materialResult->getParameters(parameters.data(), count);
+      count != actual || actual != parameters.size()) {
     spdlog::warn(
         "Count of parameters from the material instance and loaded material do "
         "not match; doesn't technically need to, but not ideal and could leave "

@@ -65,7 +65,8 @@ std::unique_ptr<TextureDefinitions> TextureDefinitions::Deserialize(
     } else if (key == "url" && std::holds_alternative<std::string>(snd)) {
       url = std::get<std::string>(snd);
     } else if (key == "type" && std::holds_alternative<std::string>(snd)) {
-      if (auto decodedType = getType(std::get<std::string>(snd)); decodedType != UNKNOWN) {
+      if (auto decodedType = getType(std::get<std::string>(snd));
+          decodedType != UNKNOWN) {
         type = decodedType;
       }
     } else if (key == "sampler" &&
