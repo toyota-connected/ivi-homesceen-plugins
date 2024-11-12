@@ -46,12 +46,11 @@ void AnimationSystem::vInitSystem() {
 
         const EntityGUID& guid =
             msg.getData<EntityGUID>(ECSMessageType::EntityToTarget);
-        auto animationIndex =
+        const auto animationIndex =
             msg.getData<int32_t>(ECSMessageType::AnimationEnqueue);
 
-        auto it = _entities.find(guid);
-        if (it != _entities.end()) {
-          auto animationComponent = dynamic_cast<Animation*>(
+        if (const auto it = _entities.find(guid); it != _entities.end()) {
+          const auto animationComponent = dynamic_cast<Animation*>(
               it->second
                   ->GetComponentByStaticTypeID(Animation::StaticGetTypeID())
                   .get());
@@ -70,9 +69,8 @@ void AnimationSystem::vInitSystem() {
         const EntityGUID& guid =
             msg.getData<EntityGUID>(ECSMessageType::EntityToTarget);
 
-        auto it = _entities.find(guid);
-        if (it != _entities.end()) {
-          auto animationComponent = dynamic_cast<Animation*>(
+        if (const auto it = _entities.find(guid); it != _entities.end()) {
+          const auto animationComponent = dynamic_cast<Animation*>(
               it->second
                   ->GetComponentByStaticTypeID(Animation::StaticGetTypeID())
                   .get());
@@ -90,12 +88,11 @@ void AnimationSystem::vInitSystem() {
 
         const EntityGUID& guid =
             msg.getData<EntityGUID>(ECSMessageType::EntityToTarget);
-        auto animationIndex =
+        const auto animationIndex =
             msg.getData<int32_t>(ECSMessageType::AnimationPlay);
 
-        auto it = _entities.find(guid);
-        if (it != _entities.end()) {
-          auto animationComponent = dynamic_cast<Animation*>(
+        if (const auto it = _entities.find(guid); it != _entities.end()) {
+          const auto animationComponent = dynamic_cast<Animation*>(
               it->second
                   ->GetComponentByStaticTypeID(Animation::StaticGetTypeID())
                   .get());
@@ -113,12 +110,11 @@ void AnimationSystem::vInitSystem() {
 
         const EntityGUID& guid =
             msg.getData<EntityGUID>(ECSMessageType::EntityToTarget);
-        auto newSpeed =
+        const auto newSpeed =
             msg.getData<float>(ECSMessageType::AnimationChangeSpeed);
 
-        auto it = _entities.find(guid);
-        if (it != _entities.end()) {
-          auto animationComponent = dynamic_cast<Animation*>(
+        if (const auto it = _entities.find(guid); it != _entities.end()) {
+          const auto animationComponent = dynamic_cast<Animation*>(
               it->second
                   ->GetComponentByStaticTypeID(Animation::StaticGetTypeID())
                   .get());
@@ -137,9 +133,8 @@ void AnimationSystem::vInitSystem() {
         const EntityGUID& guid =
             msg.getData<EntityGUID>(ECSMessageType::EntityToTarget);
 
-        auto it = _entities.find(guid);
-        if (it != _entities.end()) {
-          auto animationComponent = dynamic_cast<Animation*>(
+        if (const auto it = _entities.find(guid); it != _entities.end()) {
+          const auto animationComponent = dynamic_cast<Animation*>(
               it->second
                   ->GetComponentByStaticTypeID(Animation::StaticGetTypeID())
                   .get());
@@ -158,9 +153,8 @@ void AnimationSystem::vInitSystem() {
         const EntityGUID& guid =
             msg.getData<EntityGUID>(ECSMessageType::EntityToTarget);
 
-        auto it = _entities.find(guid);
-        if (it != _entities.end()) {
-          auto animationComponent = dynamic_cast<Animation*>(
+        if (const auto it = _entities.find(guid); it != _entities.end()) {
+          const auto animationComponent = dynamic_cast<Animation*>(
               it->second
                   ->GetComponentByStaticTypeID(Animation::StaticGetTypeID())
                   .get());
@@ -178,12 +172,11 @@ void AnimationSystem::vInitSystem() {
 
         const EntityGUID& guid =
             msg.getData<EntityGUID>(ECSMessageType::EntityToTarget);
-        auto shouldLoop =
+        const auto shouldLoop =
             msg.getData<bool>(ECSMessageType::AnimationSetLooping);
 
-        auto it = _entities.find(guid);
-        if (it != _entities.end()) {
-          auto animationComponent = dynamic_cast<Animation*>(
+        if (const auto it = _entities.find(guid); it != _entities.end()) {
+          const auto animationComponent = dynamic_cast<Animation*>(
               it->second
                   ->GetComponentByStaticTypeID(Animation::StaticGetTypeID())
                   .get());
@@ -206,12 +199,10 @@ void AnimationSystem::setupMessageChannels(
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-void AnimationSystem::vUpdate(float fElapsedTime) {
-  for (auto& animatorEntity : _entities) {
-    auto animator = dynamic_cast<Animation*>(
-        animatorEntity.second
-            ->GetComponentByStaticTypeID(Animation::StaticGetTypeID())
-            .get());
+void AnimationSystem::vUpdate(const float fElapsedTime) {
+  for (auto& [fst, snd] : _entities) {
+    const auto animator = dynamic_cast<Animation*>(
+        snd->GetComponentByStaticTypeID(Animation::StaticGetTypeID()).get());
     animator->vUpdate(fElapsedTime);
   }
 }
@@ -245,9 +236,10 @@ void AnimationSystem::DebugPrint() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-void AnimationSystem::vNotifyOfAnimationEvent(const EntityGUID& entityGuid,
-                                              const AnimationEventType& eType,
-                                              const std::string& eventData) {
+void AnimationSystem::vNotifyOfAnimationEvent(
+    const EntityGUID& entityGuid,
+    const AnimationEventType& eType,
+    const std::string& eventData) const {
   if (animationInfoCallback_ == nullptr) {
     return;
   }

@@ -58,7 +58,7 @@ class AnimationSystem : public ECSystem {
  private:
   void vNotifyOfAnimationEvent(const EntityGUID& entityGuid,
                                const AnimationEventType& eType,
-                               const std::string& eventData);
+                               const std::string& eventData) const;
 
   void setupMessageChannels(flutter::PluginRegistrar* plugin_registrar);
 

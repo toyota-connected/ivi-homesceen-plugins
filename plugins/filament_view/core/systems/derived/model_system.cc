@@ -208,15 +208,13 @@ void ModelSystem::vSetupAssetThroughoutECS(
     filament::gltfio::FilamentAsset* filamentAsset) {
   m_mapszoAssets.insert(std::pair(sharedPtr->GetGlobalGuid(), sharedPtr));
 
-  auto animatorInstance = filamentAsset->getInstance()->getAnimator();
-
-  if (animatorInstance != nullptr &&
+  if (const auto animatorInstance = filamentAsset->getInstance()->getAnimator();
+      animatorInstance != nullptr &&
       sharedPtr->HasComponentByStaticTypeID(Animation::StaticGetTypeID())) {
-    auto animatorComponent =
+    const auto animatorComponent =
         sharedPtr->GetComponentByStaticTypeID(Animation::StaticGetTypeID());
-    auto animator = dynamic_cast<Animation*>(animatorComponent.get());
-    std::shared_ptr<Animation> animationPtr =
-        std::shared_ptr(animatorComponent, animator);
+    const auto animator = dynamic_cast<Animation*>(animatorComponent.get());
+    const auto animationPtr = std::shared_ptr(animatorComponent, animator);
     animator->vSetAnimator(*animatorInstance);
 
     const auto animationSystem =
@@ -224,12 +222,16 @@ void ModelSystem::vSetupAssetThroughoutECS(
             AnimationSystem::StaticGetTypeID(), "loadModelGltf");
 
     animationSystem->vRegisterEntityObject(sharedPtr);
-    animationPtr->DebugPrint("From ModelSystem::vSetupAssetThroughoutECS\t");
-  } else if (animatorInstance != nullptr) {
+    // Great if you need help with your animation information!
+    // animationPtr->DebugPrint("From ModelSystem::vSetupAssetThroughoutECS\t");
+  } else if (animatorInstance != nullptr &&
+             animatorInstance->getAnimationCount() > 0) {
     SPDLOG_DEBUG(
-        "You have a valid set of animations you can play on this, but you "
-        "didn't load an animation component, load one if you want that "
-        "functionality");
+        "For asset - {} you have a valid set of animations [{}] you can play "
+        "on this, but you didn't load an animation component, load one if you "
+        "want that "
+        "functionality",
+        sharedPtr->szGetAssetPath(), animatorInstance->getAnimationCount());
   }
 
   const auto objectLocatorSystem =
@@ -295,7 +297,7 @@ void ModelSystem::updateAsyncAssetLoading() {
   // This does not specify per resource, but a global, best we can do with this
   // information is if we're done loading <everything> that was marked as async
   // load, then load that physics data onto a collidable if required. This gives
-  // us visuals without collidbales in a scene with <tons> of objects; but would
+  // us visuals without collidables in a scene with <tons> of objects; but would
   // eventually settle
   const float percentComplete = resourceLoader_->asyncGetLoadProgress();
 

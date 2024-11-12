@@ -57,7 +57,7 @@ class ECSMessage {
   }
 
   // Check if the message contains a specific type
-  bool hasData(ECSMessageType type) const {
+  [[nodiscard]] bool hasData(ECSMessageType type) const {
     return data_.find(type) != data_.end();
   }
 

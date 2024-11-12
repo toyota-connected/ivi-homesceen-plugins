@@ -49,7 +49,7 @@ Animation::Animation(const flutter::EncodableMap& params)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-void Animation::vUpdate(float fElapsedTime) {
+void Animation::vUpdate(const float fElapsedTime) {
   if (m_poAnimator == nullptr || m_bPaused) {
     return;
   }
@@ -65,7 +65,7 @@ void Animation::vUpdate(float fElapsedTime) {
           ECSystemManager::GetInstance()->poGetSystemAs<AnimationSystem>(
               AnimationSystem::StaticGetTypeID(), "Animation::vUpdate");
       animationSystem->vNotifyOfAnimationEvent(
-          GetOwner()->GetGlobalGuid(), AnimationEventType::eAnimationStarted,
+          GetOwner()->GetGlobalGuid(), eAnimationStarted,
           std::to_string(m_nCurrentPlayingIndex));
     }
   }
@@ -74,9 +74,9 @@ void Animation::vUpdate(float fElapsedTime) {
     return;
   }
 
-  m_fTimeSinceStart += (fElapsedTime * m_fPlaybackSpeedScalar);
+  m_fTimeSinceStart += fElapsedTime * m_fPlaybackSpeedScalar;
 
-  m_poAnimator->applyAnimation(size_t(m_nCurrentPlayingIndex),
+  m_poAnimator->applyAnimation(static_cast<size_t>(m_nCurrentPlayingIndex),
                                m_fTimeSinceStart);
   m_poAnimator->updateBoneMatrices();
 
@@ -90,7 +90,7 @@ void Animation::vUpdate(float fElapsedTime) {
               AnimationSystem::StaticGetTypeID(), "Animation::vUpdate");
 
       animationSystem->vNotifyOfAnimationEvent(
-          GetOwner()->GetGlobalGuid(), AnimationEventType::eAnimationEnded,
+          GetOwner()->GetGlobalGuid(), eAnimationEnded,
           std::to_string(m_nCurrentPlayingIndex));
     }
 
@@ -107,7 +107,7 @@ void Animation::vUpdate(float fElapsedTime) {
                 AnimationSystem::StaticGetTypeID(), "Animation::vUpdate");
 
         animationSystem->vNotifyOfAnimationEvent(
-            GetOwner()->GetGlobalGuid(), AnimationEventType::eAnimationStarted,
+            GetOwner()->GetGlobalGuid(), eAnimationStarted,
             std::to_string(m_nCurrentPlayingIndex));
       }
 
@@ -116,8 +116,7 @@ void Animation::vUpdate(float fElapsedTime) {
       m_nCurrentPlayingIndex = -1;
 
       if (!m_queAnimationQueue.empty()) {
-        m_nCurrentPlayingIndex =
-            static_cast<int32_t>(m_queAnimationQueue.front());
+        m_nCurrentPlayingIndex = m_queAnimationQueue.front();
         m_queAnimationQueue.pop();
       } else if (m_bResetToTPoseOnReset) {
         m_poAnimator->resetBoneMatrices();
@@ -127,7 +126,7 @@ void Animation::vUpdate(float fElapsedTime) {
 }
 
 ////////////////////////////////////////////////////////////////////////////
-void Animation::vEnqueueAnimation(int32_t index) {
+void Animation::vEnqueueAnimation(const int32_t index) {
   if (index < 0) {
     return;
   }
@@ -157,9 +156,6 @@ void Animation::vSetAnimator(filament::gltfio::Animator& animator) {
   if (m_bAutoPlay) {
     vPlayAnimation(m_nCurrentPlayingIndex);
   }
-
-  // debug, TODO remove before checkin
-  vPlayAnimation(m_nCurrentPlayingIndex);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -177,9 +173,9 @@ void Animation::vPlayAnimation(int32_t index) {
 
 ////////////////////////////////////////////////////////////////////////////
 bool Animation::bPlayAnimation(const std::string& szName) {
-  if (auto foundIter = m_mapAnimationNamesToIndex.find(szName);
+  if (const auto foundIter = m_mapAnimationNamesToIndex.find(szName);
       foundIter != m_mapAnimationNamesToIndex.end()) {
-    vPlayAnimation(((int32_t)foundIter->second));
+    vPlayAnimation(static_cast<int32_t>(foundIter->second));
     return true;
   }
 
