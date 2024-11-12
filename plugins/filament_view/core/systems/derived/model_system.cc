@@ -214,7 +214,6 @@ void ModelSystem::vSetupAssetThroughoutECS(
     const auto animatorComponent =
         sharedPtr->GetComponentByStaticTypeID(Animation::StaticGetTypeID());
     const auto animator = dynamic_cast<Animation*>(animatorComponent.get());
-    const auto animationPtr = std::shared_ptr(animatorComponent, animator);
     animator->vSetAnimator(*animatorInstance);
 
     const auto animationSystem =
