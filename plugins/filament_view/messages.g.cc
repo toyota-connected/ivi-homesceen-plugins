@@ -126,6 +126,133 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
           }
         }
         result->Success();
+      } else if (methodCall.method_name() == kAnimationEnqueue) {
+        const auto& args = std::get_if<EncodableMap>(methodCall.arguments());
+        EntityGUID guid;
+        int32_t animationIndex = -1;
+
+        for (const auto& [fst, snd] : *args) {
+          if (kEntityGUID == std::get<std::string>(fst)) {
+            guid = std::get<std::string>(snd);
+          } else if (kIndex == std::get<std::string>(fst)) {
+            animationIndex = std::get<int32_t>(snd);
+          }
+        }
+
+        ECSMessage enqueueMessage;
+        enqueueMessage.addData(ECSMessageType::AnimationEnqueue,
+                               animationIndex);
+        enqueueMessage.addData(ECSMessageType::EntityToTarget, guid);
+        ECSystemManager::GetInstance()->vRouteMessage(enqueueMessage);
+
+        result->Success();
+      } else if (methodCall.method_name() == kAnimationClearQueue) {
+        const auto& args = std::get_if<EncodableMap>(methodCall.arguments());
+        EntityGUID guid;
+
+        for (const auto& [fst, snd] : *args) {
+          if (kEntityGUID == std::get<std::string>(fst)) {
+            guid = std::get<std::string>(snd);
+          }
+        }
+
+        ECSMessage clearQueueMessage;
+        clearQueueMessage.addData(ECSMessageType::AnimationClearQueue, guid);
+        clearQueueMessage.addData(ECSMessageType::EntityToTarget, guid);
+        ECSystemManager::GetInstance()->vRouteMessage(clearQueueMessage);
+
+        result->Success();
+      } else if (methodCall.method_name() == kAnimationPlay) {
+        const auto& args = std::get_if<EncodableMap>(methodCall.arguments());
+        EntityGUID guid;
+        int32_t animationIndex = -1;
+
+        for (const auto& [fst, snd] : *args) {
+          if (kEntityGUID == std::get<std::string>(fst)) {
+            guid = std::get<std::string>(snd);
+          } else if (kIndex == std::get<std::string>(fst)) {
+            animationIndex = std::get<int32_t>(snd);
+          }
+        }
+
+        ECSMessage playMessage;
+        playMessage.addData(ECSMessageType::AnimationPlay, animationIndex);
+        playMessage.addData(ECSMessageType::EntityToTarget, guid);
+        ECSystemManager::GetInstance()->vRouteMessage(playMessage);
+
+        result->Success();
+      } else if (methodCall.method_name() == kAnimationChangeSpeed) {
+        const auto& args = std::get_if<EncodableMap>(methodCall.arguments());
+        EntityGUID guid;
+        float newSpeed = 1.0f;
+
+        for (const auto& [fst, snd] : *args) {
+          if (kEntityGUID == std::get<std::string>(fst)) {
+            guid = std::get<std::string>(snd);
+          } else if (kAnimationChangeSpeedValue == std::get<std::string>(fst)) {
+            newSpeed = static_cast<float>(std::get<double>(snd));
+          }
+        }
+
+        ECSMessage changeSpeedMessage;
+        changeSpeedMessage.addData(ECSMessageType::AnimationChangeSpeed,
+                                   newSpeed);
+        changeSpeedMessage.addData(ECSMessageType::EntityToTarget, guid);
+        ECSystemManager::GetInstance()->vRouteMessage(changeSpeedMessage);
+
+        result->Success();
+      } else if (methodCall.method_name() == kAnimationPause) {
+        const auto& args = std::get_if<EncodableMap>(methodCall.arguments());
+        EntityGUID guid;
+
+        for (const auto& [fst, snd] : *args) {
+          if (kEntityGUID == std::get<std::string>(fst)) {
+            guid = std::get<std::string>(snd);
+          }
+        }
+
+        ECSMessage pauseMessage;
+        pauseMessage.addData(ECSMessageType::AnimationPause, guid);
+        pauseMessage.addData(ECSMessageType::EntityToTarget, guid);
+        ECSystemManager::GetInstance()->vRouteMessage(pauseMessage);
+
+        result->Success();
+      } else if (methodCall.method_name() == kAnimationResume) {
+        const auto& args = std::get_if<EncodableMap>(methodCall.arguments());
+        EntityGUID guid;
+
+        for (const auto& [fst, snd] : *args) {
+          if (kEntityGUID == std::get<std::string>(fst)) {
+            guid = std::get<std::string>(snd);
+          }
+        }
+
+        ECSMessage resumeMessage;
+        resumeMessage.addData(ECSMessageType::AnimationResume, guid);
+        resumeMessage.addData(ECSMessageType::EntityToTarget, guid);
+        ECSystemManager::GetInstance()->vRouteMessage(resumeMessage);
+
+        result->Success();
+      } else if (methodCall.method_name() == kAnimationSetLooping) {
+        const auto& args = std::get_if<EncodableMap>(methodCall.arguments());
+        EntityGUID guid;
+        bool shouldLoop = false;
+
+        for (const auto& [fst, snd] : *args) {
+          if (kEntityGUID == std::get<std::string>(fst)) {
+            guid = std::get<std::string>(snd);
+          } else if (kAnimationSetLoopingValue == std::get<std::string>(fst)) {
+            shouldLoop = std::get<bool>(snd);
+          }
+        }
+
+        ECSMessage setLoopingMessage;
+        setLoopingMessage.addData(ECSMessageType::AnimationSetLooping,
+                                  shouldLoop);
+        setLoopingMessage.addData(ECSMessageType::EntityToTarget, guid);
+        ECSystemManager::GetInstance()->vRouteMessage(setLoopingMessage);
+
+        result->Success();
       } else if (methodCall.method_name() == kChangeQualitySettings) {
         api->ChangeViewQualitySettings(nullptr);
         result->Success();

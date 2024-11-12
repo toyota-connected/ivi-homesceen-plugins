@@ -30,6 +30,8 @@ using EntityGUID = std::string;
 class EntityObject {
   friend class CollisionSystem;
   friend class MaterialSystem;
+  friend class ModelSystem;
+  friend class AnimationSystem;
 
  public:
   // Overloading the == operator to compare based on global_guid_

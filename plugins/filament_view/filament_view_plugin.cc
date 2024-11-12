@@ -17,6 +17,7 @@
 #include "filament_view_plugin.h"
 
 #include <core/scene/serialization/scene_text_deserializer.h>
+#include <core/systems/derived/animation_system.h>
 #include <core/systems/derived/collision_system.h>
 #include <core/systems/derived/debug_lines_system.h>
 #include <core/systems/derived/entityobject_locator_system.h>
@@ -69,6 +70,7 @@ void RunOnceCheckAndInitializeECSystems() {
     ecsManager->vAddSystem(std::move(std::make_unique<SkyboxSystem>()));
     ecsManager->vAddSystem(std::move(std::make_unique<LightSystem>()));
     ecsManager->vAddSystem(std::move(std::make_unique<ViewTargetSystem>()));
+    ecsManager->vAddSystem(std::move(std::make_unique<AnimationSystem>()));
     // Internal debate whether we auto subscribe to systems on entity creation
     // or not.
     ecsManager->vAddSystem(
@@ -244,17 +246,12 @@ FilamentViewPlugin::~FilamentViewPlugin() {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-void FilamentViewPlugin::ChangeAnimationByIndex(
-    int32_t /* index */,
-    std::function<void(std::optional<FlutterError> reply)> /* result */) {}
-
-//////////////////////////////////////////////////////////////////////////////////////////
 void FilamentViewPlugin::ChangeMaterialParameter(
     const flutter::EncodableMap& params,
     const EntityGUID& guid) {
   ECSMessage materialData;
   materialData.addData(ECSMessageType::ChangeMaterialParameter, params);
-  materialData.addData(ECSMessageType::ChangeMaterialEntity, guid);
+  materialData.addData(ECSMessageType::EntityToTarget, guid);
   ECSystemManager::GetInstance()->vRouteMessage(materialData);
 }
 
@@ -264,7 +261,7 @@ void FilamentViewPlugin::ChangeMaterialDefinition(
     const EntityGUID& guid) {
   ECSMessage materialData;
   materialData.addData(ECSMessageType::ChangeMaterialDefinitions, params);
-  materialData.addData(ECSMessageType::ChangeMaterialEntity, guid);
+  materialData.addData(ECSMessageType::EntityToTarget, guid);
   ECSystemManager::GetInstance()->vRouteMessage(materialData);
 }
 
@@ -348,22 +345,6 @@ void FilamentViewPlugin::SetCameraRotation(
 
   viewTargetSystem->vSetCurrentCameraOrbitAngle(0, fValue);
 }
-
-void FilamentViewPlugin::ChangeAnimationByName(
-    std::string /* name */,
-    std::function<void(std::optional<FlutterError> reply)> /* result */) {}
-
-void FilamentViewPlugin::GetAnimationNames(
-    std::function<void(std::optional<FlutterError> reply)> /* result */) {}
-
-void FilamentViewPlugin::GetAnimationCount(
-    std::function<void(std::optional<FlutterError> reply)> /* result */) {}
-
-void FilamentViewPlugin::GetCurrentAnimationIndex(
-    std::function<void(std::optional<FlutterError> reply)> /* result */) {}
-
-void FilamentViewPlugin::GetAnimationNameByIndex(
-    std::function<void(std::optional<FlutterError> reply)> /* result */) {}
 
 void FilamentViewPlugin::ChangeSkyboxByAsset(
     std::string /* path */,

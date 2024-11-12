@@ -49,7 +49,7 @@ enum class ECSMessageType {
   ChangeViewQualitySettingsWhichView,
 
   ChangeMaterialParameter,
-  ChangeMaterialEntity,
+  EntityToTarget,
   ChangeMaterialDefinitions,
 
   ResizeWindow,
@@ -58,7 +58,15 @@ enum class ECSMessageType {
 
   MoveWindow,
   MoveWindowTop,
-  MoveWindowLeft
+  MoveWindowLeft,
+
+  AnimationEnqueue,
+  AnimationClearQueue,
+  AnimationPlay,
+  AnimationChangeSpeed,
+  AnimationPause,
+  AnimationResume,
+  AnimationSetLooping,
 };
 
 }

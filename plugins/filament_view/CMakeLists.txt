@@ -82,8 +82,7 @@ add_library(plugin_filament_view STATIC
         core/components/derived/basetransform.cc
         core/components/derived/commonrenderable.cc
         core/components/derived/collidable.cc
-        core/entity/derived/model/animation/animation.cc
-        core/entity/derived/model/animation/animation_manager.cc
+        core/components/derived/animation.cc
         core/systems/base/ecsystem.cc
         core/systems/ecsystems_manager.cc
         core/systems/derived/filament_system.cc
@@ -115,6 +114,7 @@ add_library(plugin_filament_view STATIC
         core/scene/material/texture/texture_sampler.cc
         core/scene/skybox/skybox.cc
         core/systems/derived/skybox_system.cc
+        core/systems/derived/animation_system.cc
         core/entity/derived/shapes/baseshape.cc
         core/entity/derived/shapes/cube.cc
         core/entity/derived/shapes/sphere.cc

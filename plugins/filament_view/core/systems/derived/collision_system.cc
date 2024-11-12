@@ -69,7 +69,7 @@ void CollisionSystem::vAddCollidable(EntityObject* collidable) {
 
   if (originalCollidable != nullptr &&
       originalCollidable->GetShouldMatchAttachedObject()) {
-    // if its a shape
+    // if it's a shape
     if (const auto originalShape = dynamic_cast<shapes::BaseShape*>(collidable);
         originalShape != nullptr) {
       originalCollidable->SetShapeType(originalShape->type_);
@@ -113,7 +113,7 @@ void CollisionSystem::vAddCollidable(EntityObject* collidable) {
 
     const auto& ourTransform = baseTransformPtr;
 
-    // Note i believe this is correct; more thorough testing is needed; there's
+    // Note I believe this is correct; more thorough testing is needed; there's
     // a concern around exporting models not centered at 0,0,0 and not being
     // 100% accurate.
     ourTransform->SetCenterPosition(ourAABB.center() +
@@ -158,9 +158,9 @@ void CollisionSystem::vAddCollidable(EntityObject* collidable) {
   const auto engine = filamentSystem->getFilamentEngine();
 
   filament::Scene* poFilamentScene = filamentSystem->getFilamentScene();
-  utils::EntityManager& oEntitymanager = engine->getEntityManager();
+  utils::EntityManager& oEntityManager = engine->getEntityManager();
 
-  const auto oEntity = std::make_shared<Entity>(oEntitymanager.create());
+  const auto oEntity = std::make_shared<Entity>(oEntityManager.create());
 
   newShape->bInitAndCreateShape(engine, oEntity);
   poFilamentScene->addEntity(*oEntity);
@@ -241,7 +241,7 @@ std::list<HitResult> CollisionSystem::lstCheckForCollidable(
       hitResult.name_ = entity->GetName();
       hitResult.hitPosition_ = hitLocation;  // Set the hit location
 
-      SPDLOG_WARN("HIT RESULT: {}", hitResult.guid_);
+      SPDLOG_INFO("HIT RESULT: {}", hitResult.guid_);
 
       // Add to the hit results
       hitResults.push_back(hitResult);

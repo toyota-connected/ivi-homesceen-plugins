@@ -16,23 +16,20 @@
 
 #pragma once
 
+#include <core/components/derived/animation.h>
 #include <core/components/derived/basetransform.h>
 #include <core/components/derived/commonrenderable.h>
 #include <core/entity/base/entityobject.h>
-#include <core/entity/derived/model/animation/animation.h>
 #include <gltfio/FilamentAsset.h>
 #include <string>
 
 namespace plugin_filament_view {
-
-class Animation;
 
 class Model : public EntityObject {
  public:
   Model(std::string assetPath,
         std::string url,
         Model* fallback,
-        Animation* animation,
         std::shared_ptr<BaseTransform> poTransform,
         std::shared_ptr<CommonRenderable> poCommonRenderable,
         const flutter::EncodableMap& params);
@@ -44,8 +41,6 @@ class Model : public EntityObject {
       const flutter::EncodableMap& params);
 
   [[nodiscard]] Model* GetFallback() const { return fallback_; }
-
-  [[nodiscard]] Animation* GetAnimation() const { return animation_; }
 
   // Disallow copy and assign.
   Model(const Model&) = delete;
@@ -73,7 +68,6 @@ class Model : public EntityObject {
   std::string assetPath_;
   std::string url_;
   Model* fallback_;
-  Animation* animation_;
 
   filament::gltfio::FilamentAsset* m_poAsset;
 
@@ -104,15 +98,11 @@ class GlbModel final : public Model {
   GlbModel(std::string assetPath,
            std::string url,
            Model* fallback,
-           Animation* animation,
            std::shared_ptr<BaseTransform> poTransform,
            std::shared_ptr<CommonRenderable> poCommonRenderable,
            const flutter::EncodableMap& params);
 
   ~GlbModel() override = default;
-
-  friend class ModelManager;
-  friend class SceneController;
 };
 
 class GltfModel final : public Model {
@@ -122,15 +112,11 @@ class GltfModel final : public Model {
             std::string pathPrefix,
             std::string pathPostfix,
             Model* fallback,
-            Animation* animation,
             std::shared_ptr<BaseTransform> poTransform,
             std::shared_ptr<CommonRenderable> poCommonRenderable,
             const flutter::EncodableMap& params);
 
   ~GltfModel() override = default;
-
-  friend class ModelManager;
-  friend class SceneController;
 
   [[nodiscard]] std::string szGetPrefix() const { return pathPrefix_; }
   [[nodiscard]] std::string szGetPostfix() const { return pathPostfix_; }

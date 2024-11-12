@@ -101,6 +101,9 @@ class ModelSystem : public ECSystem {
   // not actively used, to be moved
   std::vector<float> morphWeights_;
 
+  void vSetupAssetThroughoutECS(std::shared_ptr<Model>& sharedPtr,
+                                filament::gltfio::FilamentAsset* filamentAsset);
+
   void populateSceneWithAsyncLoadedAssets(const Model* model);
 
   using PromisePtr = std::shared_ptr<std::promise<Resource<std::string_view>>>;

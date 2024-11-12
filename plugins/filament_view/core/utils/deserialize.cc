@@ -122,6 +122,20 @@ void Deserialize::DecodeParameterWithDefault(
 }
 
 ////////////////////////////////////////////////////////////////////////////
+void Deserialize::DecodeParameterWithDefault(
+    const char* key,
+    std::string* out_value,
+    const flutter::EncodableMap& params,
+    const std::string& default_value) {
+  if (const auto it = params.find(flutter::EncodableValue(key));
+      it != params.end() && std::holds_alternative<std::string>(it->second)) {
+    *out_value = std::get<std::string>(it->second);
+  } else {
+    *out_value = default_value;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////
 void Deserialize::DecodeParameterWithDefaultInt64(
     const char* key,
     int64_t* out_value,

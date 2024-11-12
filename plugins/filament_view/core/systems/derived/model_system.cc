@@ -32,6 +32,7 @@
 #include <algorithm>  // for max
 #include <asio/post.hpp>
 
+#include "animation_system.h"
 #include "entityobject_locator_system.h"
 
 namespace plugin_filament_view {
@@ -133,17 +134,9 @@ void ModelSystem::loadModelGlb(std::unique_ptr<Model> oOurModel,
   EntityTransforms::vApplyTransform(oOurModel->getAsset(),
                                     *oOurModel->GetBaseTransform());
 
-  // todo
-  // setUpAnimation(poCurrModel->GetAnimation());
-
   std::shared_ptr<Model> sharedPtr = std::move(oOurModel);
-  m_mapszoAssets.insert(std::pair(sharedPtr->GetGlobalGuid(), sharedPtr));
 
-  const auto objectLocatorSystem =
-      ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
-          EntityObjectLocatorSystem::StaticGetTypeID(), "loadModelGlb");
-
-  objectLocatorSystem->vRegisterEntityObject(sharedPtr);
+  vSetupAssetThroughoutECS(sharedPtr, asset);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -201,8 +194,44 @@ void ModelSystem::loadModelGltf(
 
   oOurModel->setAsset(asset);
 
+  EntityTransforms::vApplyTransform(oOurModel->getAsset(),
+                                    *oOurModel->GetBaseTransform());
+
   std::shared_ptr<Model> sharedPtr = std::move(oOurModel);
+
+  vSetupAssetThroughoutECS(sharedPtr, asset);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+void ModelSystem::vSetupAssetThroughoutECS(
+    std::shared_ptr<Model>& sharedPtr,
+    filament::gltfio::FilamentAsset* filamentAsset) {
   m_mapszoAssets.insert(std::pair(sharedPtr->GetGlobalGuid(), sharedPtr));
+
+  if (const auto animatorInstance = filamentAsset->getInstance()->getAnimator();
+      animatorInstance != nullptr &&
+      sharedPtr->HasComponentByStaticTypeID(Animation::StaticGetTypeID())) {
+    const auto animatorComponent =
+        sharedPtr->GetComponentByStaticTypeID(Animation::StaticGetTypeID());
+    const auto animator = dynamic_cast<Animation*>(animatorComponent.get());
+    animator->vSetAnimator(*animatorInstance);
+
+    const auto animationSystem =
+        ECSystemManager::GetInstance()->poGetSystemAs<AnimationSystem>(
+            AnimationSystem::StaticGetTypeID(), "loadModelGltf");
+
+    animationSystem->vRegisterEntityObject(sharedPtr);
+    // Great if you need help with your animation information!
+    // animationPtr->DebugPrint("From ModelSystem::vSetupAssetThroughoutECS\t");
+  } else if (animatorInstance != nullptr &&
+             animatorInstance->getAnimationCount() > 0) {
+    SPDLOG_DEBUG(
+        "For asset - {} you have a valid set of animations [{}] you can play "
+        "on this, but you didn't load an animation component, load one if you "
+        "want that "
+        "functionality",
+        sharedPtr->szGetAssetPath(), animatorInstance->getAnimationCount());
+  }
 
   const auto objectLocatorSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
@@ -267,7 +296,7 @@ void ModelSystem::updateAsyncAssetLoading() {
   // This does not specify per resource, but a global, best we can do with this
   // information is if we're done loading <everything> that was marked as async
   // load, then load that physics data onto a collidable if required. This gives
-  // us visuals without collidbales in a scene with <tons> of objects; but would
+  // us visuals without collidables in a scene with <tons> of objects; but would
   // eventually settle
   const float percentComplete = resourceLoader_->asyncGetLoadProgress();
 

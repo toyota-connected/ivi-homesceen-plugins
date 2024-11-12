@@ -43,6 +43,18 @@ static constexpr char kResetInertiaCameraToDefaultValues[] =
     "RESET_INERTIA_TO_DEFAULTS";
 static constexpr char kChangeQualitySettings[] = "CHANGE_QUALITY_SETTINGS";
 
+static constexpr char kAnimationEnqueue[] = "ANIMATION_ENQUEUE";
+static constexpr char kAnimationClearQueue[] = "ANIMATION_CLEAR_QUEUE";
+static constexpr char kAnimationPlay[] = "ANIMATION_PLAY";
+static constexpr char kAnimationChangeSpeed[] = "ANIMATION_CHANGE_SPEED";
+static constexpr char kAnimationChangeSpeedValue[] =
+    "ANIMATION_CHANGE_SPEED_VALUE";
+static constexpr char kAnimationPause[] = "ANIMATION_PAUSE";
+static constexpr char kAnimationResume[] = "ANIMATION_RESUME";
+static constexpr char kAnimationSetLooping[] = "ANIMATION_SET_LOOPING";
+static constexpr char kAnimationSetLoopingValue[] = "ANIMATION_LOOPING_VALUE";
+static constexpr char kEntityGUID[] = "ENTITY_GUID";
+
 // Collision Requests
 static constexpr char kCollisionRayRequest[] = "COLLISION_RAY_REQUEST";
 static constexpr char kCollisionRayRequestOriginX[] =
@@ -132,6 +144,13 @@ static constexpr char kRight[] = "right";
 static constexpr char kBottom[] = "bottom";
 static constexpr char kTop[] = "top";
 static constexpr char kFovInDegrees[] = "fovInDegrees";
+static constexpr char kAutoPlay[] = "autoPlay";
+static constexpr char kIndex[] = "index";
+static constexpr char kAnimation[] = "animation";
+static constexpr char kLoop[] = "loop";
+static constexpr char kResetToTPoseOnReset[] = "resetToTPoseOnReset";
+static constexpr char kPlaybackSpeed[] = "playbackSpeed";
+static constexpr char kNotifyOfAnimationEvents[] = "notifyOfAnimationEvents";
 
 // specific collidable values:
 static constexpr char kCollidable[] = "collidable";
@@ -166,6 +185,15 @@ enum CollisionEventType {
   eNativeOnTouchHeld,
   eNativeOnTouchEnd
 };
+
+static constexpr char kAnimationEvent[] = "animation_event";
+static constexpr char kAnimationEventType[] = "animation_event_type";
+enum AnimationEventType {
+  eAnimationStarted,
+  eAnimationEnded,
+  // might want paused, un-paused, speed change.
+};
+static constexpr char kAnimationEventData[] = "animation_event_data";
 
 static constexpr char kCamera_Inertia_RotationSpeed[] = "inertia_rotationSpeed";
 static constexpr char kCamera_Inertia_VelocityFactor[] =

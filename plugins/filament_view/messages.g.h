@@ -138,26 +138,6 @@ class FilamentViewApi {
       float fValue,
       std::function<void(std::optional<FlutterError> reply)> result) = 0;
 
-  virtual void ChangeAnimationByIndex(
-      int32_t index,
-      std::function<void(std::optional<FlutterError> reply)> result) = 0;
-
-  virtual void ChangeAnimationByName(
-      std::string name,
-      std::function<void(std::optional<FlutterError> reply)> result) = 0;
-
-  virtual void GetAnimationNames(
-      std::function<void(std::optional<FlutterError> reply)> result) = 0;
-
-  virtual void GetAnimationCount(
-      std::function<void(std::optional<FlutterError> reply)> result) = 0;
-
-  virtual void GetCurrentAnimationIndex(
-      std::function<void(std::optional<FlutterError> reply)> result) = 0;
-
-  virtual void GetAnimationNameByIndex(
-      std::function<void(std::optional<FlutterError> reply)> result) = 0;
-
   virtual void ChangeSkyboxByAsset(
       std::string path,
       std::function<void(std::optional<FlutterError> reply)> result) = 0;

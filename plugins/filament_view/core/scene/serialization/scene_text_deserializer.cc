@@ -187,7 +187,6 @@ void SceneTextDeserializer::vRunPostSetupLoad() {
 //////////////////////////////////////////////////////////////////////////////////////////
 void SceneTextDeserializer::setUpLoadingModels() {
   SPDLOG_TRACE("++{}::{}", __FILE__, __FUNCTION__);
-  // animationManager_ = std::make_unique<AnimationManager>();
 
   for (auto& iter : models_) {
     // Note: Instancing or prefab of models is not currently supported but might
