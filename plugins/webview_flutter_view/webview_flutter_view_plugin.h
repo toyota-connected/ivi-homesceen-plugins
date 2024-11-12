@@ -46,48 +46,11 @@
 
 namespace plugin_webview_flutter {
 
-class RenderHandler : public CefRenderHandler {
- public:
-  RenderHandler();
-  ~RenderHandler();
-
-  // CefRenderHandler interface
- public:
-  void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
-
-  void OnPaint(CefRefPtr<CefBrowser> browser,
-               PaintElementType type,
-               const RectList& dirtyRects,
-               const void* buffer,
-               int width,
-               int height) override;
-
-  void OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
-                          PaintElementType type,
-                          const RectList& dirtyRects,
-                          const CefAcceleratedPaintInfo& info) override;
-  // CefBase interface
- public:
-  IMPLEMENT_REFCOUNTING(RenderHandler);
-};
-
-// for manual render handler
-class BrowserClient : public CefClient {
- public:
-  BrowserClient(RenderHandler* renderHandler) : m_renderHandler(renderHandler) {
-    ;
-  }
-
-  CefRefPtr<CefRenderHandler> GetRenderHandler() override {
-    return m_renderHandler;
-  }
-
-  CefRefPtr<CefRenderHandler> m_renderHandler;
-
-  IMPLEMENT_REFCOUNTING(BrowserClient);
-};
-
-class WebviewPlatformView final : public PlatformView {
+class WebviewPlatformView final : public PlatformView,
+                                  public CefApp, 
+                                  public CefRenderHandler,
+                                  public CefClient,
+                                  public CefBrowserProcessHandler {
  public:
   WebviewPlatformView(int32_t id,
                       std::string viewType,
@@ -107,11 +70,43 @@ class WebviewPlatformView final : public PlatformView {
 
 
   void StartCef();
-  static void CefThreadMain();
+  void CefThreadMain();
 
   static bool is_start_cef_done_;
   static bool is_shutdown_cef_done_;
   std::thread cef_thread_;
+
+
+  // CefApp methods:
+  CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override {
+    return this;
+  }
+
+  // CefBrowserProcessHandler methods:
+  void OnContextInitialized() override;
+
+  // CefRenderHandler methods:
+  void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
+
+  void OnPaint(CefRefPtr<CefBrowser> browser,
+               PaintElementType type,
+               const RectList& dirtyRects,
+               const void* buffer,
+               int width,
+               int height) override;
+
+  void OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
+                          PaintElementType type,
+                          const RectList& dirtyRects,
+                          const CefAcceleratedPaintInfo& info) override;
+
+  // CefClient methods:
+  CefRefPtr<CefRenderHandler> GetRenderHandler() override {
+    return this;
+  }
+
+
+  CefRefPtr<CefBrowser> browser_;
 
  private:
   MAYBE_UNUSED int32_t id_;
@@ -151,27 +146,7 @@ class WebviewPlatformView final : public PlatformView {
   static void on_dispose(bool hybrid, void* data);
 
   static const platform_view_listener platform_view_listener_;
-};
-
-class WebviewFlutterApp : public CefApp, public CefBrowserProcessHandler {
- public:
-
-  // CefApp methods:
-  CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override {
-    return this;
-  }
-
-  // CefBrowserProcessHandler methods:
-  void OnContextInitialized() override;
-
-
-  CefRefPtr<CefBrowser> browser_;
-  CefRefPtr<BrowserClient> browserClient_;
-  std::unique_ptr<RenderHandler> renderHandler_;
-
- private:
-
-  IMPLEMENT_REFCOUNTING(WebviewFlutterApp);
+  IMPLEMENT_REFCOUNTING(WebviewPlatformView);
 };
 
 class WebviewFlutterInstanceManagerHostApi : public InstanceManagerHostApi {
