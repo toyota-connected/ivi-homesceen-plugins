@@ -24,6 +24,8 @@
 #include <zlib.h>
 #include <asio/post.hpp>
 
+#include "appstream_catalog.h"
+#include "common.h"
 #include "messages.g.h"
 #include "plugins/common/common.h"
 
@@ -56,8 +58,7 @@ FlatpakPlugin::FlatpakPlugin()
                 FLATPAK_MINOR_VERSION, FLATPAK_MICRO_VERSION);
   spdlog::debug("\tDefault Arch: {}", flatpak_get_default_arch());
   spdlog::debug("\tSupported Arches:");
-  auto* supported_arches = flatpak_get_supported_arches();
-  if (supported_arches) {
+  if (auto* supported_arches = flatpak_get_supported_arches()) {
     for (auto arch = supported_arches; *arch != nullptr; ++arch) {
       spdlog::debug("\t\t{}", *arch);
     }
@@ -83,10 +84,9 @@ ErrorOr<std::string> FlatpakPlugin::GetDefaultArch() {
 // Get all arches supported by flatpak
 ErrorOr<flutter::EncodableList> FlatpakPlugin::GetSupportedArches() {
   flutter::EncodableList result;
-  auto* supported_arches = flatpak_get_supported_arches();
-  if (supported_arches) {
+  if (auto* supported_arches = flatpak_get_supported_arches()) {
     for (auto arch = supported_arches; *arch != nullptr; ++arch) {
-      result.emplace_back(*arch);
+      result.emplace_back(static_cast<const char*>(*arch));
     }
   }
   return result;
@@ -94,7 +94,7 @@ ErrorOr<flutter::EncodableList> FlatpakPlugin::GetSupportedArches() {
 
 GPtrArray* FlatpakPlugin::get_system_installations() {
   GError* error = nullptr;
-  auto sys_installs = flatpak_get_system_installations(nullptr, &error);
+  const auto sys_installs = flatpak_get_system_installations(nullptr, &error);
   if (error) {
     spdlog::error("[FlatpakPlugin] Error getting system installations: {}",
                   error->message);
@@ -106,7 +106,7 @@ GPtrArray* FlatpakPlugin::get_system_installations() {
 
 GPtrArray* FlatpakPlugin::get_remotes(FlatpakInstallation* installation) {
   GError* error = nullptr;
-  auto remotes =
+  const auto remotes =
       flatpak_installation_list_remotes(installation, nullptr, &error);
 
   if (error) {
@@ -121,7 +121,7 @@ flutter::EncodableList FlatpakPlugin::installation_get_default_languages(
   flutter::EncodableList languages;
   GError* error = nullptr;
 
-  auto default_languages =
+  const auto default_languages =
       flatpak_installation_get_default_languages(installation, &error);
   if (error) {
     spdlog::error(
@@ -132,7 +132,7 @@ flutter::EncodableList FlatpakPlugin::installation_get_default_languages(
   }
   if (default_languages != nullptr) {
     for (auto language = default_languages; *language != nullptr; ++language) {
-      languages.emplace_back(*language);
+      languages.emplace_back(static_cast<const char*>(*language));
     }
     g_strfreev(default_languages);
   }
@@ -155,7 +155,7 @@ flutter::EncodableList FlatpakPlugin::installation_get_default_locales(
   }
   if (default_locales != nullptr) {
     for (auto locale = default_locales; *locale != nullptr; ++locale) {
-      locales.emplace_back(*locale);
+      locales.emplace_back(static_cast<const char*>(*locale));
     }
     g_strfreev(default_locales);
   }
@@ -172,12 +172,12 @@ void format_time_iso8601(time_t raw_time, char* buffer, size_t buffer_size) {
 
   // Get timezone offset in seconds
   long timezone_offset = tm_info.tm_gmtoff;
-  char sign = (timezone_offset >= 0) ? '+' : '-';
+  const char sign = (timezone_offset >= 0) ? '+' : '-';
   timezone_offset = (timezone_offset >= 0) ? timezone_offset : -timezone_offset;
 
   // Calculate hours and minutes
-  int hours = static_cast<int>(timezone_offset / 3600);
-  int minutes = static_cast<int>((timezone_offset % 3600) / 60);
+  const int hours = static_cast<int>(timezone_offset / 3600);
+  const int minutes = static_cast<int>((timezone_offset % 3600) / 60);
 
   // Append timezone offset to the buffer
   char tz_buffer[7];  // To store the timezone offset in +-HH:MM format
@@ -189,32 +189,43 @@ Installation FlatpakPlugin::get_installation(
     FlatpakInstallation* installation) {
   flutter::EncodableList remote_list;
 
-  auto remotes = get_remotes(installation);
+  const auto remotes = get_remotes(installation);
   for (auto j = 0; j < remotes->len; j++) {
-    auto remote = static_cast<FlatpakRemote*>(g_ptr_array_index(remotes, j));
+    const auto remote =
+        static_cast<FlatpakRemote*>(g_ptr_array_index(remotes, j));
 
-    auto name = flatpak_remote_get_name(remote);
-    auto url = flatpak_remote_get_url(remote);
-    auto collection_id = flatpak_remote_get_collection_id(remote);
-    auto title = flatpak_remote_get_title(remote);
-    auto comment = flatpak_remote_get_comment(remote);
-    auto description = flatpak_remote_get_description(remote);
-    auto homepage = flatpak_remote_get_homepage(remote);
-    auto icon = flatpak_remote_get_icon(remote);
-    auto default_branch = flatpak_remote_get_default_branch(remote);
-    auto main_ref = flatpak_remote_get_main_ref(remote);
-    auto filter = flatpak_remote_get_filter(remote);
-    bool gpg_verify = flatpak_remote_get_gpg_verify(remote);
-    bool no_enumerate = flatpak_remote_get_noenumerate(remote);
-    bool no_deps = flatpak_remote_get_nodeps(remote);
-    bool disabled = flatpak_remote_get_disabled(remote);
+    const auto name = flatpak_remote_get_name(remote);
+    const auto url = flatpak_remote_get_url(remote);
+    const auto collection_id = flatpak_remote_get_collection_id(remote);
+    const auto title = flatpak_remote_get_title(remote);
+    const auto comment = flatpak_remote_get_comment(remote);
+    const auto description = flatpak_remote_get_description(remote);
+    const auto homepage = flatpak_remote_get_homepage(remote);
+    const auto icon = flatpak_remote_get_icon(remote);
+    const auto default_branch = flatpak_remote_get_default_branch(remote);
+    const auto main_ref = flatpak_remote_get_main_ref(remote);
+    const auto filter = flatpak_remote_get_filter(remote);
+    const bool gpg_verify = flatpak_remote_get_gpg_verify(remote);
+    const bool no_enumerate = flatpak_remote_get_noenumerate(remote);
+    const bool no_deps = flatpak_remote_get_nodeps(remote);
+    const bool disabled = flatpak_remote_get_disabled(remote);
     int32_t prio = flatpak_remote_get_prio(remote);
 
-    auto default_arch = flatpak_get_default_arch();
+    const auto default_arch = flatpak_get_default_arch();
     auto appstream_timestamp_path = g_file_get_path(
         flatpak_remote_get_appstream_timestamp(remote, default_arch));
     auto appstream_dir_path =
         g_file_get_path(flatpak_remote_get_appstream_dir(remote, default_arch));
+
+    std::filesystem::path appstream_xml_path = appstream_dir_path;
+    appstream_xml_path /= "appstream.xml";
+    auto catalog = AppstreamCatalog(appstream_xml_path, "");
+    spdlog::debug("[FlatpakPlugin] Appstream Catalog Total components: {}",
+                  catalog.getTotalComponentCount());
+    const auto& components = catalog.getComponents();
+    for (const auto& component : components) {
+      PrintComponent(component);
+    }
 
     auto appstream_timestamp =
         get_appstream_timestamp(appstream_timestamp_path);
@@ -222,7 +233,7 @@ Installation FlatpakPlugin::get_installation(
     format_time_iso8601(appstream_timestamp, formatted_time,
                         sizeof(formatted_time));
 
-    remote_list.emplace_back(flutter::CustomEncodableValue(Remote(
+    remote_list.push_back(flutter::CustomEncodableValue(Remote(
         name ? name : "", url ? url : "", collection_id ? collection_id : "",
         title ? title : "", comment ? comment : "",
         description ? description : "", homepage ? homepage : "",
@@ -234,15 +245,17 @@ Installation FlatpakPlugin::get_installation(
   }
   g_ptr_array_unref(remotes);
 
-  auto id = flatpak_installation_get_id(installation);
-  auto display_name = flatpak_installation_get_display_name(installation);
-  auto installationPath = flatpak_installation_get_path(installation);
-  auto path = g_file_get_path(installationPath);
-  auto no_interaction = flatpak_installation_get_no_interaction(installation);
-  auto is_user = flatpak_installation_get_is_user(installation);
-  auto priority = flatpak_installation_get_priority(installation);
-  auto default_languages = installation_get_default_languages(installation);
-  auto default_locales = installation_get_default_locales(installation);
+  const auto id = flatpak_installation_get_id(installation);
+  const auto display_name = flatpak_installation_get_display_name(installation);
+  const auto installationPath = flatpak_installation_get_path(installation);
+  const auto path = g_file_get_path(installationPath);
+  const auto no_interaction =
+      flatpak_installation_get_no_interaction(installation);
+  const auto is_user = flatpak_installation_get_is_user(installation);
+  const auto priority = flatpak_installation_get_priority(installation);
+  const auto default_languages =
+      installation_get_default_languages(installation);
+  const auto default_locales = installation_get_default_locales(installation);
 
   return Installation(id, display_name, path, no_interaction, is_user, priority,
                       default_languages, default_locales, remote_list);
@@ -251,17 +264,17 @@ Installation FlatpakPlugin::get_installation(
 // Get configuration of user installation.
 ErrorOr<Installation> FlatpakPlugin::GetUserInstallation() {
   GError* error = nullptr;
-  auto installation = flatpak_installation_new_user(nullptr, &error);
+  const auto installation = flatpak_installation_new_user(nullptr, &error);
   return get_installation(installation);
 }
 
 ErrorOr<flutter::EncodableList> FlatpakPlugin::GetSystemInstallations() {
   flutter::EncodableList installs_list;
-  auto system_installations = get_system_installations();
+  const auto system_installations = get_system_installations();
   for (auto i = 0; i < system_installations->len; i++) {
-    auto installation = static_cast<FlatpakInstallation*>(
+    const auto installation = static_cast<FlatpakInstallation*>(
         g_ptr_array_index(system_installations, i));
-    installs_list.emplace_back(
+    installs_list.push_back(
         flutter::CustomEncodableValue(get_installation(installation)));
   }
   g_ptr_array_unref(system_installations);
@@ -286,7 +299,7 @@ void FlatpakPlugin::get_application_list(
   flutter::EncodableList result;
   GError* error = nullptr;
 
-  auto refs =
+  const auto refs =
       flatpak_installation_list_installed_refs(installation, nullptr, &error);
   if (error) {
     spdlog::error("[FlatpakPlugin] Error listing installed refs: {}",
@@ -297,30 +310,31 @@ void FlatpakPlugin::get_application_list(
   }
 
   for (guint i = 0; i < refs->len; i++) {
-    auto ref = static_cast<FlatpakInstalledRef*>(g_ptr_array_index(refs, i));
+    const auto ref =
+        static_cast<FlatpakInstalledRef*>(g_ptr_array_index(refs, i));
 
-    auto appdata_name = flatpak_installed_ref_get_appdata_name(ref);
-    auto appdata_id = flatpak_installation_get_id(installation);
-    auto appdata_summary = flatpak_installed_ref_get_appdata_summary(ref);
-    auto appdata_version = flatpak_installed_ref_get_appdata_version(ref);
-    auto appdata_origin = flatpak_installed_ref_get_origin(ref);
-    auto appdata_license = flatpak_installed_ref_get_appdata_license(ref);
-    auto deploy_dir = flatpak_installed_ref_get_deploy_dir(ref);
-    auto content_rating_type =
+    const auto appdata_name = flatpak_installed_ref_get_appdata_name(ref);
+    const auto appdata_id = flatpak_installation_get_id(installation);
+    const auto appdata_summary = flatpak_installed_ref_get_appdata_summary(ref);
+    const auto appdata_version = flatpak_installed_ref_get_appdata_version(ref);
+    const auto appdata_origin = flatpak_installed_ref_get_origin(ref);
+    const auto appdata_license = flatpak_installed_ref_get_appdata_license(ref);
+    const auto deploy_dir = flatpak_installed_ref_get_deploy_dir(ref);
+    const auto content_rating_type =
         flatpak_installed_ref_get_appdata_content_rating_type(ref);
-    auto latest_commit = flatpak_installed_ref_get_latest_commit(ref);
-    auto eol = flatpak_installed_ref_get_eol(ref);
-    auto eol_rebase = flatpak_installed_ref_get_eol_rebase(ref);
+    const auto latest_commit = flatpak_installed_ref_get_latest_commit(ref);
+    const auto eol = flatpak_installed_ref_get_eol(ref);
+    const auto eol_rebase = flatpak_installed_ref_get_eol_rebase(ref);
 
     flutter::EncodableList subpath_list;
     auto subpaths = flatpak_installed_ref_get_subpaths(ref);
     if (subpaths != nullptr) {
       for (auto sub_path = subpaths; *sub_path != nullptr; ++sub_path) {
-        subpath_list.emplace_back(*sub_path);
+        subpath_list.emplace_back(static_cast<const char*>(*sub_path));
       }
     }
 
-    application_list.emplace_back(flutter::CustomEncodableValue(Application(
+    application_list.push_back(flutter::CustomEncodableValue(Application(
         appdata_name ? appdata_name : "", appdata_id ? appdata_id : "",
         appdata_summary ? appdata_summary : "",
         appdata_version ? appdata_version : "",
@@ -342,7 +356,7 @@ ErrorOr<flutter::EncodableList> FlatpakPlugin::GetApplicationsInstalled() {
   auto installation = flatpak_installation_new_user(nullptr, &error);
   get_application_list(installation, application_list);
 
-  auto system_installations = get_system_installations();
+  const auto system_installations = get_system_installations();
   for (auto i = 0; i < system_installations->len; i++) {
     installation = static_cast<FlatpakInstallation*>(
         g_ptr_array_index(system_installations, i));
@@ -388,7 +402,7 @@ std::time_t FlatpakPlugin::get_appstream_timestamp(
         std::filesystem::last_write_time(timestamp_filepath);
 
     // return system time
-    auto sctp =
+    const auto sctp =
         std::chrono::time_point_cast<std::chrono::system_clock::duration>(
             fileTime - std::filesystem::file_time_type::clock::now() +
             std::chrono::system_clock::now());
@@ -402,19 +416,19 @@ std::time_t FlatpakPlugin::get_appstream_timestamp(
 std::vector<char> FlatpakPlugin::decompress_gzip(
     const std::vector<char>& compressedData,
     std::vector<char>& decompressedData) {
-  z_stream zs;
-  memset(&zs, 0, sizeof(zs));
+  z_stream zs = {};
 
   if (inflateInit2(&zs, 16 + MAX_WBITS) != Z_OK) {
     spdlog::error("[FlatpakPlugin] Unable to initialize zlib inflate");
     return {};
   }
 
-  zs.next_in = (Bytef*)compressedData.data();
+  zs.next_in =
+      const_cast<Bytef*>(reinterpret_cast<const Bytef*>(compressedData.data()));
   zs.avail_in = static_cast<uInt>(compressedData.size());
 
   int zlibResult;
-  auto buffer = std::make_unique<char[]>(BUFFER_SIZE);
+  const auto buffer = std::make_unique<char[]>(BUFFER_SIZE);
 
   do {
     zs.next_out = reinterpret_cast<Bytef*>(buffer.get());
@@ -443,7 +457,7 @@ std::string FlatpakPlugin::get_metadata_as_string(
     FlatpakInstalledRef* installed_ref) {
   GError* error = nullptr;
 
-  auto g_bytes =
+  const auto g_bytes =
       flatpak_installed_ref_load_metadata(installed_ref, nullptr, &error);
 
   if (!g_bytes) {
@@ -456,7 +470,7 @@ std::string FlatpakPlugin::get_metadata_as_string(
   }
 
   gsize size;
-  auto data = static_cast<const char*>(g_bytes_get_data(g_bytes, &size));
+  const auto data = static_cast<const char*>(g_bytes_get_data(g_bytes, &size));
   std::string result(data, size);
   g_bytes_unref(g_bytes);
   return std::move(result);
@@ -465,7 +479,7 @@ std::string FlatpakPlugin::get_metadata_as_string(
 std::string FlatpakPlugin::get_appdata_as_string(
     FlatpakInstalledRef* installed_ref) {
   GError* error = nullptr;
-  auto g_bytes =
+  const auto g_bytes =
       flatpak_installed_ref_load_appdata(installed_ref, nullptr, &error);
   if (!g_bytes) {
     if (error != nullptr) {
@@ -476,8 +490,9 @@ std::string FlatpakPlugin::get_appdata_as_string(
   }
 
   gsize size;
-  auto data = static_cast<const uint8_t*>(g_bytes_get_data(g_bytes, &size));
-  std::vector<char> compressedData(data, data + size);
+  const auto data =
+      static_cast<const uint8_t*>(g_bytes_get_data(g_bytes, &size));
+  const std::vector<char> compressedData(data, data + size);
   std::vector<char> decompressedData;
   decompress_gzip(compressedData, decompressedData);
   std::string decompressedString(decompressedData.begin(),
@@ -488,7 +503,8 @@ std::string FlatpakPlugin::get_appdata_as_string(
 flutter::EncodableMap FlatpakPlugin::get_content_rating_map(
     FlatpakInstalledRef* ref) {
   flutter::EncodableMap result;
-  auto content_rating = flatpak_installed_ref_get_appdata_content_rating(ref);
+  const auto content_rating =
+      flatpak_installed_ref_get_appdata_content_rating(ref);
   if (!content_rating) {
     return result;
   }

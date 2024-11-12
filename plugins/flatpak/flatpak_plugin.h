@@ -22,10 +22,8 @@
 #include <flatpak/flatpak.h>
 
 #include <filesystem>
-#include <future>
 #include <thread>
 
-#include <flutter/method_channel.h>
 #include <flutter/plugin_registrar.h>
 #include <asio/io_context_strand.hpp>
 
