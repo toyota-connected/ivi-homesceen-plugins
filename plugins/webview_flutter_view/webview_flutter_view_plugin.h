@@ -133,12 +133,9 @@ class WebviewPlatformView final : public PlatformView {
   GLuint programObject_{};
   EGLSurface egl_surface_{};
 
-  // _cef_browser_t* browser_;
-  // _cef_client_t* browserClient_;
-  // std::unique_ptr<_cef_render_handler_t> renderHandler_;
-
   void InitializeEGL();
   void InitializeScene();
+  void DrawFrame(uint32_t time) const;
 
   static void on_frame(void* data, wl_callback* callback, uint32_t time);
   static const wl_callback_listener frame_listener;
@@ -154,6 +151,27 @@ class WebviewPlatformView final : public PlatformView {
   static void on_dispose(bool hybrid, void* data);
 
   static const platform_view_listener platform_view_listener_;
+};
+
+class WebviewFlutterApp : public CefApp, public CefBrowserProcessHandler {
+ public:
+
+  // CefApp methods:
+  CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override {
+    return this;
+  }
+
+  // CefBrowserProcessHandler methods:
+  void OnContextInitialized() override;
+
+
+  CefRefPtr<CefBrowser> browser_;
+  CefRefPtr<BrowserClient> browserClient_;
+  std::unique_ptr<RenderHandler> renderHandler_;
+
+ private:
+
+  IMPLEMENT_REFCOUNTING(WebviewFlutterApp);
 };
 
 class WebviewFlutterInstanceManagerHostApi : public InstanceManagerHostApi {

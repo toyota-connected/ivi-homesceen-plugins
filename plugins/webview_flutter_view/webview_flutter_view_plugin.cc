@@ -29,43 +29,6 @@
 
 namespace plugin_webview_flutter {
 
-_cef_render_handler_t renderHandler_ = {};
-
-struct _cef_render_handler_t* get_render_handler(
-    struct _cef_client_t* self) {
-  return &renderHandler_;
-}
-
-void get_view_rect(struct _cef_render_handler_t* self,
-                    struct _cef_browser_t* browser,
-                    cef_rect_t* rect) {
-  spdlog::debug("[webivew_flutter] GetViewRect");
-  rect->width = 800;
-  rect->height = 600;
-}
-
-void on_paint(struct _cef_render_handler_t* self,
-               struct _cef_browser_t* browser,
-               cef_paint_element_type_t type,
-               size_t dirtyRectsCount,
-               cef_rect_t const* dirtyRects,
-               const void* buffer,
-               int width,
-               int height) {
-  // spdlog::debug("[webview_flutter] OnPaint, width: {}, height: {}", width,
-                // height);
-}
-
-void on_accelerated_paint(
-      struct _cef_render_handler_t* self,
-      struct _cef_browser_t* browser,
-      cef_paint_element_type_t type,
-      size_t dirtyRectsCount,
-      cef_rect_t const* dirtyRects,
-      const cef_accelerated_paint_info_t* info) {
-  spdlog::debug("[webivew_flutter] OnAcceleratedPaint");
-}
-
 // static
 void WebviewFlutterPlugin::RegisterWithRegistrar(
     flutter::PluginRegistrar* registrar) {
@@ -198,10 +161,12 @@ WebviewPlatformView::WebviewPlatformView(
   eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_);
   InitializeScene();
 
+
   addListener(platformViewsContext_, id, &platform_view_listener_, this);
 #endif
   StartCef();
 
+  // on_frame(this, callback_, 0);
   cef_thread_.join();
 }
 
@@ -245,10 +210,10 @@ void WebviewPlatformView::CefThreadMain() {
   spdlog::debug("[webview_flutter] cef_load_library OK!");
 
 
-  cef_main_args_t main_args = {static_cast<int>(args.size()), args.data()};
+  CefMainArgs main_args(static_cast<int>(args.size()), args.data());
 
   // Specify CEF global settings here.
-  _cef_settings_t settings = {0};
+  CefSettings settings;
 
   settings.no_sandbox = false;
   settings.windowless_rendering_enabled = true;
@@ -258,81 +223,46 @@ void WebviewPlatformView::CefThreadMain() {
   std::string root_cache_path_str =
       std::string(CEF_ROOT) + "/.config/cef_user_data";
   const char* root_cache_path = root_cache_path_str.c_str();
-  cef_string_ascii_to_utf16(root_cache_path, strlen(root_cache_path),
-                            &settings.root_cache_path);
+  CefString(&settings.root_cache_path).FromASCII(root_cache_path);
 
   std::string resource_path_str = std::string(CEF_ROOT) + "/Resources";
   const char* resource_path = resource_path_str.c_str();
-  cef_string_ascii_to_utf16(resource_path, strlen(resource_path),
-                            &settings.resources_dir_path);
+  CefString(&settings.resources_dir_path).FromASCII(resource_path);
 
   const char* browser_subprocess_path =
       "/usr/local/bin/webview_flutter_subprocess";
-  cef_string_ascii_to_utf16(browser_subprocess_path,
-                            strlen(browser_subprocess_path),
-                            &settings.browser_subprocess_path);
+  CefString(&settings.browser_subprocess_path).FromASCII(browser_subprocess_path);
 
-  settings.size = sizeof(_cef_settings_t);
-
-  // auto app = std::make_unique<WebviewFlutterApp>();
+  auto app = std::make_unique<WebviewFlutterApp>();
   // cef_app_t app = {};
   // app->base.size = sizeof(cef_app_t);
 
   spdlog::debug("[webview_flutter] ++CefInitialize");
-  if (!cef_initialize(&main_args, &settings, nullptr, nullptr)) {
+  if (!CefInitialize(main_args, settings, app.get(), nullptr)) {
     int error_code;
-    error_code = cef_get_exit_code();
+    error_code = CefGetExitCode();
     spdlog::error("[webview_flutter] CefInitialize: {}", error_code);
     exit(EXIT_FAILURE);
   }
   spdlog::debug("[webview_flutter] --CefInitialize");
 
-  cef_window_info_t window_info;
-  window_info.windowless_rendering_enabled = true;
-
-  renderHandler_ = {};
-  renderHandler_.base.size = sizeof(_cef_render_handler_t);
-  renderHandler_.get_view_rect = get_view_rect;
-  renderHandler_.on_paint = on_paint;
-  renderHandler_.on_accelerated_paint = on_accelerated_paint;
-
-  _cef_browser_settings_t browserSettings;
-  browserSettings.windowless_frame_rate = 60;  // 30 is default
-  browserSettings.size = sizeof(_cef_browser_settings_t);
-
-  cef_string_t browser_url_cef_str = {0};
-  const char* browser_url = "https://deanm.github.io/pre3d/monster.html";
-  // const char* browser_url = "https://www.google.com";
-  cef_string_ascii_to_utf16(browser_url, strlen(browser_url),
-                            &browser_url_cef_str);
-
-  // Client handler and its callbacks
-  cef_client_t browserClient_ = {};
-  browserClient_.base.size = sizeof(cef_client_t);
-  browserClient_.get_render_handler = get_render_handler;
-
-  spdlog::debug("[webview_flutter] CreateBrowserSync++");
-  /*browser_ = */cef_browser_host_create_browser_sync(
-      &window_info, &browserClient_, &browser_url_cef_str,
-      &browserSettings, nullptr, nullptr);
-  spdlog::debug("[webview_flutter] CreateBrowserSync--");
-
   // Run the CEF message loop. This will block until CefQuitMessageLoop() is
   // called.
   spdlog::debug("[webview_cef_thread] ++CefRunMessageLoop");
-  cef_run_message_loop();
+  CefRunMessageLoop();
   spdlog::debug("[webview_cef_thread] --CefRunMessageLoop");
 
   // Shut down CEF.
   spdlog::debug("[webview_cef_thread] ++CefShutdown");
-  cef_shutdown();
+  CefShutdown();
   spdlog::debug("[webview_cef_thread] --CefShutdown");
 }
+
 
 WebviewFlutterPlugin::~WebviewFlutterPlugin() {
   // browser_ = nullptr;
   // browserClient_ = nullptr;
-  cef_shutdown();
+  CefShutdown();
 
   // renderHandler_.reset();
 };
@@ -360,6 +290,29 @@ GLuint LoadShader(const GLchar* shaderSrc, const GLenum type) {
     return 0;
   }
   return shader;
+}
+
+void WebviewFlutterApp::OnContextInitialized() {
+  spdlog::debug("[webview_flutter] WebviewFlutterApp::OnContextInitialized");
+  CefWindowInfo window_info;
+  window_info.SetAsWindowless(true);
+
+  renderHandler_ = std::make_unique<RenderHandler>();
+  browserClient_ = new BrowserClient(renderHandler_.get());
+
+  CefBrowserSettings browserSettings;
+  browserSettings.windowless_frame_rate = 5;  // 30 is default
+
+  CefString browser_url_cef_str;
+  const char* browser_url = "https://deanm.github.io/pre3d/monster.html";
+  CefString(browser_url_cef_str).FromASCII(browser_url);
+
+  spdlog::debug("[webview_flutter] CreateBrowserSync++");
+  browser_ = CefBrowserHost::CreateBrowserSync(
+      window_info, browserClient_.get(),
+      "https://deanm.github.io/pre3d/monster.html", browserSettings, nullptr,
+      nullptr);
+  spdlog::debug("[webview_flutter] CreateBrowserSync--");
 }
 
 void WebviewPlatformView::InitializeScene() {
@@ -407,7 +360,7 @@ void WebviewPlatformView::InitializeScene() {
   }
 
   programObject_ = programObject;
-  glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 void WebviewPlatformView::InitializeEGL() {
@@ -1112,10 +1065,10 @@ const struct platform_view_listener
 
 void WebviewPlatformView::on_frame(void* data,
                                    wl_callback* callback,
-                                   const uint32_t /* time */) {
+                                   const uint32_t  time ) {
   const auto obj = static_cast<WebviewPlatformView*>(data);
 
-  spdlog::debug("[webview_flutter] on_frame");
+  // spdlog::debug("[webview_flutter] on_frame");
 
   obj->callback_ = nullptr;
 
@@ -1124,7 +1077,7 @@ void WebviewPlatformView::on_frame(void* data,
     wl_callback_destroy(callback);
   }
 
-  // TODO obj->DrawFrame(time);
+  obj->DrawFrame(time);
 
   // Z-Order
   // wl_subsurface_place_above(obj->subsurface_, obj->parent_surface_);
@@ -1141,5 +1094,25 @@ void WebviewPlatformView::on_frame(void* data,
 
 const wl_callback_listener WebviewPlatformView::frame_listener = {.done =
                                                                       on_frame};
+
+void WebviewPlatformView::DrawFrame(uint32_t  time ) const {
+  static constexpr GLfloat vVertices[] = {0.0f, 0.5f, 0.0f,  -0.5f, -0.5f,
+                                          0.0f, 0.5f, -0.5f, 0.0f};
+
+  if (eglGetCurrentContext() != egl_context_) {
+    eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_);
+  }
+
+  glViewport(0, 0, width_, height_);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glUseProgram(programObject_);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vVertices);
+  glEnableVertexAttribArray(0);
+  glDrawArrays(GL_TRIANGLES, 0, 3);
+  eglSwapBuffers(egl_display_, egl_surface_);
+
+  eglMakeCurrent(egl_display_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+}
 
 }  // namespace plugin_webview_flutter
