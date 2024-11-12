@@ -15,13 +15,19 @@
 #
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(FLATPAK IMPORTED_TARGET REQUIRED flatpak)
-pkg_check_modules(ZLIB IMPORTED_TARGET REQUIRED zlib)
+pkg_check_modules(FLATPAK_DEPS IMPORTED_TARGET REQUIRED flatpak libxml-2.0 zlib)
 
 add_library(plugin_flatpak STATIC
         flatpak_plugin_c_api.cc
         flatpak_plugin.cc
         messages.g.cc
+
+        common.cc
+        appstream_catalog.cc
+        component.cc
+        icon.cc
+        release.cc
+        screenshot.cc
 )
 
 target_include_directories(plugin_flatpak PRIVATE include)
@@ -29,6 +35,5 @@ target_include_directories(plugin_flatpak PRIVATE include)
 target_link_libraries(plugin_flatpak PUBLIC
         flutter
         platform_homescreen
-        PkgConfig::FLATPAK
-        PkgConfig::ZLIB
+        PkgConfig::FLATPAK_DEPS
 )
