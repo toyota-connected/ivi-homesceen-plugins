@@ -60,7 +60,7 @@ Model::Model(std::string assetPath,
 
   // if we have animation data; lets deserialize and add it to this
   if (const auto it = params.find(flutter::EncodableValue(kAnimation));
-    it != params.end() && !it->second.IsNull()) {
+      it != params.end() && !it->second.IsNull()) {
     auto animationInformation = std::make_shared<Animation>(
         std::get<flutter::EncodableMap>(it->second));
     vAddComponent(std::move(animationInformation));
@@ -100,8 +100,9 @@ GltfModel::GltfModel(std::string assetPath,
       pathPostfix_(std::move(pathPostfix)) {}
 
 ////////////////////////////////////////////////////////////////////////////
-std::unique_ptr<Model> Model::Deserialize(const std::string& /*flutterAssetsPath*/,
-                                          const flutter::EncodableMap& params) {
+std::unique_ptr<Model> Model::Deserialize(
+    const std::string& /*flutterAssetsPath*/,
+    const flutter::EncodableMap& params) {
   SPDLOG_TRACE("++Model::Model");
   std::unique_ptr<Animation> animation;
   std::unique_ptr<Model> fallback;
@@ -117,14 +118,8 @@ std::unique_ptr<Model> Model::Deserialize(const std::string& /*flutterAssetsPath
   for (const auto& [fst, snd] : params) {
     if (snd.IsNull())
       continue;
-
-    /*if (auto key = std::get<std::string>(fst);
-        key == "animation" &&
-        std::holds_alternative<flutter::EncodableMap>(snd)) {
-      animation = std::make_unique<Animation>(
-          flutterAssetsPath, std::get<flutter::EncodableMap>(snd));*/
-
-    if (auto key = std::get<std::string>(fst); key == "assetPath" && std::holds_alternative<std::string>(snd)) {
+    if (auto key = std::get<std::string>(fst);
+        key == "assetPath" && std::holds_alternative<std::string>(snd)) {
       assetPath = std::get<std::string>(snd);
     } else if (key == "isGlb" && std::holds_alternative<bool>(snd)) {
       is_glb = std::get<bool>(snd);
@@ -149,8 +144,7 @@ std::unique_ptr<Model> Model::Deserialize(const std::string& /*flutterAssetsPath
   if (is_glb) {
     return std::make_unique<GlbModel>(
         assetPath.has_value() ? std::move(assetPath.value()) : "",
-        url.has_value() ? std::move(url.value()) : "", nullptr,
-        oTransform,
+        url.has_value() ? std::move(url.value()) : "", nullptr, oTransform,
         oCommonRenderable, params);
   }
 
@@ -159,8 +153,7 @@ std::unique_ptr<Model> Model::Deserialize(const std::string& /*flutterAssetsPath
       url.has_value() ? std::move(url.value()) : "",
       pathPrefix.has_value() ? std::move(pathPrefix.value()) : "",
       pathPostfix.has_value() ? std::move(pathPostfix.value()) : "", nullptr,
-      oTransform, oCommonRenderable,
-      params);
+      oTransform, oCommonRenderable, params);
 }
 
 ////////////////////////////////////////////////////////////////////////////

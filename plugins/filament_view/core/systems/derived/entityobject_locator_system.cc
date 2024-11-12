@@ -27,7 +27,9 @@ void EntityObjectLocatorSystem::vInitSystem() {}
 void EntityObjectLocatorSystem::vUpdate(float /*fElapsedTime*/) {}
 
 ////////////////////////////////////////////////////////////////////////////////////
-void EntityObjectLocatorSystem::vShutdownSystem() {}
+void EntityObjectLocatorSystem::vShutdownSystem() {
+  _entities.clear();
+}
 
 ////////////////////////////////////////////////////////////////////////////////////
 void EntityObjectLocatorSystem::DebugPrint() {

@@ -100,26 +100,6 @@ class FilamentViewPlugin : public flutter::Plugin,
       float fValue,
       std::function<void(std::optional<FlutterError> reply)> result) override;
 
-  void ChangeAnimationByIndex(
-      int32_t index,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ChangeAnimationByName(
-      std::string name,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void GetAnimationNames(
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void GetAnimationCount(
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void GetCurrentAnimationIndex(
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void GetAnimationNameByIndex(
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
   void ChangeSkyboxByAsset(
       std::string path,
       std::function<void(std::optional<FlutterError> reply)> result) override;

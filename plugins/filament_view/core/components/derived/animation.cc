@@ -16,52 +16,231 @@
 #include "animation.h"
 
 #include <core/include/literals.h>
+#include <core/systems/derived/animation_system.h>
+#include <core/systems/ecsystems_manager.h>
 #include <core/utils/deserialize.h>
 #include <plugins/common/common.h>
 #include <filesystem>
-#include <core/systems/ecsystems_manager.h>
 
 namespace plugin_filament_view {
 
 ////////////////////////////////////////////////////////////////////////////
 Animation::Animation(const flutter::EncodableMap& params)
     : Component(std::string(__FUNCTION__)) {
-    Deserialize::DecodeParameterWithDefault(kAutoPlay, &auto_play_, params, false);
-    Deserialize::DecodeParameterWithDefault(kIndex, &index_, params, 0);
-    Deserialize::DecodeParameterWithDefault(kName, &name_, params, "not_set");
-    Deserialize::DecodeParameterWithDefault(kAssetPath, &asset_path_, params, "");
+  Deserialize::DecodeParameterWithDefault(kAutoPlay, &m_bAutoPlay, params,
+                                          false);
+  Deserialize::DecodeParameterWithDefault(kIndex, &m_nCurrentPlayingIndex,
+                                          params, 0);
 
-    // animation had centerPosition as a variable, not using this atm.
-    /*for (const auto& [fst, snd] : params) {
-        if (snd.IsNull())
-            continue;
+  Deserialize::DecodeParameterWithDefault(kLoop, &m_bLoop, params, true);
 
-        auto key = std::get<std::string>(fst);
-        if (key == "centerPosition" &&
-                   std::holds_alternative<flutter::EncodableMap>(snd)) {
-            center_position_ = std::make_unique<filament::math::float3>(
-                Deserialize::Format3(std::get<flutter::EncodableMap>(snd)));
-                   } else if (!snd.IsNull()) {
-                       spdlog::debug("[Animation] Unhandled Parameter");
-                       plugin_common::Encodable::PrintFlutterEncodableValue(key.c_str(), snd);
-                   }
-    }*/
+  Deserialize::DecodeParameterWithDefault(
+      kResetToTPoseOnReset, &m_bResetToTPoseOnReset, params, false);
+
+  double speed;
+  Deserialize::DecodeParameterWithDefault(kPlaybackSpeed, &speed, params, 1.0f);
+
+  m_fPlaybackSpeedScalar = static_cast<float>(speed);
+
+  Deserialize::DecodeParameterWithDefault(
+      kNotifyOfAnimationEvents, &m_bNotifyOfAnimationEvents, params, false);
+
+  m_bPaused = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////
+void Animation::vUpdate(float fElapsedTime) {
+  if (m_poAnimator == nullptr || m_bPaused) {
+    return;
+  }
+
+  if (m_nCurrentPlayingIndex < 0 && !m_queAnimationQueue.empty()) {
+    // Dequeue the next animation if the current one is finished
+    m_nCurrentPlayingIndex = m_queAnimationQueue.front();
+    m_queAnimationQueue.pop();
+    m_fTimeSinceStart = 0.0f;
+
+    if (m_bNotifyOfAnimationEvents) {
+      const auto animationSystem =
+          ECSystemManager::GetInstance()->poGetSystemAs<AnimationSystem>(
+              AnimationSystem::StaticGetTypeID(), "Animation::vUpdate");
+      animationSystem->vNotifyOfAnimationEvent(
+          GetOwner()->GetGlobalGuid(), AnimationEventType::eAnimationStarted,
+          std::to_string(m_nCurrentPlayingIndex));
+    }
+  }
+
+  if (m_nCurrentPlayingIndex < 0) {
+    return;
+  }
+
+  m_fTimeSinceStart += (fElapsedTime * m_fPlaybackSpeedScalar);
+
+  m_poAnimator->applyAnimation(size_t(m_nCurrentPlayingIndex),
+                               m_fTimeSinceStart);
+  m_poAnimator->updateBoneMatrices();
+
+  const auto currentAnimDuration = m_poAnimator->getAnimationDuration(
+      static_cast<size_t>(m_nCurrentPlayingIndex));
+  if (m_fTimeSinceStart > currentAnimDuration) {
+    if (m_bNotifyOfAnimationEvents) {
+      // send message here to dart
+      const auto animationSystem =
+          ECSystemManager::GetInstance()->poGetSystemAs<AnimationSystem>(
+              AnimationSystem::StaticGetTypeID(), "Animation::vUpdate");
+
+      animationSystem->vNotifyOfAnimationEvent(
+          GetOwner()->GetGlobalGuid(), AnimationEventType::eAnimationEnded,
+          std::to_string(m_nCurrentPlayingIndex));
+    }
+
+    // check queue
+
+    // check loop
+    if (m_bLoop) {
+      m_fTimeSinceStart -= currentAnimDuration;
+
+      if (m_bNotifyOfAnimationEvents) {
+        // send message here to dart
+        const auto animationSystem =
+            ECSystemManager::GetInstance()->poGetSystemAs<AnimationSystem>(
+                AnimationSystem::StaticGetTypeID(), "Animation::vUpdate");
+
+        animationSystem->vNotifyOfAnimationEvent(
+            GetOwner()->GetGlobalGuid(), AnimationEventType::eAnimationStarted,
+            std::to_string(m_nCurrentPlayingIndex));
+      }
+
+    } else {
+      m_fTimeSinceStart = 0.0f;
+      m_nCurrentPlayingIndex = -1;
+
+      if (!m_queAnimationQueue.empty()) {
+        m_nCurrentPlayingIndex =
+            static_cast<int32_t>(m_queAnimationQueue.front());
+        m_queAnimationQueue.pop();
+      } else if (m_bResetToTPoseOnReset) {
+        m_poAnimator->resetBoneMatrices();
+      }
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////
+void Animation::vEnqueueAnimation(int32_t index) {
+  if (index < 0) {
+    return;
+  }
+
+  if (index >= m_mapAnimationNamesToIndex.size()) {
+    spdlog::warn(
+        "Attempting to vEnqueueAnimation that is greater than total count of "
+        "animations.");
+    return;
+  }
+
+  m_queAnimationQueue.push(index);
+}
+
+////////////////////////////////////////////////////////////////////////////
+void Animation::vClearQueue() {
+  std::queue<int32_t> emptyQueue;
+  std::swap(m_queAnimationQueue, emptyQueue);  // Efficiently clear the queue
+}
+
+////////////////////////////////////////////////////////////////////////////
+void Animation::vSetAnimator(filament::gltfio::Animator& animator) {
+  m_poAnimator = &animator;
+
+  vSetupAnimationNameMapping();
+
+  if (m_bAutoPlay) {
+    vPlayAnimation(m_nCurrentPlayingIndex);
+  }
+
+  // debug, TODO remove before checkin
+  vPlayAnimation(m_nCurrentPlayingIndex);
+}
+
+////////////////////////////////////////////////////////////////////////////
+void Animation::vPlayAnimation(int32_t index) {
+  if (index < 0 || index >= m_mapAnimationNamesToIndex.size()) {
+    spdlog::warn("Invalid animation index: {}", index);
+    return;
+  }
+
+  vClearQueue();
+
+  m_nCurrentPlayingIndex = index;
+  m_fTimeSinceStart = 0.0f;
+}
+
+////////////////////////////////////////////////////////////////////////////
+bool Animation::bPlayAnimation(const std::string& szName) {
+  if (auto foundIter = m_mapAnimationNamesToIndex.find(szName);
+      foundIter != m_mapAnimationNamesToIndex.end()) {
+    vPlayAnimation(((int32_t)foundIter->second));
+    return true;
+  }
+
+  spdlog::warn("Animation string not found in mapping table {}", szName);
+  return false;
+}
+
+////////////////////////////////////////////////////////////////////////////
+void Animation::vSetupAnimationNameMapping() {
+  if (m_poAnimator) {
+    const auto count = m_poAnimator->getAnimationCount();
+    for (size_t i = 0; i < count; i++) {
+      m_mapAnimationNamesToIndex.insert(
+          std::make_pair(std::string(m_poAnimator->getAnimationName(i)), i));
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
 void Animation::DebugPrint(const std::string& tabPrefix) const {
-    spdlog::debug(tabPrefix + "name: [{}]", name_);
-    spdlog::debug(tabPrefix + "index_: {}", index_);
-    spdlog::debug(tabPrefix + "autoPlay: {}", auto_play_);
-    spdlog::debug(tabPrefix + "asset_path: [{}]", asset_path_);
+  spdlog::debug("{}m_nCurrentPlayingIndex: {}", tabPrefix,
+                m_nCurrentPlayingIndex);
+  spdlog::debug("{}m_bPaused: {}", tabPrefix, m_bPaused);
+  spdlog::debug("{}m_bAutoPlay: {}", tabPrefix, m_bAutoPlay);
+  spdlog::debug("{}m_bLoop: {}", tabPrefix, m_bLoop);
+  spdlog::debug("{}m_bResetToTPoseOnReset: {}", tabPrefix,
+                m_bResetToTPoseOnReset);
+  spdlog::debug("{}m_fPlaybackSpeedScalar: {}", tabPrefix,
+                m_fPlaybackSpeedScalar);
+  spdlog::debug("{}m_bNotifyOfAnimationEvents: {}", tabPrefix,
+                m_bNotifyOfAnimationEvents);
+  spdlog::debug("{}m_fTimeSinceStart: {}", tabPrefix, m_fTimeSinceStart);
 
-    const auto flutterAssetsPath =
-        ECSystemManager::GetInstance()->getConfigValue<std::string>(kAssetPath);
+  if (m_poAnimator) {
+    const auto count = m_poAnimator->getAnimationCount();
+    spdlog::debug("{}Animation Info: count[{}]", tabPrefix, count);
+    for (size_t i = 0; i < count; i++) {
+      spdlog::debug("{}Anim at [{}]: Name: '{}', Duration: {}", tabPrefix, i,
+                    m_poAnimator->getAnimationName(i),
+                    m_poAnimator->getAnimationDuration(i));
+    }
+  } else {
+    spdlog::debug("{}m_poAnimator is nullptr", tabPrefix);
+  }
 
-    const std::filesystem::path asset_folder(flutterAssetsPath);
-    spdlog::debug(tabPrefix + "asset_path {} valid",
-                  exists(asset_folder / asset_path_) ? "is" : "is not");
+  spdlog::debug("{}m_mapAnimationNamesToIndex:", tabPrefix);
+  for (const auto& [name, index] : m_mapAnimationNamesToIndex) {
+    spdlog::debug("{}  Name: '{}', Index: {}", tabPrefix, name, index);
+  }
 
+  spdlog::debug("{}m_queAnimationQueue size: {}", tabPrefix,
+                m_queAnimationQueue.size());
+  if (!m_queAnimationQueue.empty()) {
+    std::queue<int32_t> tempQueue = m_queAnimationQueue;  // Copy to iterate
+    spdlog::debug("{}Queue contents:", tabPrefix);
+    while (!tempQueue.empty()) {
+      int32_t index = tempQueue.front();
+      tempQueue.pop();
+      spdlog::debug("{}  Animation Index: {}", tabPrefix, index);
+    }
+  }
 }
 
 }  // namespace plugin_filament_view

@@ -114,6 +114,7 @@ add_library(plugin_filament_view STATIC
         core/scene/material/texture/texture_sampler.cc
         core/scene/skybox/skybox.cc
         core/systems/derived/skybox_system.cc
+        core/systems/derived/animation_system.cc
         core/entity/derived/shapes/baseshape.cc
         core/entity/derived/shapes/cube.cc
         core/entity/derived/shapes/sphere.cc

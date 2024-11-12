@@ -32,6 +32,7 @@
 #include <algorithm>  // for max
 #include <asio/post.hpp>
 
+#include "animation_system.h"
 #include "entityobject_locator_system.h"
 
 namespace plugin_filament_view {
@@ -133,17 +134,9 @@ void ModelSystem::loadModelGlb(std::unique_ptr<Model> oOurModel,
   EntityTransforms::vApplyTransform(oOurModel->getAsset(),
                                     *oOurModel->GetBaseTransform());
 
-  // todo
-  // setUpAnimation(poCurrModel->GetAnimation());
-
   std::shared_ptr<Model> sharedPtr = std::move(oOurModel);
-  m_mapszoAssets.insert(std::pair(sharedPtr->GetGlobalGuid(), sharedPtr));
 
-  const auto objectLocatorSystem =
-      ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
-          EntityObjectLocatorSystem::StaticGetTypeID(), "loadModelGlb");
-
-  objectLocatorSystem->vRegisterEntityObject(sharedPtr);
+  vSetupAssetThroughoutECS(sharedPtr, asset);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -201,8 +194,43 @@ void ModelSystem::loadModelGltf(
 
   oOurModel->setAsset(asset);
 
+  EntityTransforms::vApplyTransform(oOurModel->getAsset(),
+                                    *oOurModel->GetBaseTransform());
+
   std::shared_ptr<Model> sharedPtr = std::move(oOurModel);
+
+  vSetupAssetThroughoutECS(sharedPtr, asset);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+void ModelSystem::vSetupAssetThroughoutECS(
+    std::shared_ptr<Model>& sharedPtr,
+    filament::gltfio::FilamentAsset* filamentAsset) {
   m_mapszoAssets.insert(std::pair(sharedPtr->GetGlobalGuid(), sharedPtr));
+
+  auto animatorInstance = filamentAsset->getInstance()->getAnimator();
+
+  if (animatorInstance != nullptr &&
+      sharedPtr->HasComponentByStaticTypeID(Animation::StaticGetTypeID())) {
+    auto animatorComponent =
+        sharedPtr->GetComponentByStaticTypeID(Animation::StaticGetTypeID());
+    auto animator = dynamic_cast<Animation*>(animatorComponent.get());
+    std::shared_ptr<Animation> animationPtr =
+        std::shared_ptr(animatorComponent, animator);
+    animator->vSetAnimator(*animatorInstance);
+
+    const auto animationSystem =
+        ECSystemManager::GetInstance()->poGetSystemAs<AnimationSystem>(
+            AnimationSystem::StaticGetTypeID(), "loadModelGltf");
+
+    animationSystem->vRegisterEntityObject(sharedPtr);
+    animationPtr->DebugPrint("From ModelSystem::vSetupAssetThroughoutECS\t");
+  } else if (animatorInstance != nullptr) {
+    SPDLOG_DEBUG(
+        "You have a valid set of animations you can play on this, but you "
+        "didn't load an animation component, load one if you want that "
+        "functionality");
+  }
 
   const auto objectLocatorSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(

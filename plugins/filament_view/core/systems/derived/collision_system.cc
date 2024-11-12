@@ -241,7 +241,7 @@ std::list<HitResult> CollisionSystem::lstCheckForCollidable(
       hitResult.name_ = entity->GetName();
       hitResult.hitPosition_ = hitLocation;  // Set the hit location
 
-      SPDLOG_WARN("HIT RESULT: {}", hitResult.guid_);
+      SPDLOG_INFO("HIT RESULT: {}", hitResult.guid_);
 
       // Add to the hit results
       hitResults.push_back(hitResult);

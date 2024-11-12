@@ -16,9 +16,9 @@
 
 #pragma once
 
+#include <core/components/derived/animation.h>
 #include <core/components/derived/basetransform.h>
 #include <core/components/derived/commonrenderable.h>
-#include <core/components/derived/animation.h>
 #include <core/entity/base/entityobject.h>
 #include <gltfio/FilamentAsset.h>
 #include <string>
