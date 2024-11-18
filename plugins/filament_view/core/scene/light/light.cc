@@ -16,13 +16,14 @@
 
 #include "light.h"
 
+#include <core/include/literals.h>
 #include <core/utils/deserialize.h>
 #include <plugins/common/common.h>
 
 namespace plugin_filament_view {
 
 ////////////////////////////////////////////////////////////////////////////
-Light::Light(float colorTemperature,
+Light2::Light2(float colorTemperature,
              float intensity,
              filament::math::float3 direction,
              bool castShadows) {
@@ -34,7 +35,7 @@ Light::Light(float colorTemperature,
 }
 
 ////////////////////////////////////////////////////////////////////////////
-Light::Light(const flutter::EncodableMap& params) {
+Light2::Light2(const flutter::EncodableMap& params) {
   SPDLOG_TRACE("++{}::{}", __FILE__, __FUNCTION__);
   for (const auto& [fst, snd] : params) {
     auto key = std::get<std::string>(fst);
@@ -44,50 +45,49 @@ Light::Light(const flutter::EncodableMap& params) {
       continue;
     }
 
-    if (key == "type" && std::holds_alternative<std::string>(snd)) {
+    if (key == kType && std::holds_alternative<std::string>(snd)) {
       type_ = textToLightType(std::get<std::string>(snd));
-    } else if (key == "color" && std::holds_alternative<std::string>(snd)) {
+    } else if (key == kColor && std::holds_alternative<std::string>(snd)) {
       color_ = std::get<std::string>(snd);
-      SPDLOG_DEBUG("color: {}", color_.value());
-    } else if (key == "colorTemperature" &&
+    } else if (key == kColorTemperature &&
                std::holds_alternative<double>(snd)) {
       colorTemperature_ = std::get<double>(snd);
-    } else if (key == "intensity" && std::holds_alternative<double>(snd)) {
+    } else if (key == kIntensity && std::holds_alternative<double>(snd)) {
       intensity_ = std::get<double>(snd);
-    } else if (key == "position" &&
+    } else if (key == kPosition &&
                std::holds_alternative<flutter::EncodableMap>(snd)) {
       position_ = std::make_unique<filament::math::float3>(
           Deserialize::Format3(std::get<flutter::EncodableMap>(snd)));
-    } else if (key == "direction" &&
+    } else if (key == kDirection &&
                std::holds_alternative<flutter::EncodableMap>(snd)) {
       direction_ = std::make_unique<filament::math::float3>(
           Deserialize::Format3(std::get<flutter::EncodableMap>(snd)));
-    } else if (key == "castLight" && std::holds_alternative<bool>(snd)) {
+    } else if (key == kCastLight && std::holds_alternative<bool>(snd)) {
       castLight_ = std::get<bool>(snd);
-    } else if (key == "castShadows" && std::holds_alternative<bool>(snd)) {
+    } else if (key == kCastShadows && std::holds_alternative<bool>(snd)) {
       castShadows_ = std::get<bool>(snd);
-    } else if (key == "falloffRadius" && std::holds_alternative<double>(snd)) {
+    } else if (key == kFalloffRadius && std::holds_alternative<double>(snd)) {
       falloffRadius_ = std::get<double>(snd);
-    } else if (key == "spotLightConeInner" &&
+    } else if (key == kSpotLightConeInner &&
                std::holds_alternative<double>(snd)) {
       spotLightConeInner_ = std::get<double>(snd);
-    } else if (key == "spotLightConeOuter" && !snd.IsNull() &&
+    } else if (key == kSpotLightConeOuter &&
                std::holds_alternative<double>(snd)) {
       spotLightConeOuter_ = std::get<double>(snd);
-    } else if (key == "sunAngularRadius" && !snd.IsNull() &&
+    } else if (key == kSunAngularRadius &&
                std::holds_alternative<double>(snd)) {
       sunAngularRadius_ = std::get<double>(snd);
-    } else if (key == "sunHaloSize" && !snd.IsNull() &&
+    } else if (key == kSunHaloSize &&
                std::holds_alternative<double>(snd)) {
       sunHaloSize_ = std::get<double>(snd);
-    } else if (key == "sunHaloFalloff" && !snd.IsNull() &&
+    } else if (key == kSunHaloFalloff &&
                std::holds_alternative<double>(snd)) {
       sunHaloFalloff_ = std::get<double>(snd);
     } /*else if (!it.second.IsNull()) {
-      spdlog::debug("[Light] Unhandled Parameter {}", key.c_str());
-      plugin_common::Encodable::PrintFlutterEncodableValue(key.c_str(),
-                                                           it.second);
-    }*/
+          spdlog::debug("[Light] Unhandled Parameter {}", key.c_str());
+          plugin_common::Encodable::PrintFlutterEncodableValue(key.c_str(),
+                                                               it.second);
+        }*/
   }
 
   // Print("Setup Light");
@@ -95,93 +95,107 @@ Light::Light(const flutter::EncodableMap& params) {
 }
 
 ////////////////////////////////////////////////////////////////////////////
-void Light::DebugPrint(const char* tag) {
-  spdlog::debug("++++++++");
-  spdlog::debug("{} (Light)", tag);
+void Light2::DebugPrint(const std::string& tabPrefix) const {
+  spdlog::debug(tabPrefix + "Light Debug Info:");
+  spdlog::debug(tabPrefix + "Type: {}", lightTypeToText(type_));
 
-  spdlog::debug("\ttype: {}", lightTypeToText(type_));
   if (color_.has_value()) {
-    spdlog::debug("\tcolor: {}", color_.value());
+    spdlog::debug(tabPrefix + "Color: {}", color_.value());
   }
+
   if (colorTemperature_.has_value()) {
-    spdlog::debug("\tcolorTemperature: {}", colorTemperature_.value());
+    spdlog::debug(tabPrefix + "Color Temperature: {}",
+                  colorTemperature_.value());
   }
+
   if (intensity_.has_value()) {
-    spdlog::debug("\tintensity: {}", intensity_.value());
+    spdlog::debug(tabPrefix + "Intensity: {}", intensity_.value());
   }
-#if 1
+
   if (position_) {
-    SPDLOG_DEBUG("\tposition {} {} {}", position_.get()->x, position_.get()->y,
-                 position_.get()->z);
+    spdlog::debug(tabPrefix + "Position: x={}, y={}, z={}", position_->x,
+                  position_->y, position_->z);
   }
+
   if (direction_) {
-    SPDLOG_DEBUG("\tdirection_ {} {} {}", direction_.get()->x,
-                 direction_.get()->y, direction_.get()->z);
+    spdlog::debug(tabPrefix + "Direction: x={}, y={}, z={}", direction_->x,
+                  direction_->y, direction_->z);
   }
-#endif
+
   if (castLight_.has_value()) {
-    spdlog::debug("\tcastLight: {}", castLight_.value());
+    spdlog::debug(tabPrefix + "Casts Light: {}", castLight_.value());
   }
+
   if (castShadows_.has_value()) {
-    spdlog::debug("\tcastShadows: {}", castShadows_.value());
+    spdlog::debug(tabPrefix + "Casts Shadows: {}", castShadows_.value());
   }
+
   if (falloffRadius_.has_value()) {
-    spdlog::debug("\tfalloffRadius: {}", falloffRadius_.value());
+    spdlog::debug(tabPrefix + "Falloff Radius: {}", falloffRadius_.value());
   }
+
   if (spotLightConeInner_.has_value()) {
-    spdlog::debug("\tspotLightConeInner: {}", spotLightConeInner_.value());
+    spdlog::debug(tabPrefix + "Spotlight Cone Inner Angle: {}",
+                  spotLightConeInner_.value());
   }
+
   if (spotLightConeOuter_.has_value()) {
-    spdlog::debug("\tspotLightConeOuter: {}", spotLightConeOuter_.value());
+    spdlog::debug(tabPrefix + "Spotlight Cone Outer Angle: {}",
+                  spotLightConeOuter_.value());
   }
+
   if (sunAngularRadius_.has_value()) {
-    spdlog::debug("\tsunAngularRadius: {}", sunAngularRadius_.value());
+    spdlog::debug(tabPrefix + "Sun Angular Radius: {}",
+                  sunAngularRadius_.value());
   }
+
   if (sunHaloSize_.has_value()) {
-    spdlog::debug("\tsunHaloSize: {}", sunHaloSize_.value());
+    spdlog::debug(tabPrefix + "Sun Halo Size: {}", sunHaloSize_.value());
   }
+
   if (sunHaloFalloff_.has_value()) {
-    spdlog::debug("\tsunHaloFalloff: {}", sunHaloFalloff_.value());
+    spdlog::debug(tabPrefix + "Sun Halo Falloff: {}", sunHaloFalloff_.value());
   }
-  spdlog::debug("++++++++");
 }
 
 ////////////////////////////////////////////////////////////////////////////
-filament::LightManager::Type Light::textToLightType(const std::string& type) {
-  if (type == "SUN") {
-    return filament::LightManager::Type::SUN;
+filament::LightManager::Type Light2::textToLightType(const std::string& type) {
+  static constexpr std::pair<const char*, filament::LightManager::Type>
+      typeMap[] = {
+          {"SUN", filament::LightManager::Type::SUN},
+          {"DIRECTIONAL", filament::LightManager::Type::DIRECTIONAL},
+          {"POINT", filament::LightManager::Type::POINT},
+          {"FOCUSED_SPOT", filament::LightManager::Type::FOCUSED_SPOT},
+          {"SPOT", filament::LightManager::Type::SPOT},
+      };
+
+  for (const auto& [text, lightType] : typeMap) {
+    if (type == text) {
+      return lightType;
+    }
   }
-  if (type == "DIRECTIONAL") {
-    return filament::LightManager::Type::DIRECTIONAL;
-  }
-  if (type == "POINT") {
-    return filament::LightManager::Type::POINT;
-  }
-  if (type == "FOCUSED_SPOT") {
-    return filament::LightManager::Type::FOCUSED_SPOT;
-  }
-  if (type == "SPOT") {
-    return filament::LightManager::Type::SPOT;
-  }
-  return filament::LightManager::Type::DIRECTIONAL;
+
+  return filament::LightManager::Type::DIRECTIONAL;  // Default fallback
 }
 
 ////////////////////////////////////////////////////////////////////////////
-const char* Light::lightTypeToText(const filament::LightManager::Type type) {
-  switch (type) {
-    case filament::LightManager::Type::SUN:
-      return "SUN";
-    case filament::LightManager::Type::DIRECTIONAL:
-      return "DIRECTIONAL";
-    case filament::LightManager::Type::POINT:
-      return "POINT";
-    case filament::LightManager::Type::FOCUSED_SPOT:
-      return "FOCUSED_SPOT";
-    case filament::LightManager::Type::SPOT:
-      return "SPOT";
-    default:
-      return "DIRECTIONAL";
+const char* Light2::lightTypeToText(const filament::LightManager::Type type) {
+  static constexpr std::pair<filament::LightManager::Type, const char*>
+      typeMap[] = {
+          {filament::LightManager::Type::SUN, "SUN"},
+          {filament::LightManager::Type::DIRECTIONAL, "DIRECTIONAL"},
+          {filament::LightManager::Type::POINT, "POINT"},
+          {filament::LightManager::Type::FOCUSED_SPOT, "FOCUSED_SPOT"},
+          {filament::LightManager::Type::SPOT, "SPOT"},
+      };
+
+  for (const auto& [lightType, text] : typeMap) {
+    if (type == lightType) {
+      return text;
+    }
   }
+
+  return "DIRECTIONAL";  // Default fallback
 }
 
 }  // namespace plugin_filament_view

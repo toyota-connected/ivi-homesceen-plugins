@@ -58,7 +58,7 @@ class SceneTextDeserializer {
 
   std::unique_ptr<Skybox> skybox_;
   std::unique_ptr<IndirectLight> indirect_light_;
-  std::vector<std::unique_ptr<Light>> lights_;
+  //std::vector<std::unique_ptr<Light>> lights_;
   std::unique_ptr<Camera> camera_;
 };
 

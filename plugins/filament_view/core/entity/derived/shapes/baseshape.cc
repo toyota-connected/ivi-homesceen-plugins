@@ -44,8 +44,7 @@ using utils::Entity;
 
 ////////////////////////////////////////////////////////////////////////////
 BaseShape::BaseShape()
-    : EntityObject("unset name tbd"),
-      m_poVertexBuffer(nullptr),
+    : m_poVertexBuffer(nullptr),
       m_poIndexBuffer(nullptr),
       type_(ShapeType::Unset),
       m_f3Normal(0, 0, 0),
@@ -54,7 +53,7 @@ BaseShape::BaseShape()
 
 ////////////////////////////////////////////////////////////////////////////
 BaseShape::BaseShape(const flutter::EncodableMap& params)
-    : EntityObject("unset name tbd"),
+    : RenderableEntityObject(params),
       m_poVertexBuffer(nullptr),
       m_poIndexBuffer(nullptr),
       type_(ShapeType::Unset),

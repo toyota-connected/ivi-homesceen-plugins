@@ -21,6 +21,7 @@
 #include <core/components/derived/basetransform.h>
 #include <core/components/derived/commonrenderable.h>
 #include <core/entity/base/entityobject.h>
+#include <core/entity/derived/renderable_entityobject.h>
 #include <core/include/shapetypes.h>
 #include <core/scene/geometry/direction.h>
 #include <core/systems/derived/material_system.h>
@@ -35,7 +36,7 @@ using ::utils::Entity;
 
 namespace shapes {
 
-class BaseShape : public EntityObject {
+class BaseShape : public RenderableEntityObject {
   friend class plugin_filament_view::CollisionSystem;
 
  public:

@@ -19,6 +19,7 @@
 
 #include <core/components/derived/material_definitions.h>
 #include <core/entity/base/entityobject.h>
+#include <core/entity/derived/renderable_entityobject.h>
 #include <core/systems/ecsystems_manager.h>
 #include <plugins/common/common.h>
 
@@ -193,8 +194,10 @@ void MaterialSystem::vInitSystem() {
 
           const auto parameter = MaterialParameter::Deserialize("", params);
 
-          entityObject->vChangeMaterialInstanceProperty(parameter.get(),
-                                                        loadedTextures_);
+          auto renderable =
+              dynamic_cast<RenderableEntityObject*>(entityObject.get());
+          renderable->vChangeMaterialInstanceProperty(parameter.get(),
+                                                      loadedTextures_);
         }
 
         spdlog::debug("ChangeMaterialParameter Complete");
@@ -222,7 +225,9 @@ void MaterialSystem::vInitSystem() {
             entityObject != nullptr) {
           spdlog::debug("ChangeMaterialDefinitions valid entity found.");
 
-          entityObject->vChangeMaterialDefinitions(params, loadedTextures_);
+          auto renderable =
+              dynamic_cast<RenderableEntityObject*>(entityObject.get());
+          renderable->vChangeMaterialDefinitions(params, loadedTextures_);
         }
 
         spdlog::debug("ChangeMaterialDefinitions Complete");

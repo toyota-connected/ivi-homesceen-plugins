@@ -22,16 +22,16 @@
 #include <memory>
 
 namespace plugin_filament_view {
-class Light {
+class Light2 {
  public:
-  explicit Light(float colorTemperature = 6'500.0f,
+  explicit Light2(float colorTemperature = 6'500.0f,
                  float intensity = 100'000.0f,
                  ::filament::math::float3 direction = {0.0f, -1.0f, 0.0f},
                  bool castShadows = true);
 
-  explicit Light(const flutter::EncodableMap& params);
+  explicit Light2(const flutter::EncodableMap& params);
 
-  void DebugPrint(const char* tag);
+  void DebugPrint(const std::string& tabPrefix) const;
 
   static ::filament::LightManager::Type textToLightType(
       const std::string& type);
@@ -39,7 +39,7 @@ class Light {
   static const char* lightTypeToText(::filament::LightManager::Type type);
 
   // Copy constructor for shallow copy
-  Light(const Light& other)
+  Light2(const Light2& other)
       : type_(other.type_),
         color_(other.color_),
         colorTemperature_(other.colorTemperature_),
@@ -61,7 +61,7 @@ class Light {
         sunHaloFalloff_(other.sunHaloFalloff_) {}
 
   // Copy assignment operator for shallow copy
-  Light& operator=(const Light& other) {
+  Light2& operator=(const Light2& other) {
     if (this != &other) {
       type_ = other.type_;
       color_ = other.color_;

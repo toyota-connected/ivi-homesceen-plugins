@@ -17,6 +17,8 @@
 #pragma once
 
 #include <future>
+#include <core/components/derived/light.h>
+#include <core/entity/base/entityobject.h>
 
 #include <core/include/resource.h>
 #include <core/scene/light/light.h>
@@ -25,15 +27,15 @@
 
 namespace plugin_filament_view {
 
-class Light;
-
 class LightSystem : public ECSystem {
  public:
   LightSystem() = default;
 
-  void setDefaultLight();
-
-  std::future<Resource<std::string_view>> changeLight(Light* light);
+ // if after deserialization is complete, and there isn't a light made
+ // this will be called to create a simple direct light
+  void vCreateDefaultLight();
+ void vBuildLight(Light& light) const;
+ void vBuildLightAndAddToScene(Light& light) const;
 
   // Disallow copy and assign.
   LightSystem(const LightSystem&) = delete;
@@ -50,8 +52,17 @@ class LightSystem : public ECSystem {
   void vShutdownSystem() override;
   void DebugPrint() override;
 
+ void vRegisterEntityObject(const std::shared_ptr<EntityObject>& entity);
+ void vUnregisterEntityObject(const std::shared_ptr<EntityObject>& entity);
+
  private:
-  utils::Entity entityLight_;
-  std::unique_ptr<Light> defaultlight_;
+
+  // These change the lights in filaments scene
+  static void vRemoveLightFromScene(Light& light) ;
+  static void vAddLightToScene(Light& light) ;
+
+  std::unique_ptr<Light> m_poDefaultLight;
+  std::map<EntityGUID, std::shared_ptr<EntityObject>> m_mapGuidToEntity;
+
 };
 }  // namespace plugin_filament_view

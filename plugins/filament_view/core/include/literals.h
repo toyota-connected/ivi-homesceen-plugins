@@ -151,6 +151,18 @@ static constexpr char kLoop[] = "loop";
 static constexpr char kResetToTPoseOnReset[] = "resetToTPoseOnReset";
 static constexpr char kPlaybackSpeed[] = "playbackSpeed";
 static constexpr char kNotifyOfAnimationEvents[] = "notifyOfAnimationEvents";
+static constexpr char kType[] = "type";
+static constexpr char kColor[] = "color";
+static constexpr char kColorTemperature[] = "colorTemperature";
+static constexpr char kIntensity[] = "intensity";
+static constexpr char kPosition[] = "position";
+static constexpr char kCastLight[] = "castLight";
+static constexpr char kFalloffRadius[] = "falloffRadius";
+static constexpr char kSpotLightConeInner[] = "spotLightConeInner";
+static constexpr char kSpotLightConeOuter[] = "spotLightConeOuter";
+static constexpr char kSunAngularRadius[] = "sunAngularRadius";
+static constexpr char kSunHaloSize[] = "sunHaloSize";
+static constexpr char kSunHaloFalloff[] = "sunHaloFalloff";
 
 // specific collidable values:
 static constexpr char kCollidable[] = "collidable";

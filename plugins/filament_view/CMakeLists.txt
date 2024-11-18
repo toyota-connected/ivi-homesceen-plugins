@@ -83,6 +83,9 @@ add_library(plugin_filament_view STATIC
         core/components/derived/commonrenderable.cc
         core/components/derived/collidable.cc
         core/components/derived/animation.cc
+        core/components/derived/light.cc
+        core/entity/derived/nonrenderable_entityobject.cc
+        core/entity/derived/renderable_entityobject.cc
         core/systems/base/ecsystem.cc
         core/systems/ecsystems_manager.cc
         core/systems/derived/filament_system.cc
@@ -103,7 +106,6 @@ add_library(plugin_filament_view STATIC
         core/systems/derived/indirect_light_system.cc
         core/utils/entitytransforms.cc
         core/utils/hdr_loader.cc
-        core/scene/light/light.cc
         core/systems/derived/light_system.cc
         core/scene/material/loader/material_loader.cc
         core/scene/material/loader/texture_loader.cc

@@ -20,12 +20,13 @@
 #include <core/components/derived/basetransform.h>
 #include <core/components/derived/commonrenderable.h>
 #include <core/entity/base/entityobject.h>
+#include <core/entity/derived/renderable_entityobject.h>
 #include <gltfio/FilamentAsset.h>
 #include <string>
 
 namespace plugin_filament_view {
 
-class Model : public EntityObject {
+class Model : public RenderableEntityObject {
  public:
   Model(std::string assetPath,
         std::string url,

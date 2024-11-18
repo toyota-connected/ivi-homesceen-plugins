@@ -36,7 +36,7 @@ Model::Model(std::string assetPath,
              std::shared_ptr<BaseTransform> poTransform,
              std::shared_ptr<CommonRenderable> poCommonRenderable,
              const flutter::EncodableMap& params)
-    : EntityObject(assetPath),
+    : RenderableEntityObject(params),
       assetPath_(std::move(assetPath)),
       url_(std::move(url)),
       fallback_(fallback),

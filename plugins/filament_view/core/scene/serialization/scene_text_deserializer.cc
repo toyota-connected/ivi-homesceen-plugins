@@ -150,10 +150,13 @@ void SceneTextDeserializer::vDeserializeSceneLevel(
 
     auto encodableMap = std::get<flutter::EncodableMap>(snd);
 
+    // All of these need to become entities.
+
     if (key == kSkybox) {
       skybox_ = Skybox::Deserialize(encodableMap);
     } else if (key == kLight) {
-      lights_.emplace_back(std::make_unique<Light>(encodableMap));
+      // TODO
+      //lights_.emplace_back(std::make_unique<Light>(encodableMap));
     } else if (key == kIndirectLight) {
       indirect_light_ = IndirectLight::Deserialize(encodableMap);
     } else if (key == kCamera) {
@@ -168,6 +171,7 @@ void SceneTextDeserializer::vDeserializeSceneLevel(
       plugin_common::Encodable::PrintFlutterEncodableValue(key.c_str(), snd);
     }
   }
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -323,11 +327,15 @@ void SceneTextDeserializer::setUpLight() const {
 
   // Note, currently copied over in the changeLight function, for multi-lights
   // we'll need to expand this functionality .
-  if (!lights_.empty()) {
+  /*if (!lights_.empty()) {
     lightSystem->changeLight(lights_[0].get());
   } else {
     lightSystem->setDefaultLight();
-  }
+  }*/
+
+  // if a light didnt get deserialized, tell light system to create a default one.
+  // TODO CHECK IF NO OTHER LIGHTS
+  lightSystem->vCreateDefaultLight();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
