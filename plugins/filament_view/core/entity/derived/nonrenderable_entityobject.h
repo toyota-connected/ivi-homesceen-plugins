@@ -29,9 +29,11 @@ namespace plugin_filament_view {
 // collision
 class NonRenderableEntityObject : public EntityObject {
  public:
+ explicit NonRenderableEntityObject(const flutter::EncodableMap& params);
+ explicit NonRenderableEntityObject(const std::string& szName) : EntityObject(szName) {}
+
  protected:
-  explicit NonRenderableEntityObject(const flutter::EncodableMap& params);
-  virtual void DebugPrint();
+  void DebugPrint() const override;
 
  private:
 };

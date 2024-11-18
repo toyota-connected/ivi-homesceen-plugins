@@ -26,8 +26,9 @@
 #include <core/systems/base/ecsystem.h>
 
 namespace plugin_filament_view {
+ class NonRenderableEntityObject;
 
-class LightSystem : public ECSystem {
+ class LightSystem : public ECSystem {
  public:
   LightSystem() = default;
 
@@ -61,7 +62,7 @@ class LightSystem : public ECSystem {
   static void vRemoveLightFromScene(Light& light) ;
   static void vAddLightToScene(Light& light) ;
 
-  std::unique_ptr<Light> m_poDefaultLight;
+  std::shared_ptr<NonRenderableEntityObject> m_poDefaultLight;
   std::map<EntityGUID, std::shared_ptr<EntityObject>> m_mapGuidToEntity;
 
 };

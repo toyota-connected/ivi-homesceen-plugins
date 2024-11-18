@@ -24,6 +24,9 @@
 #include <plugins/common/common.h>
 #include <asio/post.hpp>
 #include <core/components/derived/light.h>
+#include <core/entity/derived/nonrenderable_entityobject.h>
+
+#include "entityobject_locator_system.h"
 
 namespace plugin_filament_view {
   using filament::math::float3;
@@ -33,16 +36,26 @@ namespace plugin_filament_view {
   ////////////////////////////////////////////////////////////////////////////////////
   void LightSystem::vCreateDefaultLight() {
     SPDLOG_DEBUG("{}", __FUNCTION__);
-    m_poDefaultLight = std::make_unique<Light>();
+    m_poDefaultLight = std::make_shared<NonRenderableEntityObject>("DefaultLight");
+    auto oLightComp = std::make_shared<Light>();
+    m_poDefaultLight->vAddComponent(oLightComp);
 
-    m_poDefaultLight->SetIntensity(200);
-    m_poDefaultLight->SetDirection({0,-1,0});
-    m_poDefaultLight->SetPosition({0, 5, 0});
-    m_poDefaultLight->SetCastLight(true);
+    oLightComp->SetIntensity(200);
+    oLightComp->SetDirection({0,-1,0});
+    oLightComp->SetPosition({0, 5, 0});
+    oLightComp->SetCastLight(true);
     // if you're in an closed space (IE Garage), it will self shadow cast
-    m_poDefaultLight->SetCastShadows(false);
+    oLightComp->SetCastShadows(false);
 
-    vBuildLightAndAddToScene(*m_poDefaultLight);
+    vBuildLightAndAddToScene(*oLightComp);
+
+    // register throughout systems
+    const auto objectLocatorSystem =
+          ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
+              EntityObjectLocatorSystem::StaticGetTypeID(), "vCreateDefaultLight");
+
+    objectLocatorSystem->vRegisterEntityObject(m_poDefaultLight);
+    vRegisterEntityObject(m_poDefaultLight);
   }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -154,7 +167,16 @@ void LightSystem::vUpdate(float /*fElapsedTime*/) {}
 ////////////////////////////////////////////////////////////////////////////////////
 void LightSystem::vShutdownSystem() {
   if(m_poDefaultLight != nullptr) {
-    vRemoveLightFromScene(*m_poDefaultLight);
+    auto component = dynamic_cast<Light*>(m_poDefaultLight->GetComponentByStaticTypeID(Light::StaticGetTypeID()).get());
+    vRemoveLightFromScene(*component);
+
+    const auto objectLocatorSystem =
+          ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
+              EntityObjectLocatorSystem::StaticGetTypeID(), "vCreateDefaultLight");
+
+    objectLocatorSystem->vUnregisterEntityObject(m_poDefaultLight);
+    vUnregisterEntityObject(m_poDefaultLight);
+    
     m_poDefaultLight.reset();
   }
 }

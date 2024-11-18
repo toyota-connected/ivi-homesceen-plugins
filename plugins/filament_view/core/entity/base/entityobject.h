@@ -32,6 +32,7 @@ class EntityObject {
   friend class MaterialSystem;
   friend class ModelSystem;
   friend class AnimationSystem;
+  friend class LightSystem;
 
  public:
   // Overloading the == operator to compare based on global_guid_

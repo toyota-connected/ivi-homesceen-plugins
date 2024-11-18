@@ -30,6 +30,6 @@ NonRenderableEntityObject::NonRenderableEntityObject(
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void NonRenderableEntityObject::DebugPrint() {}
+void NonRenderableEntityObject::DebugPrint() const {}
 
 }  // namespace plugin_filament_view
