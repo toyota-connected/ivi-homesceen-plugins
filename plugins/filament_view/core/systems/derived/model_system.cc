@@ -78,7 +78,7 @@ filament::gltfio::FilamentAsset* ModelSystem::poFindAssetByGuid(
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-void ModelSystem::loadModelGlb(std::unique_ptr<Model> oOurModel,
+void ModelSystem::loadModelGlb(std::shared_ptr<Model> oOurModel,
                                const std::vector<uint8_t>& buffer,
                                const std::string& /*assetName*/) {
   if (assetLoader_ == nullptr) {
@@ -141,7 +141,7 @@ void ModelSystem::loadModelGlb(std::unique_ptr<Model> oOurModel,
 
 ////////////////////////////////////////////////////////////////////////////////////
 void ModelSystem::loadModelGltf(
-    std::unique_ptr<Model> oOurModel,
+    std::shared_ptr<Model> oOurModel,
     const std::vector<uint8_t>& buffer,
     std::function<const filament::backend::BufferDescriptor&(
         std::string uri)>& /* callback */) {
@@ -216,11 +216,6 @@ void ModelSystem::vSetupAssetThroughoutECS(
     const auto animator = dynamic_cast<Animation*>(animatorComponent.get());
     animator->vSetAnimator(*animatorInstance);
 
-    const auto animationSystem =
-        ECSystemManager::GetInstance()->poGetSystemAs<AnimationSystem>(
-            AnimationSystem::StaticGetTypeID(), "loadModelGltf");
-
-    animationSystem->vRegisterEntityObject(sharedPtr);
     // Great if you need help with your animation information!
     // animationPtr->DebugPrint("From ModelSystem::vSetupAssetThroughoutECS\t");
   } else if (animatorInstance != nullptr &&
@@ -233,11 +228,7 @@ void ModelSystem::vSetupAssetThroughoutECS(
         sharedPtr->szGetAssetPath(), animatorInstance->getAnimationCount());
   }
 
-  const auto objectLocatorSystem =
-      ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
-          EntityObjectLocatorSystem::StaticGetTypeID(), "loadModelGltf");
-
-  objectLocatorSystem->vRegisterEntityObject(sharedPtr);
+  sharedPtr->vRegisterEntity();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -284,6 +275,9 @@ void ModelSystem::populateSceneWithAsyncLoadedAssets(const Model* model) {
   }
 
   if ([[maybe_unused]] auto lightEntities = asset->getLightEntities()) {
+    spdlog::info(
+        "Note: Light entities have come in from asset model load;"
+        "these are not attached to our entities and will be un changeable");
     filamentSystem->getFilamentScene()->addEntities(asset->getLightEntities(),
                                                     sizeof(*lightEntities));
   }
@@ -331,7 +325,7 @@ void ModelSystem::updateAsyncAssetLoading() {
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>> ModelSystem::loadGlbFromAsset(
-    std::unique_ptr<Model> oOurModel,
+    std::shared_ptr<Model> oOurModel,
     const std::string& path,
     bool isFallback) {
   const auto promise(
@@ -365,7 +359,7 @@ std::future<Resource<std::string_view>> ModelSystem::loadGlbFromAsset(
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>> ModelSystem::loadGlbFromUrl(
-    std::unique_ptr<Model> oOurModel,
+    std::shared_ptr<Model> oOurModel,
     std::string url,
     bool isFallback) {
   const auto promise(
@@ -386,7 +380,7 @@ std::future<Resource<std::string_view>> ModelSystem::loadGlbFromUrl(
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-void ModelSystem::handleFile(std::unique_ptr<Model>&& oOurModel,
+void ModelSystem::handleFile(std::shared_ptr<Model>&& oOurModel,
                              const std::vector<uint8_t>& buffer,
                              const std::string& fileSource,
                              bool /*isFallback*/,
@@ -403,7 +397,7 @@ void ModelSystem::handleFile(std::unique_ptr<Model>&& oOurModel,
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>> ModelSystem::loadGltfFromAsset(
-    std::unique_ptr<Model> /*oOurModel*/,
+    std::shared_ptr<Model> /*oOurModel*/,
     const std::string& /* path */,
     const std::string& /* pre_path */,
     const std::string& /* post_path */,
@@ -417,7 +411,7 @@ std::future<Resource<std::string_view>> ModelSystem::loadGltfFromAsset(
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>> ModelSystem::loadGltfFromUrl(
-    std::unique_ptr<Model> /*oOurModel*/,
+    std::shared_ptr<Model> /*oOurModel*/,
     const std::string& /* url */,
     bool /* isFallback */) {
   const auto promise(

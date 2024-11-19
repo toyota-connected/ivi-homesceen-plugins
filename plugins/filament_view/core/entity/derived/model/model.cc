@@ -33,18 +33,22 @@ namespace plugin_filament_view {
 Model::Model(std::string assetPath,
              std::string url,
              Model* fallback,
-             std::shared_ptr<BaseTransform> poTransform,
-             std::shared_ptr<CommonRenderable> poCommonRenderable,
              const flutter::EncodableMap& params)
     : RenderableEntityObject(params),
       assetPath_(std::move(assetPath)),
       url_(std::move(url)),
       fallback_(fallback),
       m_poAsset(nullptr) {
+  DeserializeNameAndGlobalGuid(params);
+}
+
+////////////////////////////////////////////////////////////////////////////
+  void Model::vInitComponents(std::shared_ptr<BaseTransform> poTransform,
+               std::shared_ptr<CommonRenderable> poCommonRenderable
+               , const flutter::EncodableMap& params) {
+
   m_poBaseTransform = std::weak_ptr<BaseTransform>(poTransform);
   m_poCommonRenderable = std::weak_ptr<CommonRenderable>(poCommonRenderable);
-
-  DeserializeNameAndGlobalGuid(params);
 
   vAddComponent(std::move(poTransform));
   vAddComponent(std::move(poCommonRenderable));
@@ -67,18 +71,15 @@ Model::Model(std::string assetPath,
   }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////
 GlbModel::GlbModel(std::string assetPath,
                    std::string url,
                    Model* fallback,
-                   std::shared_ptr<BaseTransform> poTransform,
-                   std::shared_ptr<CommonRenderable> poCommonRenderable,
                    const flutter::EncodableMap& params)
     : Model(std::move(assetPath),
             std::move(url),
             fallback,
-            std::move(poTransform),
-            std::move(poCommonRenderable),
             params) {}
 
 ////////////////////////////////////////////////////////////////////////////
@@ -87,20 +88,16 @@ GltfModel::GltfModel(std::string assetPath,
                      std::string pathPrefix,
                      std::string pathPostfix,
                      Model* fallback,
-                     std::shared_ptr<BaseTransform> poTransform,
-                     std::shared_ptr<CommonRenderable> poCommonRenderable,
                      const flutter::EncodableMap& params)
     : Model(std::move(assetPath),
             std::move(url),
             fallback,
-            std::move(poTransform),
-            std::move(poCommonRenderable),
             params),
       pathPrefix_(std::move(pathPrefix)),
       pathPostfix_(std::move(pathPostfix)) {}
 
 ////////////////////////////////////////////////////////////////////////////
-std::unique_ptr<Model> Model::Deserialize(
+std::shared_ptr<Model> Model::Deserialize(
     const std::string& /*flutterAssetsPath*/,
     const flutter::EncodableMap& params) {
   SPDLOG_TRACE("++Model::Model");
@@ -142,18 +139,27 @@ std::unique_ptr<Model> Model::Deserialize(
   }
 
   if (is_glb) {
-    return std::make_unique<GlbModel>(
+    auto toReturn = std::make_shared<GlbModel>(
         assetPath.has_value() ? std::move(assetPath.value()) : "",
-        url.has_value() ? std::move(url.value()) : "", nullptr, oTransform,
-        oCommonRenderable, params);
+        url.has_value() ? std::move(url.value()) : "", nullptr, params);
+
+    toReturn->vInitComponents(std::move(oTransform),
+            std::move(oCommonRenderable),
+             params);
+    return toReturn;
   }
 
-  return std::make_unique<GltfModel>(
+  auto toReturn = std::make_shared<GltfModel>(
       assetPath.has_value() ? std::move(assetPath.value()) : "",
       url.has_value() ? std::move(url.value()) : "",
       pathPrefix.has_value() ? std::move(pathPrefix.value()) : "",
       pathPostfix.has_value() ? std::move(pathPostfix.value()) : "", nullptr,
-      oTransform, oCommonRenderable, params);
+      params);
+
+  toReturn->vInitComponents(std::move(oTransform),
+            std::move(oCommonRenderable),
+             params);
+  return toReturn;
 }
 
 ////////////////////////////////////////////////////////////////////////////

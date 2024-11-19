@@ -106,9 +106,9 @@ class Deserialize {
   // Note std::get only supports double, this will take your double
   // and cast to float; this of course can truncate your value
   static void DecodeParameterWithDefault(const char* key,
-                                       float* out_value,
-                                       const flutter::EncodableMap& params,
-                                       const float& default_value);
+                                         float* out_value,
+                                         const flutter::EncodableMap& params,
+                                         const float& default_value);
 
   static void DecodeParameterWithDefaultInt64(
       const char* key,

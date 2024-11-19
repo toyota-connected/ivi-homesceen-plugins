@@ -15,8 +15,10 @@
  */
 #include "scene_text_deserializer.h"
 
+#include <core/entity/derived/nonrenderable_entityobject.h>
 #include <core/include/literals.h>
 #include <core/systems/derived/collision_system.h>
+#include <core/systems/derived/entityobject_locator_system.h>
 #include <core/systems/derived/indirect_light_system.h>
 #include <core/systems/derived/light_system.h>
 #include <core/systems/derived/model_system.h>
@@ -26,8 +28,6 @@
 #include <core/utils/deserialize.h>
 #include <plugins/common/common.h>
 #include <asio/post.hpp>
-#include <core/entity/derived/nonrenderable_entityobject.h>
-#include <core/systems/derived/entityobject_locator_system.h>
 
 #include "shell/platform/common/client_wrapper/include/flutter/standard_message_codec.h"
 
@@ -144,9 +144,7 @@ void SceneTextDeserializer::vDeserializeSceneLevel(
       continue;
     }
 
-    if (key == kLights &&
-               std::holds_alternative<flutter::EncodableList>(snd)) {
-
+    if (key == kLights && std::holds_alternative<flutter::EncodableList>(snd)) {
       auto list = std::get<flutter::EncodableList>(snd);
       for (const auto& iter : list) {
         if (iter.IsNull()) {
@@ -158,14 +156,18 @@ void SceneTextDeserializer::vDeserializeSceneLevel(
 
         // This will get placed on an entity
         std::string overWriteGuid;
-        Deserialize::DecodeParameterWithDefault(kGlobalGuid, &overWriteGuid, encodableMap, std::string(""));
+        Deserialize::DecodeParameterWithDefault(kGlobalGuid, &overWriteGuid,
+                                                encodableMap, std::string(""));
 
-        if(overWriteGuid.empty()) {
-          spdlog::warn("Your {} on light is empty string, will not add to scene", kGlobalGuid);
+        if (overWriteGuid.empty()) {
+          spdlog::warn(
+              "Your {} on light is empty string, will not add to scene",
+              kGlobalGuid);
           continue;
         }
 
-        lights_.insert(std::pair(overWriteGuid, std::make_shared<Light>(encodableMap)));
+        lights_.insert(
+            std::pair(overWriteGuid, std::make_shared<Light>(encodableMap)));
       }
 
       continue;
@@ -229,7 +231,6 @@ void SceneTextDeserializer::vDeserializeSceneLevel(
       plugin_common::Encodable::PrintFlutterEncodableValue(key.c_str(), snd);
     }
   }
-
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -286,12 +287,13 @@ void SceneTextDeserializer::setUpShapes() {
     }
   }
 
-  // This method releases shapes,
   shapeSystem->addShapesToScene(&shapes_);
+
+  shapes_.clear();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-void SceneTextDeserializer::loadModel(std::unique_ptr<Model>& model) {
+void SceneTextDeserializer::loadModel(std::shared_ptr<Model>& model) {
   const auto ecsManager = ECSystemManager::GetInstance();
   const auto& strand = *ecsManager->GetStrand();
 
@@ -376,7 +378,7 @@ void SceneTextDeserializer::setUpSkybox() const {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-void SceneTextDeserializer::setUpLights()  {
+void SceneTextDeserializer::setUpLights() {
   // Todo move to a message.
 
   const auto lightSystem =
@@ -385,8 +387,9 @@ void SceneTextDeserializer::setUpLights()  {
 
   // Note, this introduces a fire and forget functionality for entities
   // there's no "one" owner system, but its propagated to whomever cares for it.
-  for (const auto& light: lights_) {
-    auto newEntity = std::make_shared<NonRenderableEntityObject>("SceneTextDeserializer::setUpLights");
+  for (const auto& light : lights_) {
+    auto newEntity = std::make_shared<NonRenderableEntityObject>(
+        "SceneTextDeserializer::setUpLights");
 
     spdlog::debug("light override happening {}", light.first);
     newEntity->vOverrideGlobalGuid(light.first);
@@ -394,16 +397,12 @@ void SceneTextDeserializer::setUpLights()  {
 
     lightSystem->vBuildLightAndAddToScene(*light.second);
 
-    const auto objectLocatorSystem =
-          ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
-              EntityObjectLocatorSystem::StaticGetTypeID(), "setUpLights");
-
-    objectLocatorSystem->vRegisterEntityObject(newEntity);
-    lightSystem->vRegisterEntityObject(newEntity);
+    newEntity->vRegisterEntity();
   }
 
-  // if a light didnt get deserialized, tell light system to create a default one.
-  if(lights_.empty()) {
+  // if a light didnt get deserialized, tell light system to create a default
+  // one.
+  if (lights_.empty()) {
     lightSystem->vCreateDefaultLight();
   }
 

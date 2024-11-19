@@ -27,7 +27,7 @@ class MaterialParameter;
 
 using EntityGUID = std::string;
 
-class EntityObject {
+class EntityObject : public std::enable_shared_from_this<EntityObject> {
   friend class CollisionSystem;
   friend class MaterialSystem;
   friend class ModelSystem;
@@ -57,6 +57,16 @@ class EntityObject {
   EntityObject(const EntityObject&) = delete;
   EntityObject& operator=(const EntityObject&) = delete;
 
+  // This will register the object to the entity object locator
+  // system. Components will be registered with their respective
+  // System when a component is added to the entity.
+  void vRegisterEntity();
+
+  // Called from destructor but if saved in other list, which it
+  // will be. then it won't unregister. So you need to call this
+  // when you want it gone.
+  void vUnregisterEntity();
+
  protected:
   explicit EntityObject(std::string name);
   // Note, global_guid, needs to be unique here; this is mainly here for
@@ -64,6 +74,8 @@ class EntityObject {
   EntityObject(std::string name, std::string global_guid);
 
   virtual ~EntityObject() {
+    vUnregisterEntity();
+
     // smart ptrs in components deleted on clear.
     components_.clear();
   }
@@ -72,10 +84,7 @@ class EntityObject {
 
   [[nodiscard]] const std::string& GetName() const { return name_; }
 
-  void vAddComponent(std::shared_ptr<Component> component) {
-    component->entityOwner_ = this;
-    components_.emplace_back(std::move(component));
-  }
+  void vAddComponent(std::shared_ptr<Component> component, bool bAutoAddToSystems = true);
 
   void vRemoveComponent(size_t staticTypeID) {
     components_.erase(std::remove_if(components_.begin(), components_.end(),
@@ -116,9 +125,12 @@ class EntityObject {
 
   void DeserializeNameAndGlobalGuid(const flutter::EncodableMap& params);
 
+
  private:
   EntityGUID global_guid_;
   std::string name_;
+
+  bool m_bAlreadyRegistered{};
 
   // Look, if you're calling this, its expected your name clashing checking
   // yourself. This isn't done for you. Please dont have 100 'my_sphere'.

@@ -72,12 +72,9 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
           if (kChangeLightColorByGUIDColor == std::get<std::string>(fst) &&
               std::holds_alternative<std::string>(snd)) {
             colorString = std::get<std::string>(snd);
-          } else if (kEntityGUID ==
-                         std::get<std::string>(fst) &&
+          } else if (kEntityGUID == std::get<std::string>(fst) &&
                      std::holds_alternative<std::string>(snd)) {
             guid = std::get<std::string>(snd);
-            spdlog::debug("{} for guid passed in", guid);
-
           } else if (kChangeLightColorByGUIDIntensity ==
                          std::get<std::string>(fst) &&
                      std::holds_alternative<int32_t>(snd)) {

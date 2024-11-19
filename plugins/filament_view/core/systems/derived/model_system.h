@@ -35,11 +35,11 @@ class ModelSystem : public ECSystem {
   void destroyAllAssetsOnModels();
   void destroyAsset(const filament::gltfio::FilamentAsset* asset) const;
 
-  void loadModelGlb(std::unique_ptr<Model> oOurModel,
+  void loadModelGlb(std::shared_ptr<Model> oOurModel,
                     const std::vector<uint8_t>& buffer,
                     const std::string& assetName);
 
-  void loadModelGltf(std::unique_ptr<Model> oOurModel,
+  void loadModelGltf(std::shared_ptr<Model> oOurModel,
                      const std::vector<uint8_t>& buffer,
                      std::function<const ::filament::backend::BufferDescriptor&(
                          std::string uri)>& callback);
@@ -49,24 +49,24 @@ class ModelSystem : public ECSystem {
   void updateAsyncAssetLoading();
 
   std::future<Resource<std::string_view>> loadGlbFromAsset(
-      std::unique_ptr<Model> oOurModel,
+      std::shared_ptr<Model> oOurModel,
       const std::string& path,
       bool isFallback = false);
 
   std::future<Resource<std::string_view>> loadGlbFromUrl(
-      std::unique_ptr<Model> oOurModel,
+      std::shared_ptr<Model> oOurModel,
       std::string url,
       bool isFallback = false);
 
   static std::future<Resource<std::string_view>> loadGltfFromAsset(
-      std::unique_ptr<Model> oOurModel,
+      std::shared_ptr<Model> oOurModel,
       const std::string& path,
       const std::string& pre_path,
       const std::string& post_path,
       bool isFallback = false);
 
   static std::future<Resource<std::string_view>> loadGltfFromUrl(
-      std::unique_ptr<Model> oOurModel,
+      std::shared_ptr<Model> oOurModel,
       const std::string& url,
       bool isFallback = false);
 
@@ -108,7 +108,7 @@ class ModelSystem : public ECSystem {
 
   using PromisePtr = std::shared_ptr<std::promise<Resource<std::string_view>>>;
   void handleFile(
-      std::unique_ptr<Model>&& oOurModel,
+      std::shared_ptr<Model>&& oOurModel,
       const std::vector<uint8_t>& buffer,
       const std::string& fileSource,
       bool isFallback,

@@ -20,8 +20,7 @@ namespace plugin_filament_view {
 
 // Messages.cc usage from Dart->C++
 static constexpr char kChangeAnimationByIndex[] = "CHANGE_ANIMATION_BY_INDEX";
-static constexpr char kChangeLightColorByGUID[] =
-        "CHANGE_LIGHT_COLOR_BY_GUID";
+static constexpr char kChangeLightColorByGUID[] = "CHANGE_LIGHT_COLOR_BY_GUID";
 static constexpr char kChangeLightColorByGUIDColor[] =
     "CHANGE_LIGHT_COLOR_BY_GUID_COLOR";
 static constexpr char kChangeLightColorByGUIDIntensity[] =

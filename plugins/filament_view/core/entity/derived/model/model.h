@@ -31,13 +31,11 @@ class Model : public RenderableEntityObject {
   Model(std::string assetPath,
         std::string url,
         Model* fallback,
-        std::shared_ptr<BaseTransform> poTransform,
-        std::shared_ptr<CommonRenderable> poCommonRenderable,
         const flutter::EncodableMap& params);
 
   ~Model() override = default;
 
-  static std::unique_ptr<Model> Deserialize(
+  static std::shared_ptr<Model> Deserialize(
       const std::string& flutterAssetsPath,
       const flutter::EncodableMap& params);
 
@@ -64,6 +62,10 @@ class Model : public RenderableEntityObject {
 
   [[nodiscard]] std::string szGetAssetPath() const { return assetPath_; }
   [[nodiscard]] std::string szGetURLPath() const { return url_; }
+
+    void vInitComponents(std::shared_ptr<BaseTransform> poTransform,
+                 std::shared_ptr<CommonRenderable> poCommonRenderable
+                 , const flutter::EncodableMap& params);
 
  protected:
   std::string assetPath_;
@@ -99,9 +101,7 @@ class GlbModel final : public Model {
   GlbModel(std::string assetPath,
            std::string url,
            Model* fallback,
-           std::shared_ptr<BaseTransform> poTransform,
-           std::shared_ptr<CommonRenderable> poCommonRenderable,
-           const flutter::EncodableMap& params);
+          const flutter::EncodableMap& params);
 
   ~GlbModel() override = default;
 };
@@ -113,8 +113,6 @@ class GltfModel final : public Model {
             std::string pathPrefix,
             std::string pathPostfix,
             Model* fallback,
-            std::shared_ptr<BaseTransform> poTransform,
-            std::shared_ptr<CommonRenderable> poCommonRenderable,
             const flutter::EncodableMap& params);
 
   ~GltfModel() override = default;

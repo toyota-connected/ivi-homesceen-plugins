@@ -27,9 +27,9 @@
 #include <vector>
 
 namespace plugin_filament_view {
- class Light;
+class Light;
 
- class SceneTextDeserializer {
+class SceneTextDeserializer {
  public:
   explicit SceneTextDeserializer(const std::vector<uint8_t>& params);
   void vRunPostSetupLoad();
@@ -38,9 +38,9 @@ namespace plugin_filament_view {
 
  private:
   // These get released to the Model_system / obj locator
-  std::vector<std::unique_ptr<Model>> models_;
+  std::vector<std::shared_ptr<Model>> models_;
   // These get released to the Shape_System / obj locator
-  std::vector<std::unique_ptr<shapes::BaseShape>> shapes_;
+  std::vector<std::shared_ptr<shapes::BaseShape>> shapes_;
 
   void vDeserializeRootLevel(const std::vector<uint8_t>& params,
                              const std::string& flutterAssetsPath);
@@ -54,7 +54,7 @@ namespace plugin_filament_view {
   void setUpIndirectLight() const;
   void setUpShapes();
 
-  static void loadModel(std::unique_ptr<Model>& model);
+  static void loadModel(std::shared_ptr<Model>& model);
 
   std::unique_ptr<Skybox> skybox_;
   std::unique_ptr<IndirectLight> indirect_light_;

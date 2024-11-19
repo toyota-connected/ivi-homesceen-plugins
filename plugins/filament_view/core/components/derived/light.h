@@ -1,5 +1,5 @@
 /*
-* Copyright 2020-2024 Toyota Connected North America
+ * Copyright 2020-2024 Toyota Connected North America
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,13 @@
 
 #include "shell/platform/common/client_wrapper/include/flutter/encodable_value.h"
 
-#include <filament/LightManager.h>
 #include <core/components/base/component.h>
+#include <filament/LightManager.h>
 
 namespace plugin_filament_view {
 
 class Light : public Component {
-    friend class LightSystem;
+  friend class LightSystem;
 
  public:
   // Constructors
@@ -45,27 +45,47 @@ class Light : public Component {
 
   explicit Light(const flutter::EncodableMap& params);
 
-  [[nodiscard]] filament::LightManager::Type GetLightType() const { return m_Type; }
+  [[nodiscard]] filament::LightManager::Type GetLightType() const {
+    return m_Type;
+  }
   [[nodiscard]] const std::string& GetColor() const { return m_szColor; }
-  [[nodiscard]] float GetColorTemperature() const { return m_fColorTemperature; }
+  [[nodiscard]] float GetColorTemperature() const {
+    return m_fColorTemperature;
+  }
   [[nodiscard]] float GetIntensity() const { return m_fIntensity; }
-  [[nodiscard]] const filament::math::float3& GetPosition() const { return m_f3Position; }
-  [[nodiscard]] const filament::math::float3& GetDirection() const { return m_f3Direction; }
+  [[nodiscard]] const filament::math::float3& GetPosition() const {
+    return m_f3Position;
+  }
+  [[nodiscard]] const filament::math::float3& GetDirection() const {
+    return m_f3Direction;
+  }
   [[nodiscard]] bool GetCastLight() const { return m_bCastLight; }
   [[nodiscard]] bool GetCastShadows() const { return m_bCastShadows; }
   [[nodiscard]] float GetFalloffRadius() const { return m_fFalloffRadius; }
-  [[nodiscard]] float GetSpotLightConeInner() const { return m_fSpotLightConeInner; }
-  [[nodiscard]] float GetSpotLightConeOuter() const { return m_fSpotLightConeOuter; }
-  [[nodiscard]] float GetSunAngularRadius() const { return m_fSunAngularRadius; }
+  [[nodiscard]] float GetSpotLightConeInner() const {
+    return m_fSpotLightConeInner;
+  }
+  [[nodiscard]] float GetSpotLightConeOuter() const {
+    return m_fSpotLightConeOuter;
+  }
+  [[nodiscard]] float GetSunAngularRadius() const {
+    return m_fSunAngularRadius;
+  }
   [[nodiscard]] float GetSunHaloSize() const { return m_fSunHaloSize; }
   [[nodiscard]] float GetSunHaloFalloff() const { return m_fSunHaloFalloff; }
 
   void SetLightType(filament::LightManager::Type type) { m_Type = type; }
   void SetColor(const std::string& color) { m_szColor = color; }
-  void SetColorTemperature(float temperature) { m_fColorTemperature = temperature; }
+  void SetColorTemperature(float temperature) {
+    m_fColorTemperature = temperature;
+  }
   void SetIntensity(float intensity) { m_fIntensity = intensity; }
-  void SetPosition(const filament::math::float3& position) { m_f3Position = position; }
-  void SetDirection(const filament::math::float3& direction) { m_f3Direction = direction; }
+  void SetPosition(const filament::math::float3& position) {
+    m_f3Position = position;
+  }
+  void SetDirection(const filament::math::float3& direction) {
+    m_f3Direction = direction;
+  }
   void SetCastLight(bool castLight) { m_bCastLight = castLight; }
   void SetCastShadows(bool castShadows) { m_bCastShadows = castShadows; }
   void SetFalloffRadius(float radius) { m_fFalloffRadius = radius; }
@@ -81,18 +101,15 @@ class Light : public Component {
 
   [[nodiscard]] size_t GetTypeID() const override { return StaticGetTypeID(); }
 
-  [[nodiscard]] Component* Clone() const override {
-    return new Light(*this);
-  }
+  [[nodiscard]] Component* Clone() const override { return new Light(*this); }
 
-    static ::filament::LightManager::Type textToLightType(
-    const std::string& type);
+  static ::filament::LightManager::Type textToLightType(
+      const std::string& type);
 
-    static const char* lightTypeToText(::filament::LightManager::Type type);
-
+  static const char* lightTypeToText(::filament::LightManager::Type type);
 
  private:
-      std::shared_ptr<utils::Entity> m_poFilamentEntityLight;
+  std::shared_ptr<utils::Entity> m_poFilamentEntityLight;
 
   filament::LightManager::Type m_Type;
   std::string m_szColor;

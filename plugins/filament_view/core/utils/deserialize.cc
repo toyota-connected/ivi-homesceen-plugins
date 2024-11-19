@@ -122,10 +122,11 @@ void Deserialize::DecodeParameterWithDefault(
 }
 
 ////////////////////////////////////////////////////////////////////////////
-void Deserialize::DecodeParameterWithDefault(const char* key,
-                                   float* out_value,
-                                   const flutter::EncodableMap& params,
-                                   const float& default_value) {
+void Deserialize::DecodeParameterWithDefault(
+    const char* key,
+    float* out_value,
+    const flutter::EncodableMap& params,
+    const float& default_value) {
   double dValue = 0.0;
   DecodeParameterWithDefault(key, &dValue, params, default_value);
   *out_value = static_cast<float>(dValue);
