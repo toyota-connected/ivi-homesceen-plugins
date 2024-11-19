@@ -22,14 +22,14 @@
 #include <core/entity/derived/shapes/baseshape.h>
 #include <core/scene/camera/camera.h>
 #include <core/scene/indirect_light/indirect_light.h>
-#include <core/scene/light/light.h>
 #include <core/scene/skybox/skybox.h>
 #include <encodable_value.h>
 #include <vector>
 
 namespace plugin_filament_view {
+ class Light;
 
-class SceneTextDeserializer {
+ class SceneTextDeserializer {
  public:
   explicit SceneTextDeserializer(const std::vector<uint8_t>& params);
   void vRunPostSetupLoad();
@@ -50,7 +50,7 @@ class SceneTextDeserializer {
 
   void setUpLoadingModels();
   void setUpSkybox() const;
-  void setUpLight() const;
+  void setUpLights();
   void setUpIndirectLight() const;
   void setUpShapes();
 
@@ -58,7 +58,7 @@ class SceneTextDeserializer {
 
   std::unique_ptr<Skybox> skybox_;
   std::unique_ptr<IndirectLight> indirect_light_;
-  //std::vector<std::unique_ptr<Light>> lights_;
+  std::map<EntityGUID, std::shared_ptr<Light>> lights_;
   std::unique_ptr<Camera> camera_;
 };
 

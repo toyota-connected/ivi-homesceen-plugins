@@ -26,6 +26,8 @@
 #include <core/utils/deserialize.h>
 #include <plugins/common/common.h>
 #include <asio/post.hpp>
+#include <core/entity/derived/nonrenderable_entityobject.h>
+#include <core/systems/derived/entityobject_locator_system.h>
 
 #include "shell/platform/common/client_wrapper/include/flutter/standard_message_codec.h"
 
@@ -142,6 +144,33 @@ void SceneTextDeserializer::vDeserializeSceneLevel(
       continue;
     }
 
+    if (key == kLights &&
+               std::holds_alternative<flutter::EncodableList>(snd)) {
+
+      auto list = std::get<flutter::EncodableList>(snd);
+      for (const auto& iter : list) {
+        if (iter.IsNull()) {
+          spdlog::warn("CreationParamName unable to cast {}", key.c_str());
+          continue;
+        }
+
+        auto encodableMap = std::get<flutter::EncodableMap>(iter);
+
+        // This will get placed on an entity
+        std::string overWriteGuid;
+        Deserialize::DecodeParameterWithDefault(kGlobalGuid, &overWriteGuid, encodableMap, std::string(""));
+
+        if(overWriteGuid.empty()) {
+          spdlog::warn("Your {} on light is empty string, will not add to scene", kGlobalGuid);
+          continue;
+        }
+
+        lights_.insert(std::pair(overWriteGuid, std::make_shared<Light>(encodableMap)));
+      }
+
+      continue;
+    }
+
     // everything in this loop looks to make sure its a map, we can continue
     // on if its not.
     if (!std::holds_alternative<flutter::EncodableMap>(snd)) {
@@ -152,11 +181,40 @@ void SceneTextDeserializer::vDeserializeSceneLevel(
 
     // All of these need to become entities.
 
+#if 0
+    else if (key == kModels &&
+               std::holds_alternative<flutter::EncodableList>(snd)) {
+
+      auto list = std::get<flutter::EncodableList>(snd);
+      for (const auto& iter : list) {
+        if (iter.IsNull()) {
+          spdlog::warn("CreationParamName unable to cast {}", key.c_str());
+          continue;
+        }
+
+        auto deserializedModel = Model::Deserialize(
+            flutterAssetsPath, std::get<flutter::EncodableMap>(iter));
+        if (deserializedModel == nullptr) {
+          // load fallback
+          auto fallbackToDeserialize =
+              Deserialize::DeserializeParameter(kFallback, iter);
+          deserializedModel = Model::Deserialize(
+              flutterAssetsPath,
+              std::get<flutter::EncodableMap>(fallbackToDeserialize));
+        }
+        if (deserializedModel == nullptr) {
+          spdlog::error("Unable to load model and fallback model");
+          continue;
+        }
+        models_.emplace_back(std::move(deserializedModel));
+      }
+    }
+#endif
+
+    SPDLOG_DEBUG("KEY {} ", key);
+
     if (key == kSkybox) {
       skybox_ = Skybox::Deserialize(encodableMap);
-    } else if (key == kLight) {
-      // TODO
-      //lights_.emplace_back(std::make_unique<Light>(encodableMap));
     } else if (key == kIndirectLight) {
       indirect_light_ = IndirectLight::Deserialize(encodableMap);
     } else if (key == kCamera) {
@@ -178,7 +236,7 @@ void SceneTextDeserializer::vDeserializeSceneLevel(
 void SceneTextDeserializer::vRunPostSetupLoad() {
   setUpLoadingModels();
   setUpSkybox();
-  setUpLight();
+  setUpLights();
   setUpIndirectLight();
   setUpShapes();
 
@@ -318,24 +376,38 @@ void SceneTextDeserializer::setUpSkybox() const {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-void SceneTextDeserializer::setUpLight() const {
+void SceneTextDeserializer::setUpLights()  {
   // Todo move to a message.
 
   const auto lightSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<LightSystem>(
           LightSystem::StaticGetTypeID(), __FUNCTION__);
 
-  // Note, currently copied over in the changeLight function, for multi-lights
-  // we'll need to expand this functionality .
-  /*if (!lights_.empty()) {
-    lightSystem->changeLight(lights_[0].get());
-  } else {
-    lightSystem->setDefaultLight();
-  }*/
+  // Note, this introduces a fire and forget functionality for entities
+  // there's no "one" owner system, but its propagated to whomever cares for it.
+  for (const auto& light: lights_) {
+    auto newEntity = std::make_shared<NonRenderableEntityObject>("SceneTextDeserializer::setUpLights");
+
+    spdlog::debug("light override happening {}", light.first);
+    newEntity->vOverrideGlobalGuid(light.first);
+    newEntity->vAddComponent(light.second);
+
+    lightSystem->vBuildLightAndAddToScene(*light.second);
+
+    const auto objectLocatorSystem =
+          ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
+              EntityObjectLocatorSystem::StaticGetTypeID(), "setUpLights");
+
+    objectLocatorSystem->vRegisterEntityObject(newEntity);
+    lightSystem->vRegisterEntityObject(newEntity);
+  }
 
   // if a light didnt get deserialized, tell light system to create a default one.
-  // TODO CHECK IF NO OTHER LIGHTS
-  lightSystem->vCreateDefaultLight();
+  if(lights_.empty()) {
+    lightSystem->vCreateDefaultLight();
+  }
+
+  lights_.clear();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

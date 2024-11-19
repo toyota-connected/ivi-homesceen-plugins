@@ -63,26 +63,35 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
 
       if (methodCall.method_name() == kChangeAnimationByIndex) {
         result->Success();
-      } else if (methodCall.method_name() == kChangeLightColorByIndex) {
+      } else if (methodCall.method_name() == kChangeLightColorByGUID) {
         const auto& args = std::get_if<EncodableMap>(methodCall.arguments());
-        int32_t index = 0;
+        EntityGUID guid;
         std::string colorString;
         int32_t intensity = 0;
         for (const auto& [fst, snd] : *args) {
-          if (kChangeLightColorByIndexColor == std::get<std::string>(fst) &&
+          if (kChangeLightColorByGUIDColor == std::get<std::string>(fst) &&
               std::holds_alternative<std::string>(snd)) {
             colorString = std::get<std::string>(snd);
-          } else if (kChangeLightColorByIndexKey ==
+          } else if (kEntityGUID ==
                          std::get<std::string>(fst) &&
-                     std::holds_alternative<int32_t>(snd)) {
-            index = std::get<int32_t>(snd);
-          } else if (kChangeLightColorByIndexIntensity ==
+                     std::holds_alternative<std::string>(snd)) {
+            guid = std::get<std::string>(snd);
+            spdlog::debug("{} for guid passed in", guid);
+
+          } else if (kChangeLightColorByGUIDIntensity ==
                          std::get<std::string>(fst) &&
                      std::holds_alternative<int32_t>(snd)) {
             intensity = std::get<int32_t>(snd);
           }
         }
-        api->ChangeDirectLightByIndex(index, colorString, intensity, nullptr);
+
+        ECSMessage lightData;
+        lightData.addData(ECSMessageType::ChangeSceneLightProperties, guid);
+        lightData.addData(ECSMessageType::ChangeSceneLightPropertiesColorValue,
+                          colorString);
+        lightData.addData(ECSMessageType::ChangeSceneLightPropertiesIntensity,
+                          static_cast<float>(intensity));
+        ECSystemManager::GetInstance()->vRouteMessage(lightData);
 
         result->Success();
       } else if (methodCall.method_name() == kToggleShapesInScene) {

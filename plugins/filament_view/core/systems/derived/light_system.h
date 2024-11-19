@@ -29,6 +29,7 @@ namespace plugin_filament_view {
  class NonRenderableEntityObject;
 
  class LightSystem : public ECSystem {
+  friend class SceneTextDeserializer;
  public:
   LightSystem() = default;
 

@@ -33,6 +33,7 @@ class EntityObject {
   friend class ModelSystem;
   friend class AnimationSystem;
   friend class LightSystem;
+  friend class SceneTextDeserializer;
 
  public:
   // Overloading the == operator to compare based on global_guid_

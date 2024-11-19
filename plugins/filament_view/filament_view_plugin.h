@@ -72,12 +72,6 @@ class FilamentViewPlugin : public flutter::Plugin,
   void ChangeMaterialDefinition(const flutter::EncodableMap& params,
                                 const EntityGUID& guid) override;
 
-  void ChangeDirectLightByIndex(
-      int32_t index,
-      std::string color,
-      int32_t intensity,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
   void ToggleShapesInScene(
       bool value,
       std::function<void(std::optional<FlutterError> reply)> result) override;

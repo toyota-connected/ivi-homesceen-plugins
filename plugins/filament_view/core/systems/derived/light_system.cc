@@ -143,15 +143,27 @@ void LightSystem::vInitSystem() {
       [this](const ECSMessage& msg) {
         spdlog::debug("ChangeSceneLightProperties");
 
+        const auto guid = msg.getData<std::string>(ECSMessageType::ChangeSceneLightProperties);
+
         const auto colorValue = msg.getData<std::string>(
             ECSMessageType::ChangeSceneLightPropertiesColorValue);
 
         const auto intensityValue = msg.getData<float>(
             ECSMessageType::ChangeSceneLightPropertiesIntensity);
 
-        //defaultlight_->ChangeColor(colorValue);
-        //defaultlight_->ChangeIntensity(intensityValue);
-        //changeLight(defaultlight_.get());
+        spdlog::debug("{} is string", guid);
+
+        // find the entity in our list:
+        if(auto ourEntity = m_mapGuidToEntity.find(guid); ourEntity != m_mapGuidToEntity.end()) {
+          spdlog::debug("Found Light");
+
+          auto theLight = dynamic_cast<Light*>(ourEntity->second->GetComponentByStaticTypeID(Light::StaticGetTypeID()).get());
+          theLight->SetIntensity(intensityValue);
+          theLight->SetColor(colorValue);
+
+          vRemoveLightFromScene(*theLight);
+          vBuildLightAndAddToScene(*theLight);
+        }
 
         spdlog::debug("ChangeSceneLightProperties Complete");
       });
@@ -176,7 +188,7 @@ void LightSystem::vShutdownSystem() {
 
     objectLocatorSystem->vUnregisterEntityObject(m_poDefaultLight);
     vUnregisterEntityObject(m_poDefaultLight);
-    
+
     m_poDefaultLight.reset();
   }
 }
