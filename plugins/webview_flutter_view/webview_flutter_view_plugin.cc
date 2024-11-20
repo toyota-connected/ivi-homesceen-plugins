@@ -29,6 +29,32 @@
 
 namespace plugin_webview_flutter {
 
+
+GLuint LoadShader(const GLchar* shaderSrc, const GLenum type) {
+  // Create the shader object
+  const GLuint shader = glCreateShader(type);
+  if (shader == 0)
+    return 0;
+  glShaderSource(shader, 1, &shaderSrc, nullptr);
+  glCompileShader(shader);
+  GLint compiled;
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+  if (!compiled) {
+    GLint infoLen = 0;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
+    if (infoLen > 1) {
+      auto* infoLog = static_cast<GLchar*>(
+          malloc(sizeof(char) * static_cast<unsigned long>(infoLen)));
+      glGetShaderInfoLog(shader, infoLen, nullptr, infoLog);
+      spdlog::error("Error compiling shader:\n{}\n", infoLog);
+      free(infoLog);
+    }
+    glDeleteShader(shader);
+    return 0;
+  }
+  return shader;
+}
+
 // static
 void WebviewFlutterPlugin::RegisterWithRegistrar(
     flutter::PluginRegistrar* registrar) {
@@ -52,17 +78,192 @@ void WebviewPlatformView::GetViewRect(CefRefPtr<CefBrowser> /* browser */,
                                 CefRect& rect) {
   spdlog::debug("[webivew_flutter] GetViewRect");
   rect.width = 800;
-  rect.height = 544;
+  rect.height = 600;
 }
 
-void WebviewPlatformView::OnPaint(CefRefPtr<CefBrowser> /* browser */,
-                            PaintElementType /* type */,
-                            const RectList& /* dirtyRects */,
-                            const void* /* buffer */,
+void WebviewPlatformView::OnPaint(CefRefPtr<CefBrowser> browser,
+                            PaintElementType type,
+                            const RectList& dirtyRects,
+                            const void* buffer,
                             int width,
                             int height) {
-  spdlog::debug("[webivew_flutter] OnPaint, width: {}, height: {}", width,
-                height);
+  spdlog::debug("[webivew_flutter] OnPaint, width: {}, height: {}, type: {}", width,
+                height, (uint8_t)type);
+#if 1
+  if (eglGetCurrentContext() != egl_context_) {
+    eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_);
+  }
+
+
+  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
+  GLenum err = 0;
+  err = glGetError();
+  spdlog::debug("glBindFramebuffer: glGetError: {}", (uint32_t)err);
+  glBindTexture(GL_TEXTURE_2D, gl_texture_);
+  err = glGetError();
+  spdlog::debug("glBindTexture: glGetError: {}", (uint32_t)err);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  err = glGetError();
+  spdlog::debug("glTexParameteri: glGetError: {}", (uint32_t)err);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  err = glGetError();
+  spdlog::debug("glTexParameteri: glGetError: {}", (uint32_t)err);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  err = glGetError();
+  spdlog::debug("glTexParameteri: glGetError: {}", (uint32_t)err);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  err = glGetError();
+  spdlog::debug("glTexParameteri: glGetError: {}", (uint32_t)err);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width,
+               height, 0,  GL_RGBA,  GL_UNSIGNED_BYTE, buffer);
+  err = glGetError();
+  spdlog::debug("glTexImage2D: glGetError: {}", (uint32_t)err);
+  glBindTexture(GL_TEXTURE_2D, 0);
+  err = glGetError();
+  spdlog::debug("glBindTexture: glGetError: {}", (uint32_t)err);
+
+  
+  glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer_);
+  err = glGetError();
+  spdlog::debug("glBindRenderbuffer: glGetError: {}", (uint32_t)err);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
+  err = glGetError();
+  spdlog::debug("glRenderbufferStorage: glGetError: {}", (uint32_t)err);
+  glBindRenderbuffer(GL_RENDERBUFFER, 0);
+  err = glGetError();
+  spdlog::debug("glBindRenderbuffer: glGetError: {}", (uint32_t)err);
+  // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gl_texture_, 0);
+  
+
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                         gl_texture_, 0);
+  err = glGetError();
+  spdlog::debug("glFramebufferTexture2D: glGetError: {}", (uint32_t)err);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer_);
+  err = glGetError();
+  spdlog::debug("glFramebufferRenderbuffer: glGetError: {}", (uint32_t)err);
+  GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+  glDrawBuffers(1, DrawBuffers); 
+  err = glGetError();
+  spdlog::debug("glDrawBuffers: glGetError: {}", (uint32_t)err);
+  GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  if(status != GL_FRAMEBUFFER_COMPLETE) {
+    spdlog::debug("glCheckFramebufferStatus Failed: {}", status);
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  err = glGetError();
+  spdlog::debug("glBindFramebuffer: glGetError: {}", (uint32_t)err);
+  
+#if 0
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_);
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+  glViewport(0, 0, width, height);
+  glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT,
+    GL_NEAREST);
+#endif
+
+#if 0
+  GLuint quad_VertexArrayID;
+  glGenVertexArrays(1, &quad_VertexArrayID);
+  glBindVertexArray(quad_VertexArrayID);
+
+  static const GLfloat g_quad_vertex_buffer_data[] = {
+      -1.0f, -1.0f, 0.0f,
+      1.0f, -1.0f, 0.0f,
+      -1.0f,  1.0f, 0.0f,
+      -1.0f,  1.0f, 0.0f,
+      1.0f, -1.0f, 0.0f,
+      1.0f,  1.0f, 0.0f,
+  };
+
+  GLuint quad_vertexbuffer;
+  glGenBuffers(1, &quad_vertexbuffer);
+  glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
+
+  // Create and compile our GLSL program from the shaders
+  // const GLuint vertexShader = LoadShader(vShaderStr, GL_VERTEX_SHADER);
+  // const GLuint fragmentShader = LoadShader(fShaderStr, GL_FRAGMENT_SHADER);
+  GLuint texID = glGetUniformLocation(programObject_, "gl_texture_");
+
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glViewport(0, 0, width, height);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glUseProgram(programObject_);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, gl_texture_);
+  // Set our "gl_texture_" sampler to use Texture Unit 0
+  glUniform1i(texID, 0);
+
+  glEnableVertexAttribArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
+  glVertexAttribPointer(
+    0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+    3,                  // size
+    GL_FLOAT,           // type
+    GL_FALSE,           // normalized?
+    0,                  // stride
+    (void*)0            // array buffer offset
+  );
+  // Draw the triangles !
+  glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
+  glDisableVertexAttribArray(0);
+#endif
+#if 1
+    float vertices[] = {
+      // positions          // colors           // texture coords
+       1.0f,  1.0f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 0.0f, // top right
+       1.0f, -1.0f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 1.0f, // bottom right
+      -1.0f, -1.0f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 1.0f, // bottom left
+      -1.0f,  1.0f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 0.0f  // top left 
+    };
+    unsigned int indices[] = {
+        0, 1, 3, // first triangle
+        1, 2, 3  // second triangle
+    };
+    unsigned int VBO, VAO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    // texture coord attribute
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    glUseProgram(programObject_);
+    glUniform1i(glGetUniformLocation(programObject_, "texture1"), 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gl_texture_);
+
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+#endif
+#endif
+
+  eglSwapBuffers(egl_display_, egl_surface_);
+  eglMakeCurrent(egl_display_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+  wl_subsurface_place_below(subsurface_, parent_surface_);
+
+  wl_subsurface_set_position(subsurface_, 0, 0);
+
+  wl_surface_commit(surface_);
+
 }
 
 void WebviewPlatformView::OnAcceleratedPaint(
@@ -128,17 +329,10 @@ WebviewPlatformView::WebviewPlatformView(
 #if 1
   /* Setup Wayland subsurface */
   display_ = flutter_view->GetDisplay()->GetDisplay();
-  egl_display_ = eglGetDisplay(display_);
-  assert(egl_display_);
   parent_surface_ = flutter_view->GetWindow()->GetBaseSurface();
   surface_ =
       wl_compositor_create_surface(flutter_view->GetDisplay()->GetCompositor());
-  egl_window_ = wl_egl_window_create(surface_, width_, height_);
-  assert(egl_window_);
 
-  InitializeEGL();
-  egl_surface_ =
-      eglCreateWindowSurface(egl_display_, egl_config_, egl_window_, nullptr);
 
 
   parent_surface_ = flutter_view->GetWindow()->GetBaseSurface();
@@ -153,50 +347,53 @@ WebviewPlatformView::WebviewPlatformView(
   // wl_subsurface_place_above(subsurface_, parent_surface_);
   wl_subsurface_place_below(subsurface_, surface_);
   wl_surface_commit(parent_surface_);
-
-  eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_);
-  InitializeScene();
-
-
 #endif
 
   addListener(platformViewsContext_, id, &platform_view_listener_, this);
-  // StartCef();
+
   cef_thread_ = std::thread(&WebviewPlatformView::CefThreadMain, this);
 
   // on_frame(this, callback_, 0);
   cef_thread_.join();
 }
 
-void WebviewPlatformView::StartCef() {
-  SPDLOG_DEBUG("[webview_flutter] StartCef");
-  // cef_thread_ = std::thread([&]() { CefThreadMain(); });
-  // cef_thread_ = std::thread([this]() { this->CefThreadMain(); });
-  // cef_thread_ = std::thread(CefThreadMain);
-}
-
 void WebviewPlatformView::CefThreadMain() {
   std::vector<char*> args;
   args.reserve(11);
   args.push_back("homescreen");
-  // args.push_back("--no-sandbox");
   args.push_back("--use-views");
   args.push_back("--use-ozone");
-  // args.push_back("--use-angle=vulkan");
-  // args.push_back("--use-vulkan");
-  // args.push_back("--enable-features=Vulkan");
   args.push_back("--enable-features=UseOzonePlatform");
-  // args.push_back("--enable-features=VaapiVideoDecoder");
   args.push_back("--ozone-platform=wayland");
   args.push_back("--log-level=0");
   args.push_back("--v=1");
   args.push_back("--use-gl=egl");
   args.push_back("--in-process-gpu");
-  // args.push_back("--enable-logging=stderr");
-  // args.push_back("--headless");
-  // args.push_back("--angle=opengles");
 
+  // Setup EGL objects
+  egl_display_ = eglGetDisplay(display_);
+  assert(egl_display_);
+  egl_window_ = wl_egl_window_create(surface_, 800, 600);
+  assert(egl_window_);
+  InitializeEGL();
+  egl_surface_ =
+      eglCreateWindowSurface(egl_display_, egl_config_, egl_window_, nullptr);
 
+  eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_);
+  glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+  glGenFramebuffers(1, &framebuffer_);
+  GLenum err = 0;
+  err = glGetError();
+  spdlog::debug("glBindFramebuffer: glGetError: {}", (uint32_t)err);
+  glGenTextures(1, &gl_texture_);
+  err = glGetError();
+  spdlog::debug("glBindFramebuffer: glGetError: {}", (uint32_t)err);
+  glGenRenderbuffers(1, &depthrenderbuffer_);
+  err = glGetError();
+  spdlog::debug("glBindFramebuffer: glGetError: {}", (uint32_t)err);
+  InitializeScene();
+
+  // Load libcef.so
   std::string libcef_path_str = "libcef.so";
   std::filesystem::path libcef_file_path(libcef_path_str);
   spdlog::debug("[webview_flutter] cef_load_library");
@@ -206,7 +403,7 @@ void WebviewPlatformView::CefThreadMain() {
   }
   spdlog::debug("[webview_flutter] cef_load_library OK!");
 
-
+  //  Set-up main args and settings for CEF
   CefMainArgs main_args(static_cast<int>(args.size()), args.data());
 
   // Specify CEF global settings here.
@@ -229,7 +426,6 @@ void WebviewPlatformView::CefThreadMain() {
       "/usr/local/bin/webview_flutter_subprocess";
   CefString(&settings.browser_subprocess_path).FromASCII(browser_subprocess_path);
 
-  // auto app = std::make_unique<WebviewFlutterApp>();
 
   spdlog::debug("[webview_flutter] ++CefInitialize");
   if (!CefInitialize(main_args, settings, this, nullptr)) {
@@ -257,64 +453,65 @@ WebviewFlutterPlugin::~WebviewFlutterPlugin() {
   CefShutdown();
 };
 
-GLuint LoadShader(const GLchar* shaderSrc, const GLenum type) {
-  // Create the shader object
-  const GLuint shader = glCreateShader(type);
-  if (shader == 0)
-    return 0;
-  glShaderSource(shader, 1, &shaderSrc, nullptr);
-  glCompileShader(shader);
-  GLint compiled;
-  glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-  if (!compiled) {
-    GLint infoLen = 0;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
-    if (infoLen > 1) {
-      auto* infoLog = static_cast<GLchar*>(
-          malloc(sizeof(char) * static_cast<unsigned long>(infoLen)));
-      glGetShaderInfoLog(shader, infoLen, nullptr, infoLog);
-      spdlog::error("Error compiling shader:\n{}\n", infoLog);
-      free(infoLog);
-    }
-    glDeleteShader(shader);
-    return 0;
-  }
-  return shader;
-}
-
 void WebviewPlatformView::OnContextInitialized() {
   spdlog::debug("[webview_flutter] WebviewPlatformView::OnContextInitialized");
   CefWindowInfo window_info;
   window_info.SetAsWindowless(true);
 
   CefBrowserSettings browserSettings;
-  browserSettings.windowless_frame_rate = 5;  // 30 is default
+  browserSettings.windowless_frame_rate = 60;  // 30 is default
 
   CefString browser_url_cef_str;
-  const char* browser_url = "https://deanm.github.io/pre3d/monster.html";
+  const char* browser_url = "http://www.google.com";
   CefString(browser_url_cef_str).FromASCII(browser_url);
 
   spdlog::debug("[webview_flutter] CreateBrowserSync++");
   browser_ = CefBrowserHost::CreateBrowserSync(
       window_info, this,
-      "https://deanm.github.io/pre3d/monster.html", browserSettings, nullptr,
+      "http://www.google.com", browserSettings, nullptr,
       nullptr);
   spdlog::debug("[webview_flutter] CreateBrowserSync--");
 }
 
 void WebviewPlatformView::InitializeScene() {
+  // constexpr GLchar vShaderStr[] =
+  //     "attribute vec3 vertexPosition_modelspace; \n"
+  //     "out vec2 UV; \n"
+  //     "void main(){ \n"
+  //     "  gl_Position =  vec4(vertexPosition_modelspace,1); \n"
+  //     "  UV = (vertexPosition_modelspace.xy+vec2(1,1))/2.0; \n"
+  //     "} \n";
+  // constexpr GLchar fShaderStr[] =
+  //     "attribute vec4 color;\n"
+  //     "uniform sampler2D gl_texture_;\n"
+  //     "in vec2 UV;\n"
+  //     "void main(){\n"
+  //     "  color = texture(gl_texture_, UV);\n"
+  //     "}\n";
   constexpr GLchar vShaderStr[] =
-      "attribute vec4 vPosition; \n"
-      "void main() \n"
-      "{ \n"
-      " gl_Position = vPosition; \n"
-      "} \n";
+      "#version 320 es\n"
+      "layout (location = 0) in vec3 aPos;\n"
+      "layout (location = 1) in vec3 aColor;\n"
+      "layout (location = 2) in vec2 aTexCoord;\n"
+      "out vec3 ourColor;\n"
+      "out vec2 TexCoord;\n"
+      "void main()\n"
+      "{\n"
+          "gl_Position = vec4(aPos, 1.0);\n"
+          "ourColor = aColor;\n"
+          "TexCoord = aTexCoord;\n"
+      "}\n";
   constexpr GLchar fShaderStr[] =
-      "precision mediump float; \n"
-      "void main() \n"
-      "{ \n"
-      " gl_FragColor = vec4(1.5, 0.0, 0.0, 1.0); \n"
-      "} \n";
+      "#version 320 es\n"
+      "precision mediump float;\n"
+      "out vec4 FragColor;\n"
+      "in vec3 ourColor;\n"
+      "in vec2 TexCoord;\n"
+      "uniform sampler2D ourTexture;\n"
+      "void main()\n"
+      "{\n"
+      "    FragColor = texture(ourTexture, TexCoord);\n"
+      "}\n";
 
   const GLuint vertexShader = LoadShader(vShaderStr, GL_VERTEX_SHADER);
   const GLuint fragmentShader = LoadShader(fShaderStr, GL_FRAGMENT_SHADER);
@@ -326,7 +523,8 @@ void WebviewPlatformView::InitializeScene() {
   glAttachShader(programObject, vertexShader);
   glAttachShader(programObject, fragmentShader);
 
-  glBindAttribLocation(programObject, 0, "vPosition");
+  // glBindAttribLocation(programObject, 0, "vPosition");
+  // glBindAttribLocation(programObject, 0, "color");
 
   glLinkProgram(programObject);
 
@@ -347,7 +545,6 @@ void WebviewPlatformView::InitializeScene() {
   }
 
   programObject_ = programObject;
-  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 void WebviewPlatformView::InitializeEGL() {
@@ -979,11 +1176,11 @@ std::optional<FlutterError> WebviewFlutterJavaScriptChannelHostApi::Create(
 // 
 void WebviewPlatformView::on_resize(double width, double height, void* data) {
   spdlog::debug("[webview_flutter] on_resize");
-  if (const auto plugin = static_cast<WebviewPlatformView*>(data)) {
-    plugin->width_ = static_cast<int32_t>(width);
-    plugin->height_ = static_cast<int32_t>(height);
-    spdlog::debug("[webview_flutter] Resize: {} {}", width, height);
-  }
+  // if (const auto plugin = static_cast<WebviewPlatformView*>(data)) {
+  //   plugin->width_ = static_cast<int32_t>(width);
+  //   plugin->height_ = static_cast<int32_t>(height);
+  //   spdlog::debug("[webview_flutter] Resize: {} {}", width, height);
+  // }
 }
 
 void WebviewPlatformView::on_set_direction(const int32_t direction,
@@ -1083,23 +1280,7 @@ const wl_callback_listener WebviewPlatformView::frame_listener = {.done =
                                                                       on_frame};
 
 void WebviewPlatformView::DrawFrame(uint32_t  time ) const {
-  static constexpr GLfloat vVertices[] = {0.0f, 0.5f, 0.0f,  -0.5f, -0.5f,
-                                          0.0f, 0.5f, -0.5f, 0.0f};
 
-  if (eglGetCurrentContext() != egl_context_) {
-    eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_);
-  }
-
-  glViewport(0, 0, width_, height_);
-  glClear(GL_COLOR_BUFFER_BIT);
-  glUseProgram(programObject_);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vVertices);
-  glEnableVertexAttribArray(0);
-  glDrawArrays(GL_TRIANGLES, 0, 3);
-  eglSwapBuffers(egl_display_, egl_surface_);
-
-  eglMakeCurrent(egl_display_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 }  // namespace plugin_webview_flutter

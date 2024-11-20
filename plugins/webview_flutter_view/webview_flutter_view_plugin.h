@@ -69,7 +69,6 @@ class WebviewPlatformView final : public PlatformView,
   ~WebviewPlatformView() override = default;
 
 
-  void StartCef();
   void CefThreadMain();
 
   static bool is_start_cef_done_;
@@ -127,6 +126,9 @@ class WebviewPlatformView final : public PlatformView,
   EGLConfig egl_config_{};
   GLuint programObject_{};
   EGLSurface egl_surface_{};
+  GLuint gl_texture_ = 0;
+  GLuint framebuffer_ = 0;
+  GLuint depthrenderbuffer_ = 0;
 
   void InitializeEGL();
   void InitializeScene();
