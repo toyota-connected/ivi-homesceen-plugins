@@ -53,7 +53,7 @@ In above case the staged install is set to:
 
 ## Notes
 
-Playx3d-scene needs conversion of assets for running on Vulkan+Linux:
+Playx3d-scene needs conversion of assets for running on Vulkan+Linux: 
 
 ```
 cd filament/cmake-build-debug-clang
