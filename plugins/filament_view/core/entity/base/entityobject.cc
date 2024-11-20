@@ -15,16 +15,16 @@
  */
 #include "entityobject.h"
 
-#include <core/include/literals.h>
-#include <core/utils/uuidGenerator.h>
-#include <plugins/common/common.h>
-#include <utility>
 #include <core/components/derived/animation.h>
 #include <core/components/derived/light.h>
-#include <core/systems/ecsystems_manager.h>
+#include <core/include/literals.h>
 #include <core/systems/derived/animation_system.h>
 #include <core/systems/derived/entityobject_locator_system.h>
 #include <core/systems/derived/light_system.h>
+#include <core/systems/ecsystems_manager.h>
+#include <core/utils/uuidGenerator.h>
+#include <plugins/common/common.h>
+#include <utility>
 
 namespace plugin_filament_view {
 
@@ -86,13 +86,13 @@ void EntityObject::vDebugPrintComponents() const {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void EntityObject::vUnregisterEntity() {
-  if(!m_bAlreadyRegistered) {
+  if (!m_bAlreadyRegistered) {
     return;
   }
 
   const auto objectLocatorSystem =
-     ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
-         EntityObjectLocatorSystem::StaticGetTypeID(), "vRegisterEntity");
+      ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
+          EntityObjectLocatorSystem::StaticGetTypeID(), "vRegisterEntity");
 
   objectLocatorSystem->vUnregisterEntityObject(shared_from_this());
 
@@ -101,8 +101,7 @@ void EntityObject::vUnregisterEntity() {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void EntityObject::vRegisterEntity() {
-
-  if(m_bAlreadyRegistered) {
+  if (m_bAlreadyRegistered) {
     return;
   }
 
@@ -128,23 +127,23 @@ void EntityObject::vShallowCopyComponentToOther(size_t staticTypeID,
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void EntityObject::vAddComponent(std::shared_ptr<Component> component, bool bAutoAddToSystems)
-{
+void EntityObject::vAddComponent(std::shared_ptr<Component> component,
+                                 bool bAutoAddToSystems) {
   component->entityOwner_ = this;
 
-  if(bAutoAddToSystems) {
-    if(component->GetTypeID() == Light::StaticGetTypeID() ) {
+  if (bAutoAddToSystems) {
+    if (component->GetTypeID() == Light::StaticGetTypeID()) {
       const auto lightSystem =
-      ECSystemManager::GetInstance()->poGetSystemAs<LightSystem>(
-          LightSystem::StaticGetTypeID(), __FUNCTION__);
+          ECSystemManager::GetInstance()->poGetSystemAs<LightSystem>(
+              LightSystem::StaticGetTypeID(), __FUNCTION__);
 
       lightSystem->vRegisterEntityObject(shared_from_this());
     }
 
-    if(component->GetTypeID() == Animation::StaticGetTypeID() ) {
+    if (component->GetTypeID() == Animation::StaticGetTypeID()) {
       const auto animationSystem =
-        ECSystemManager::GetInstance()->poGetSystemAs<AnimationSystem>(
-            AnimationSystem::StaticGetTypeID(), "loadModelGltf");
+          ECSystemManager::GetInstance()->poGetSystemAs<AnimationSystem>(
+              AnimationSystem::StaticGetTypeID(), "loadModelGltf");
 
       animationSystem->vRegisterEntityObject(shared_from_this());
     }

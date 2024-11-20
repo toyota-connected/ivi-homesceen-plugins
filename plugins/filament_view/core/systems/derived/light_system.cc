@@ -23,10 +23,10 @@
 #include <core/systems/ecsystems_manager.h>
 #include <filament/Color.h>
 #include <filament/LightManager.h>
-#include <plugins/common/common.h>
-#include <asio/post.hpp>
 #include <filament/Scene.h>
+#include <plugins/common/common.h>
 #include <utils/EntityManager.h>
+#include <asio/post.hpp>
 
 #include "entityobject_locator_system.h"
 
@@ -139,7 +139,7 @@ void LightSystem::vInitSystem() {
   vRegisterMessageHandler(
       ECSMessageType::ChangeSceneLightProperties,
       [this](const ECSMessage& msg) {
-        spdlog::debug("ChangeSceneLightProperties");
+        SPDLOG_TRACE("ChangeSceneLightProperties");
 
         const auto guid = msg.getData<std::string>(
             ECSMessageType::ChangeSceneLightProperties);
@@ -150,15 +150,9 @@ void LightSystem::vInitSystem() {
         const auto intensityValue = msg.getData<float>(
             ECSMessageType::ChangeSceneLightPropertiesIntensity);
 
-        spdlog::debug("{}", m_mapGuidToEntity.size());
-        for (const auto& mapSetIter: m_mapGuidToEntity) {
-          spdlog::debug("{}", mapSetIter.first);
-        }
-
         // find the entity in our list:
         if (auto ourEntity = m_mapGuidToEntity.find(guid);
             ourEntity != m_mapGuidToEntity.end()) {
-
           auto theLight = dynamic_cast<Light*>(
               ourEntity->second
                   ->GetComponentByStaticTypeID(Light::StaticGetTypeID())
@@ -170,12 +164,36 @@ void LightSystem::vInitSystem() {
           vBuildLightAndAddToScene(*theLight);
         }
 
-        spdlog::debug("ChangeSceneLightProperties Complete");
+        SPDLOG_TRACE("ChangeSceneLightProperties Complete");
       });
 
-  // add light
+  vRegisterMessageHandler(
+      ECSMessageType::ChangeSceneLightTransform, [this](const ECSMessage& msg) {
+        SPDLOG_TRACE("ChangeSceneLightTransform");
 
-  // remove light
+        const auto guid =
+            msg.getData<std::string>(ECSMessageType::ChangeSceneLightTransform);
+
+        const auto position = msg.getData<float3>(ECSMessageType::Position);
+
+        const auto rotation = msg.getData<float3>(ECSMessageType::Direction);
+
+        // find the entity in our list:
+        if (auto ourEntity = m_mapGuidToEntity.find(guid);
+            ourEntity != m_mapGuidToEntity.end()) {
+          auto theLight = dynamic_cast<Light*>(
+              ourEntity->second
+                  ->GetComponentByStaticTypeID(Light::StaticGetTypeID())
+                  .get());
+          theLight->SetPosition(position);
+          theLight->SetDirection(rotation);
+
+          vRemoveLightFromScene(*theLight);
+          vBuildLightAndAddToScene(*theLight);
+        }
+
+        SPDLOG_TRACE("ChangeSceneLightTransform Complete");
+      });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +221,6 @@ void LightSystem::DebugPrint() {
 ////////////////////////////////////////////////////////////////////////////////////
 void LightSystem::vRegisterEntityObject(
     const std::shared_ptr<EntityObject>& entity) {
-
   if (m_mapGuidToEntity.find(entity->GetGlobalGuid()) !=
       m_mapGuidToEntity.end()) {
     spdlog::error("{}::{}: Entity {} already registered", __FILE__,
@@ -211,8 +228,7 @@ void LightSystem::vRegisterEntityObject(
     return;
   }
 
-    spdlog::debug("Adding entity with {}", entity->GetGlobalGuid());
-
+  spdlog::debug("Adding entity with {}", entity->GetGlobalGuid());
 
   m_mapGuidToEntity.insert(std::pair(entity->GetGlobalGuid(), entity));
 }

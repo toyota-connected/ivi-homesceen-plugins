@@ -43,10 +43,10 @@ Model::Model(std::string assetPath,
 }
 
 ////////////////////////////////////////////////////////////////////////////
-  void Model::vInitComponents(std::shared_ptr<BaseTransform> poTransform,
-               std::shared_ptr<CommonRenderable> poCommonRenderable
-               , const flutter::EncodableMap& params) {
-
+void Model::vInitComponents(
+    std::shared_ptr<BaseTransform> poTransform,
+    std::shared_ptr<CommonRenderable> poCommonRenderable,
+    const flutter::EncodableMap& params) {
   m_poBaseTransform = std::weak_ptr<BaseTransform>(poTransform);
   m_poCommonRenderable = std::weak_ptr<CommonRenderable>(poCommonRenderable);
 
@@ -71,16 +71,12 @@ Model::Model(std::string assetPath,
   }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////
 GlbModel::GlbModel(std::string assetPath,
                    std::string url,
                    Model* fallback,
                    const flutter::EncodableMap& params)
-    : Model(std::move(assetPath),
-            std::move(url),
-            fallback,
-            params) {}
+    : Model(std::move(assetPath), std::move(url), fallback, params) {}
 
 ////////////////////////////////////////////////////////////////////////////
 GltfModel::GltfModel(std::string assetPath,
@@ -89,10 +85,7 @@ GltfModel::GltfModel(std::string assetPath,
                      std::string pathPostfix,
                      Model* fallback,
                      const flutter::EncodableMap& params)
-    : Model(std::move(assetPath),
-            std::move(url),
-            fallback,
-            params),
+    : Model(std::move(assetPath), std::move(url), fallback, params),
       pathPrefix_(std::move(pathPrefix)),
       pathPostfix_(std::move(pathPostfix)) {}
 
@@ -144,8 +137,7 @@ std::shared_ptr<Model> Model::Deserialize(
         url.has_value() ? std::move(url.value()) : "", nullptr, params);
 
     toReturn->vInitComponents(std::move(oTransform),
-            std::move(oCommonRenderable),
-             params);
+                              std::move(oCommonRenderable), params);
     return toReturn;
   }
 
@@ -156,9 +148,8 @@ std::shared_ptr<Model> Model::Deserialize(
       pathPostfix.has_value() ? std::move(pathPostfix.value()) : "", nullptr,
       params);
 
-  toReturn->vInitComponents(std::move(oTransform),
-            std::move(oCommonRenderable),
-             params);
+  toReturn->vInitComponents(std::move(oTransform), std::move(oCommonRenderable),
+                            params);
   return toReturn;
 }
 

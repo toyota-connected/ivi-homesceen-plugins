@@ -27,7 +27,7 @@ class NonRenderableEntityObject;
 
 class LightSystem : public ECSystem {
   friend class SceneTextDeserializer;
-    friend class EntityObject;
+  friend class EntityObject;
 
  public:
   LightSystem() = default;
@@ -53,14 +53,13 @@ class LightSystem : public ECSystem {
   void vShutdownSystem() override;
   void DebugPrint() override;
 
-
  private:
   // These change the lights in filaments scene
   static void vRemoveLightFromScene(Light& light);
   static void vAddLightToScene(Light& light);
 
-    void vRegisterEntityObject(const std::shared_ptr<EntityObject>& entity);
-    void vUnregisterEntityObject(const std::shared_ptr<EntityObject>& entity);
+  void vRegisterEntityObject(const std::shared_ptr<EntityObject>& entity);
+  void vUnregisterEntityObject(const std::shared_ptr<EntityObject>& entity);
 
   std::shared_ptr<NonRenderableEntityObject> m_poDefaultLight;
   std::map<EntityGUID, std::shared_ptr<EntityObject>> m_mapGuidToEntity;

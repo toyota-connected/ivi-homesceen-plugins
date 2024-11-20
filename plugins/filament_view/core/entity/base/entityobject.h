@@ -84,7 +84,8 @@ class EntityObject : public std::enable_shared_from_this<EntityObject> {
 
   [[nodiscard]] const std::string& GetName() const { return name_; }
 
-  void vAddComponent(std::shared_ptr<Component> component, bool bAutoAddToSystems = true);
+  void vAddComponent(std::shared_ptr<Component> component,
+                     bool bAutoAddToSystems = true);
 
   void vRemoveComponent(size_t staticTypeID) {
     components_.erase(std::remove_if(components_.begin(), components_.end(),
@@ -124,7 +125,6 @@ class EntityObject : public std::enable_shared_from_this<EntityObject> {
                                     EntityObject& other) const;
 
   void DeserializeNameAndGlobalGuid(const flutter::EncodableMap& params);
-
 
  private:
   EntityGUID global_guid_;

@@ -63,6 +63,42 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
 
       if (methodCall.method_name() == kChangeAnimationByIndex) {
         result->Success();
+      } else if (methodCall.method_name() == kChangeLightTransformByGUID) {
+        const auto& args = std::get_if<EncodableMap>(methodCall.arguments());
+        EntityGUID guid;
+        filament::math::float3 position(0);
+        filament::math::float3 direction(0);
+
+        for (const auto& [fst, snd] : *args) {
+          if (kChangeLightTransformByGUIDPosx == std::get<std::string>(fst)) {
+            position.x = static_cast<float>(std::get<double>(snd));
+          } else if (kChangeLightTransformByGUIDPosy ==
+                     std::get<std::string>(fst)) {
+            position.y = static_cast<float>(std::get<double>(snd));
+          } else if (kChangeLightTransformByGUIDPosz ==
+                     std::get<std::string>(fst)) {
+            position.z = static_cast<float>(std::get<double>(snd));
+          } else if (kChangeLightTransformByGUIDDirx ==
+                     std::get<std::string>(fst)) {
+            direction.x = static_cast<float>(std::get<double>(snd));
+          } else if (kChangeLightTransformByGUIDDiry ==
+                     std::get<std::string>(fst)) {
+            direction.y = static_cast<float>(std::get<double>(snd));
+          } else if (kChangeLightTransformByGUIDDirz ==
+                     std::get<std::string>(fst)) {
+            direction.z = static_cast<float>(std::get<double>(snd));
+          } else if (kEntityGUID == std::get<std::string>(fst)) {
+            guid = std::get<std::string>(snd);
+          }
+        }
+
+        ECSMessage lightData;
+        lightData.addData(ECSMessageType::ChangeSceneLightTransform, guid);
+        lightData.addData(ECSMessageType::Position, position);
+        lightData.addData(ECSMessageType::Direction, direction);
+        ECSystemManager::GetInstance()->vRouteMessage(lightData);
+
+        result->Success();
       } else if (methodCall.method_name() == kChangeLightColorByGUID) {
         const auto& args = std::get_if<EncodableMap>(methodCall.arguments());
         EntityGUID guid;

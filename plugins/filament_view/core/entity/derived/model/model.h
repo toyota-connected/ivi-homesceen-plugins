@@ -63,9 +63,9 @@ class Model : public RenderableEntityObject {
   [[nodiscard]] std::string szGetAssetPath() const { return assetPath_; }
   [[nodiscard]] std::string szGetURLPath() const { return url_; }
 
-    void vInitComponents(std::shared_ptr<BaseTransform> poTransform,
-                 std::shared_ptr<CommonRenderable> poCommonRenderable
-                 , const flutter::EncodableMap& params);
+  void vInitComponents(std::shared_ptr<BaseTransform> poTransform,
+                       std::shared_ptr<CommonRenderable> poCommonRenderable,
+                       const flutter::EncodableMap& params);
 
  protected:
   std::string assetPath_;
@@ -101,7 +101,7 @@ class GlbModel final : public Model {
   GlbModel(std::string assetPath,
            std::string url,
            Model* fallback,
-          const flutter::EncodableMap& params);
+           const flutter::EncodableMap& params);
 
   ~GlbModel() override = default;
 };
