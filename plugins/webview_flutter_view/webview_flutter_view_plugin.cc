@@ -400,7 +400,7 @@ void WebviewPlatformView::InitializeScene() {
       "uniform sampler2D ourTexture;\n"
       "void main()\n"
       "{\n"
-      "    FragColor = texture(ourTexture, TexCoord);\n"
+      "    FragColor = texture(ourTexture, TexCoord).bgra;\n"
       "}\n";
 
   const GLuint vertexShader = LoadShader(vShaderStr, GL_VERTEX_SHADER);
