@@ -129,6 +129,7 @@ class WebviewPlatformView final : public PlatformView,
   GLuint gl_texture_ = 0;
   GLuint framebuffer_ = 0;
   GLuint depthrenderbuffer_ = 0;
+  unsigned int VBO, VAO, EBO;
 
   void InitializeEGL();
   void InitializeScene();
