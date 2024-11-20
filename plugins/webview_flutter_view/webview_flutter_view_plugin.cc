@@ -95,28 +95,15 @@ void WebviewPlatformView::OnPaint(CefRefPtr<CefBrowser> browser,
 
   GLenum err = 0;
   glBindTexture(GL_TEXTURE_2D, gl_texture_);
-  err = glGetError();
-  spdlog::debug("glBindTexture: glGetError: {}", (uint32_t)err);
+
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  err = glGetError();
-  spdlog::debug("glTexParameteri: glGetError: {}", (uint32_t)err);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  err = glGetError();
-  spdlog::debug("glTexParameteri: glGetError: {}", (uint32_t)err);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  err = glGetError();
-  spdlog::debug("glTexParameteri: glGetError: {}", (uint32_t)err);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  err = glGetError();
-  spdlog::debug("glTexParameteri: glGetError: {}", (uint32_t)err);
 
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width,
                height, 0,  GL_RGBA,  GL_UNSIGNED_BYTE, buffer);
-  err = glGetError();
-  spdlog::debug("glTexImage2D: glGetError: {}", (uint32_t)err);
   glBindTexture(GL_TEXTURE_2D, 0);
-  err = glGetError();
-  spdlog::debug("glBindTexture: glGetError: {}", (uint32_t)err);
   
 
 
@@ -130,10 +117,9 @@ void WebviewPlatformView::OnPaint(CefRefPtr<CefBrowser> browser,
 
   eglSwapBuffers(egl_display_, egl_surface_);
   eglMakeCurrent(egl_display_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+  
   wl_subsurface_place_below(subsurface_, parent_surface_);
-
   wl_subsurface_set_position(subsurface_, 0, 0);
-
   wl_surface_commit(surface_);
 
 }
@@ -198,7 +184,7 @@ WebviewPlatformView::WebviewPlatformView(
   spdlog::debug("++WebviewPlatformView::WebviewPlatformView: Top: {}, Left: {}, Width: {}, Height: {}, direction: {}, viewType: {}", top, left, width, height, direction, viewType);
 
   const auto flutter_view = state->view_controller->view;
-#if 1
+
   /* Setup Wayland subsurface */
   display_ = flutter_view->GetDisplay()->GetDisplay();
   parent_surface_ = flutter_view->GetWindow()->GetBaseSurface();
@@ -219,7 +205,7 @@ WebviewPlatformView::WebviewPlatformView(
   // wl_subsurface_place_above(subsurface_, parent_surface_);
   wl_subsurface_place_below(subsurface_, surface_);
   wl_surface_commit(parent_surface_);
-#endif
+
 
   addListener(platformViewsContext_, id, &platform_view_listener_, this);
 
