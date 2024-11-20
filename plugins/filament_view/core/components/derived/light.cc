@@ -22,10 +22,10 @@ Light::Light(const flutter::EncodableMap& params)
       m_fSunAngularRadius(0.0f),
       m_fSunHaloSize(0.0f),
       m_fSunHaloFalloff(0.0f) {
-  if (auto it = params.find(flutter::EncodableValue(kType));
+  if (const auto it = params.find(flutter::EncodableValue(kType));
       it != params.end()) {
-    const auto& snd = it->second;
-    if (std::holds_alternative<std::string>(snd)) {
+    if (const auto& snd = it->second;
+        std::holds_alternative<std::string>(snd)) {
       m_Type = textToLightType(std::get<std::string>(snd));
     }
   }

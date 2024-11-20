@@ -15,11 +15,6 @@
  */
 #include "renderable_entityobject.h"
 
-#include <core/include/literals.h>
-#include <core/utils/uuidGenerator.h>
-#include <plugins/common/common.h>
-#include <utility>
-
 namespace plugin_filament_view {
 
 /////////////////////////////////////////////////////////////////////////////////////////

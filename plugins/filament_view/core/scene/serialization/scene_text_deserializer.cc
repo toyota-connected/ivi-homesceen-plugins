@@ -321,14 +321,13 @@ void SceneTextDeserializer::loadModel(std::shared_ptr<Model>& model) {
     } else if (dynamic_cast<GltfModel*>(model.get())) {
       const auto gltf_model = dynamic_cast<GltfModel*>(model.get());
       if (!gltf_model->szGetAssetPath().empty()) {
-        ModelSystem::loadGltfFromAsset(
-            std::move(model), gltf_model->szGetAssetPath(),
-            gltf_model->szGetPrefix(), gltf_model->szGetPostfix());
+        ModelSystem::loadGltfFromAsset(model, gltf_model->szGetAssetPath(),
+                                       gltf_model->szGetPrefix(),
+                                       gltf_model->szGetPostfix());
       }
 
       if (!gltf_model->szGetURLPath().empty()) {
-        ModelSystem::loadGltfFromUrl(std::move(model),
-                                     gltf_model->szGetURLPath());
+        ModelSystem::loadGltfFromUrl(model, gltf_model->szGetURLPath());
       }
     }
   });
@@ -379,23 +378,20 @@ void SceneTextDeserializer::setUpSkybox() const {
 
 //////////////////////////////////////////////////////////////////////////////////////////
 void SceneTextDeserializer::setUpLights() {
-  // Todo move to a message.
-
   const auto lightSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<LightSystem>(
           LightSystem::StaticGetTypeID(), __FUNCTION__);
 
   // Note, this introduces a fire and forget functionality for entities
   // there's no "one" owner system, but its propagated to whomever cares for it.
-  for (const auto& light : lights_) {
-    auto newEntity = std::make_shared<NonRenderableEntityObject>(
+  for (const auto& [fst, snd] : lights_) {
+    const auto newEntity = std::make_shared<NonRenderableEntityObject>(
         "SceneTextDeserializer::setUpLights");
 
-    spdlog::debug("light override happening {}", light.first);
-    newEntity->vOverrideGlobalGuid(light.first);
-    newEntity->vAddComponent(light.second);
+    newEntity->vOverrideGlobalGuid(fst);
+    newEntity->vAddComponent(snd);
 
-    lightSystem->vBuildLightAndAddToScene(*light.second);
+    LightSystem::vBuildLightAndAddToScene(*snd);
 
     newEntity->vRegisterEntity();
   }

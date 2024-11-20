@@ -28,8 +28,6 @@
 #include <utils/EntityManager.h>
 #include <asio/post.hpp>
 
-#include "entityobject_locator_system.h"
-
 namespace plugin_filament_view {
 using filament::math::float3;
 using filament::math::mat3f;
@@ -40,7 +38,7 @@ void LightSystem::vCreateDefaultLight() {
   SPDLOG_DEBUG("{}", __FUNCTION__);
   m_poDefaultLight =
       std::make_shared<NonRenderableEntityObject>("DefaultLight");
-  auto oLightComp = std::make_shared<Light>();
+  const auto oLightComp = std::make_shared<Light>();
   m_poDefaultLight->vAddComponent(oLightComp);
 
   oLightComp->SetIntensity(200);
@@ -56,16 +54,16 @@ void LightSystem::vCreateDefaultLight() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-void LightSystem::vBuildLightAndAddToScene(Light& light) const {
+void LightSystem::vBuildLightAndAddToScene(Light& light) {
   vBuildLight(light);
   vAddLightToScene(light);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-void LightSystem::vBuildLight(Light& light) const {
+void LightSystem::vBuildLight(Light& light) {
   const auto filamentSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
-          FilamentSystem::StaticGetTypeID(), "changeLight");
+          FilamentSystem::StaticGetTypeID(), "vBuildLight");
   const auto engine = filamentSystem->getFilamentEngine();
 
   if (light.m_poFilamentEntityLight == nullptr) {
@@ -113,23 +111,24 @@ void LightSystem::vBuildLight(Light& light) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-void LightSystem::vRemoveLightFromScene(Light& light) {
-  auto filamentSystem =
+void LightSystem::vRemoveLightFromScene(const Light& light) {
+  const auto filamentSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
-          FilamentSystem::StaticGetTypeID(), "lightManager::changelight");
+          FilamentSystem::StaticGetTypeID(),
+          "lightManager::vRemoveLightFromScene");
 
-  auto scene = filamentSystem->getFilamentScene();
+  const auto scene = filamentSystem->getFilamentScene();
 
   scene->removeEntities(light.m_poFilamentEntityLight.get(), 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-void LightSystem::vAddLightToScene(Light& light) {
-  auto filamentSystem =
+void LightSystem::vAddLightToScene(const Light& light) {
+  const auto filamentSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
-          FilamentSystem::StaticGetTypeID(), "lightManager::changelight");
+          FilamentSystem::StaticGetTypeID(), "lightManager::vAddLightToScene");
 
-  auto scene = filamentSystem->getFilamentScene();
+  const auto scene = filamentSystem->getFilamentScene();
 
   scene->addEntity(*light.m_poFilamentEntityLight);
 }
@@ -151,9 +150,9 @@ void LightSystem::vInitSystem() {
             ECSMessageType::ChangeSceneLightPropertiesIntensity);
 
         // find the entity in our list:
-        if (auto ourEntity = m_mapGuidToEntity.find(guid);
+        if (const auto ourEntity = m_mapGuidToEntity.find(guid);
             ourEntity != m_mapGuidToEntity.end()) {
-          auto theLight = dynamic_cast<Light*>(
+          const auto theLight = dynamic_cast<Light*>(
               ourEntity->second
                   ->GetComponentByStaticTypeID(Light::StaticGetTypeID())
                   .get());
@@ -202,7 +201,7 @@ void LightSystem::vUpdate(float /*fElapsedTime*/) {}
 ////////////////////////////////////////////////////////////////////////////////////
 void LightSystem::vShutdownSystem() {
   if (m_poDefaultLight != nullptr) {
-    auto component = dynamic_cast<Light*>(
+    const auto component = dynamic_cast<Light*>(
         m_poDefaultLight->GetComponentByStaticTypeID(Light::StaticGetTypeID())
             .get());
     vRemoveLightFromScene(*component);

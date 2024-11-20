@@ -194,7 +194,7 @@ void MaterialSystem::vInitSystem() {
 
           const auto parameter = MaterialParameter::Deserialize("", params);
 
-          auto renderable =
+          const auto renderable =
               dynamic_cast<RenderableEntityObject*>(entityObject.get());
           renderable->vChangeMaterialInstanceProperty(parameter.get(),
                                                       loadedTextures_);
@@ -225,7 +225,7 @@ void MaterialSystem::vInitSystem() {
             entityObject != nullptr) {
           spdlog::debug("ChangeMaterialDefinitions valid entity found.");
 
-          auto renderable =
+          const auto renderable =
               dynamic_cast<RenderableEntityObject*>(entityObject.get());
           renderable->vChangeMaterialDefinitions(params, loadedTextures_);
         }

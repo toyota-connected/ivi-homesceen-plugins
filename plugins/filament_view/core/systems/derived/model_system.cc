@@ -33,7 +33,6 @@
 #include <asio/post.hpp>
 
 #include "animation_system.h"
-#include "entityobject_locator_system.h"
 
 namespace plugin_filament_view {
 
@@ -397,7 +396,7 @@ void ModelSystem::handleFile(std::shared_ptr<Model>&& oOurModel,
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>> ModelSystem::loadGltfFromAsset(
-    std::shared_ptr<Model> /*oOurModel*/,
+    const std::shared_ptr<Model>& /*oOurModel*/,
     const std::string& /* path */,
     const std::string& /* pre_path */,
     const std::string& /* post_path */,
@@ -411,7 +410,7 @@ std::future<Resource<std::string_view>> ModelSystem::loadGltfFromAsset(
 
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>> ModelSystem::loadGltfFromUrl(
-    std::shared_ptr<Model> /*oOurModel*/,
+    const std::shared_ptr<Model>& /*oOurModel*/,
     const std::string& /* url */,
     bool /* isFallback */) {
   const auto promise(

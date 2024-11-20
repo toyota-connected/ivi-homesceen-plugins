@@ -35,8 +35,8 @@ class LightSystem : public ECSystem {
   // if after deserialization is complete, and there isn't a light made
   // this will be called to create a simple direct light
   void vCreateDefaultLight();
-  void vBuildLight(Light& light) const;
-  void vBuildLightAndAddToScene(Light& light) const;
+  static void vBuildLight(Light& light);
+  static void vBuildLightAndAddToScene(Light& light);
 
   // Disallow copy and assign.
   LightSystem(const LightSystem&) = delete;
@@ -55,8 +55,8 @@ class LightSystem : public ECSystem {
 
  private:
   // These change the lights in filaments scene
-  static void vRemoveLightFromScene(Light& light);
-  static void vAddLightToScene(Light& light);
+  static void vRemoveLightFromScene(const Light& light);
+  static void vAddLightToScene(const Light& light);
 
   void vRegisterEntityObject(const std::shared_ptr<EntityObject>& entity);
   void vUnregisterEntityObject(const std::shared_ptr<EntityObject>& entity);

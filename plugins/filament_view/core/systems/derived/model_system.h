@@ -59,14 +59,14 @@ class ModelSystem : public ECSystem {
       bool isFallback = false);
 
   static std::future<Resource<std::string_view>> loadGltfFromAsset(
-      std::shared_ptr<Model> oOurModel,
+      const std::shared_ptr<Model>& oOurModel,
       const std::string& path,
       const std::string& pre_path,
       const std::string& post_path,
       bool isFallback = false);
 
   static std::future<Resource<std::string_view>> loadGltfFromUrl(
-      std::shared_ptr<Model> oOurModel,
+      const std::shared_ptr<Model>& oOurModel,
       const std::string& url,
       bool isFallback = false);
 

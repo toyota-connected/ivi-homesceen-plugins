@@ -128,7 +128,7 @@ void EntityObject::vShallowCopyComponentToOther(size_t staticTypeID,
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void EntityObject::vAddComponent(std::shared_ptr<Component> component,
-                                 bool bAutoAddToSystems) {
+                                 const bool bAutoAddToSystems) {
   component->entityOwner_ = this;
 
   if (bAutoAddToSystems) {

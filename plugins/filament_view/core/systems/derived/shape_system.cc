@@ -50,7 +50,7 @@ void ShapeSystem::vToggleAllShapesInScene(const bool bValue) const {
 void ShapeSystem::vRemoveAllShapesInScene() {
   vToggleAllShapesInScene(false);
 
-  for (auto& shape : shapes_) {
+  for (const auto& shape : shapes_) {
     shape->vUnregisterEntity();
   }
 
@@ -111,14 +111,14 @@ void ShapeSystem::addShapesToScene(
 
   filament::Engine* poFilamentEngine = engine;
   filament::Scene* poFilamentScene = filamentSystem->getFilamentScene();
-  utils::EntityManager& oEntitymanager = poFilamentEngine->getEntityManager();
+  utils::EntityManager& oEntityManager = poFilamentEngine->getEntityManager();
   // Ideally this is changed to create all entities on the first go, then
   // we pass them through, upon use this failed in filament engine, more R&D
   // needed
   // oEntitymanager.create(shapes.size(), lstEntities);
 
   for (auto& shape : *shapes) {
-    auto oEntity = std::make_shared<Entity>(oEntitymanager.create());
+    auto oEntity = std::make_shared<Entity>(oEntityManager.create());
 
     shape->bInitAndCreateShape(poFilamentEngine, oEntity);
 
