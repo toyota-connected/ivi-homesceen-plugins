@@ -89,16 +89,11 @@ void WebviewPlatformView::OnPaint(CefRefPtr<CefBrowser> browser,
                             int height) {
   spdlog::debug("[webivew_flutter] OnPaint, width: {}, height: {}, type: {}", width,
                 height, (uint8_t)type);
-#if 1
   if (eglGetCurrentContext() != egl_context_) {
     eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_);
   }
 
-
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
   GLenum err = 0;
-  err = glGetError();
-  spdlog::debug("glBindFramebuffer: glGetError: {}", (uint32_t)err);
   glBindTexture(GL_TEXTURE_2D, gl_texture_);
   err = glGetError();
   spdlog::debug("glBindTexture: glGetError: {}", (uint32_t)err);
@@ -122,139 +117,48 @@ void WebviewPlatformView::OnPaint(CefRefPtr<CefBrowser> browser,
   glBindTexture(GL_TEXTURE_2D, 0);
   err = glGetError();
   spdlog::debug("glBindTexture: glGetError: {}", (uint32_t)err);
-
   
-  glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer_);
-  err = glGetError();
-  spdlog::debug("glBindRenderbuffer: glGetError: {}", (uint32_t)err);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
-  err = glGetError();
-  spdlog::debug("glRenderbufferStorage: glGetError: {}", (uint32_t)err);
-  glBindRenderbuffer(GL_RENDERBUFFER, 0);
-  err = glGetError();
-  spdlog::debug("glBindRenderbuffer: glGetError: {}", (uint32_t)err);
-  // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gl_texture_, 0);
-  
-
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                         gl_texture_, 0);
-  err = glGetError();
-  spdlog::debug("glFramebufferTexture2D: glGetError: {}", (uint32_t)err);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer_);
-  err = glGetError();
-  spdlog::debug("glFramebufferRenderbuffer: glGetError: {}", (uint32_t)err);
-  GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-  glDrawBuffers(1, DrawBuffers); 
-  err = glGetError();
-  spdlog::debug("glDrawBuffers: glGetError: {}", (uint32_t)err);
-  GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-  if(status != GL_FRAMEBUFFER_COMPLETE) {
-    spdlog::debug("glCheckFramebufferStatus Failed: {}", status);
-  }
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  err = glGetError();
-  spdlog::debug("glBindFramebuffer: glGetError: {}", (uint32_t)err);
-  
-#if 0
-  glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_);
-  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-  glViewport(0, 0, width, height);
-  glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT,
-    GL_NEAREST);
-#endif
-
-#if 0
-  GLuint quad_VertexArrayID;
-  glGenVertexArrays(1, &quad_VertexArrayID);
-  glBindVertexArray(quad_VertexArrayID);
-
-  static const GLfloat g_quad_vertex_buffer_data[] = {
-      -1.0f, -1.0f, 0.0f,
-      1.0f, -1.0f, 0.0f,
-      -1.0f,  1.0f, 0.0f,
-      -1.0f,  1.0f, 0.0f,
-      1.0f, -1.0f, 0.0f,
-      1.0f,  1.0f, 0.0f,
+  float vertices[] = {
+    // positions          // colors           // texture coords
+     1.0f,  1.0f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 0.0f, // top right
+     1.0f, -1.0f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 1.0f, // bottom right
+    -1.0f, -1.0f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 1.0f, // bottom left
+    -1.0f,  1.0f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 0.0f  // top left 
   };
+  unsigned int indices[] = {
+      0, 1, 3, // first triangle
+      1, 2, 3  // second triangle
+  };
+  unsigned int VBO, VAO, EBO;
+  glGenVertexArrays(1, &VAO);
+  glGenBuffers(1, &VBO);
+  glGenBuffers(1, &EBO);
 
-  GLuint quad_vertexbuffer;
-  glGenBuffers(1, &quad_vertexbuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
+  glBindVertexArray(VAO);
 
-  // Create and compile our GLSL program from the shaders
-  // const GLuint vertexShader = LoadShader(vShaderStr, GL_VERTEX_SHADER);
-  // const GLuint fragmentShader = LoadShader(fShaderStr, GL_FRAGMENT_SHADER);
-  GLuint texID = glGetUniformLocation(programObject_, "gl_texture_");
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glViewport(0, 0, width, height);
-  glClear(GL_COLOR_BUFFER_BIT);
+  // position attribute
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
+  // color attribute
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+  // texture coord attribute
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+  glEnableVertexAttribArray(2);
+
   glUseProgram(programObject_);
+  glUniform1i(glGetUniformLocation(programObject_, "texture1"), 0);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, gl_texture_);
-  // Set our "gl_texture_" sampler to use Texture Unit 0
-  glUniform1i(texID, 0);
 
-  glEnableVertexAttribArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
-  glVertexAttribPointer(
-    0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-    3,                  // size
-    GL_FLOAT,           // type
-    GL_FALSE,           // normalized?
-    0,                  // stride
-    (void*)0            // array buffer offset
-  );
-  // Draw the triangles !
-  glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
-  glDisableVertexAttribArray(0);
-#endif
-#if 1
-    float vertices[] = {
-      // positions          // colors           // texture coords
-       1.0f,  1.0f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 0.0f, // top right
-       1.0f, -1.0f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 1.0f, // bottom right
-      -1.0f, -1.0f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 1.0f, // bottom left
-      -1.0f,  1.0f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 0.0f  // top left 
-    };
-    unsigned int indices[] = {
-        0, 1, 3, // first triangle
-        1, 2, 3  // second triangle
-    };
-    unsigned int VBO, VAO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    // texture coord attribute
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    glUseProgram(programObject_);
-    glUniform1i(glGetUniformLocation(programObject_, "texture1"), 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gl_texture_);
-
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-#endif
-#endif
+  glBindVertexArray(VAO);
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
   eglSwapBuffers(egl_display_, egl_surface_);
   eglMakeCurrent(egl_display_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -474,20 +378,6 @@ void WebviewPlatformView::OnContextInitialized() {
 }
 
 void WebviewPlatformView::InitializeScene() {
-  // constexpr GLchar vShaderStr[] =
-  //     "attribute vec3 vertexPosition_modelspace; \n"
-  //     "out vec2 UV; \n"
-  //     "void main(){ \n"
-  //     "  gl_Position =  vec4(vertexPosition_modelspace,1); \n"
-  //     "  UV = (vertexPosition_modelspace.xy+vec2(1,1))/2.0; \n"
-  //     "} \n";
-  // constexpr GLchar fShaderStr[] =
-  //     "attribute vec4 color;\n"
-  //     "uniform sampler2D gl_texture_;\n"
-  //     "in vec2 UV;\n"
-  //     "void main(){\n"
-  //     "  color = texture(gl_texture_, UV);\n"
-  //     "}\n";
   constexpr GLchar vShaderStr[] =
       "#version 320 es\n"
       "layout (location = 0) in vec3 aPos;\n"
@@ -522,9 +412,6 @@ void WebviewPlatformView::InitializeScene() {
 
   glAttachShader(programObject, vertexShader);
   glAttachShader(programObject, fragmentShader);
-
-  // glBindAttribLocation(programObject, 0, "vPosition");
-  // glBindAttribLocation(programObject, 0, "color");
 
   glLinkProgram(programObject);
 
