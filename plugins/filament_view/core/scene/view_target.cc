@@ -358,7 +358,7 @@ void ViewTarget::SendFrameViewCallback(
     std::initializer_list<std::pair<const char*, EncodableValue>> args) {
   EncodableMap encodableMap;
   encodableMap.insert(
-      {flutter::EncodableValue("method"), flutter::EncodableValue(methodName)});
+      {EncodableValue("method"), flutter::EncodableValue(methodName)});
   for (const auto& [fst, snd] : args) {
     encodableMap[EncodableValue(fst)] = snd;  // NOLINT
   }

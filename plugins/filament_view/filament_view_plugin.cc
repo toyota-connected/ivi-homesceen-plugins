@@ -271,13 +271,13 @@ void FilamentViewPlugin::setupMessageChannels(
   const std::string readinessMethodChannel =
       "plugin.filament_view.readiness_checker";
 
-  auto methodChannel = std::make_unique<flutter::MethodChannel<>>(
+  const auto methodChannel = std::make_unique<flutter::MethodChannel<>>(
       registrar->messenger(), readinessMethodChannel,
       &flutter::StandardMethodCodec::GetInstance());
 
   methodChannel->SetMethodCallHandler(
       [&](const flutter::MethodCall<>& call,
-          std::unique_ptr<flutter::MethodResult<>> result) {
+          const std::unique_ptr<flutter::MethodResult<>>& result) {
         if (call.method_name() == "isReady") {
           // Check readiness and respond
           bool isReady = true;  // Replace with your actual readiness check
@@ -290,17 +290,15 @@ void FilamentViewPlugin::setupMessageChannels(
   // Setup EventChannel for readiness events
   const std::string readinessEventChannel = "plugin.filament_view.readiness";
 
-  auto eventChannel =
-      std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
-          registrar->messenger(), readinessEventChannel,
-          &flutter::StandardMethodCodec::GetInstance());
+  const auto eventChannel = std::make_unique<flutter::EventChannel<>>(
+      registrar->messenger(), readinessEventChannel,
+      &flutter::StandardMethodCodec::GetInstance());
 
   eventChannel->SetStreamHandler(
-      std::make_unique<
-          flutter::StreamHandlerFunctions<flutter::EncodableValue>>(
+      std::make_unique<flutter::StreamHandlerFunctions<>>(
           [&](const flutter::EncodableValue* /* arguments */,
-              std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&&
-                  events) -> std::unique_ptr<flutter::StreamHandlerError<>> {
+              std::unique_ptr<flutter::EventSink<>>&& events)
+              -> std::unique_ptr<flutter::StreamHandlerError<>> {
             eventSink_ = std::move(events);
             sendReadyEvent();  // Proactively send "ready" event
             return nullptr;
