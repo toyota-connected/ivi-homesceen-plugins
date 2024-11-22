@@ -360,7 +360,7 @@ void ViewTarget::SendFrameViewCallback(
   encodableMap.insert(
       {flutter::EncodableValue("method"), flutter::EncodableValue(methodName)});
   for (const auto& [fst, snd] : args) {
-    encodableMap[EncodableValue(fst)] = snd; // NOLINT
+    encodableMap[EncodableValue(fst)] = snd;  // NOLINT
   }
 
   const auto viewTargetSystem =
