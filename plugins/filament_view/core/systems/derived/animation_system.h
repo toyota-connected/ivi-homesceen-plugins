@@ -60,9 +60,6 @@ class AnimationSystem : public ECSystem {
                                const AnimationEventType& eType,
                                const std::string& eventData) const;
 
-
   std::map<EntityGUID, std::shared_ptr<EntityObject>> _entities;
-
-
 };
 }  // namespace plugin_filament_view

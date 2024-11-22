@@ -29,12 +29,12 @@
 #include <core/systems/derived/skybox_system.h>
 #include <core/systems/derived/view_target_system.h>
 #include <core/systems/ecsystems_manager.h>
+#include <event_stream_handler_functions.h>
 #include <messages.g.h>
 #include <plugins/common/common.h>
 #include <asio/post.hpp>
-#include <string>
 #include <memory>
-#include <event_stream_handler_functions.h>
+#include <string>
 
 class FlutterView;
 
@@ -99,7 +99,6 @@ void KickOffRenderingLoops() {
 void DeserializeDataAndSetupMessageChannels(
     flutter::PluginRegistrar* registrar,
     const std::vector<uint8_t>& params) {
-
   const auto ecsManager = ECSystemManager::GetInstance();
 
   // Get the strand from the ECSystemManager
@@ -129,21 +128,24 @@ void DeserializeDataAndSetupMessageChannels(
   setupMessageChannels.addData(ECSMessageType::SetupMessageChannels, registrar);
   ECSystemManager::GetInstance()->vRouteMessage(setupMessageChannels);*/
 
-const auto animationSystem =
-     ECSystemManager::GetInstance()->poGetSystemAs<AnimationSystem>(
-         AnimationSystem::StaticGetTypeID(), __FUNCTION__);
+  const auto animationSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<AnimationSystem>(
+          AnimationSystem::StaticGetTypeID(), __FUNCTION__);
 
-const auto viewTargetSystem =
-    ECSystemManager::GetInstance()->poGetSystemAs<ViewTargetSystem>(
-        ViewTargetSystem::StaticGetTypeID(), __FUNCTION__);
+  const auto viewTargetSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<ViewTargetSystem>(
+          ViewTargetSystem::StaticGetTypeID(), __FUNCTION__);
 
-const auto collisionSystem =
-    ECSystemManager::GetInstance()->poGetSystemAs<CollisionSystem>(
-        CollisionSystem::StaticGetTypeID(), __FUNCTION__);
+  const auto collisionSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<CollisionSystem>(
+          CollisionSystem::StaticGetTypeID(), __FUNCTION__);
 
-    collisionSystem->vSetupMessageChannels(registrar, "plugin.filament_view.collision_info");
-    viewTargetSystem->vSetupMessageChannels(registrar, "plugin.filament_view.frame_view");
-    animationSystem->vSetupMessageChannels(registrar, "plugin.filament_view.animation_info");
+  collisionSystem->vSetupMessageChannels(registrar,
+                                         "plugin.filament_view.collision_info");
+  viewTargetSystem->vSetupMessageChannels(registrar,
+                                          "plugin.filament_view.frame_view");
+  animationSystem->vSetupMessageChannels(registrar,
+                                         "plugin.filament_view.animation_info");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -264,54 +266,58 @@ FilamentViewPlugin::~FilamentViewPlugin() {
 
 //////////////////////////////////////////////////////////////////////////////////////////
 std::unique_ptr<flutter::EventSink<>> eventSink_;
-void FilamentViewPlugin::setupMessageChannels(flutter::PluginRegistrar* registrar) {
-    // Setup MethodChannel for readiness check
-    const std::string readinessMethodChannel = "plugin.filament_view.readiness_checker";
+void FilamentViewPlugin::setupMessageChannels(
+    flutter::PluginRegistrar* registrar) {
+  // Setup MethodChannel for readiness check
+  const std::string readinessMethodChannel =
+      "plugin.filament_view.readiness_checker";
 
-    auto methodChannel = std::make_unique<flutter::MethodChannel<>>(
-        registrar->messenger(),
-        readinessMethodChannel,
-        &flutter::StandardMethodCodec::GetInstance());
+  auto methodChannel = std::make_unique<flutter::MethodChannel<>>(
+      registrar->messenger(), readinessMethodChannel,
+      &flutter::StandardMethodCodec::GetInstance());
 
-    methodChannel->SetMethodCallHandler(
-        [&](const flutter::MethodCall<>& call, std::unique_ptr<flutter::MethodResult<>> result) {
-            if (call.method_name() == "isReady") {
-                // Check readiness and respond
-                bool isReady = true; // Replace with your actual readiness check
-                result->Success(flutter::EncodableValue(isReady));
-            } else {
-                result->NotImplemented();
-            }
-        });
+  methodChannel->SetMethodCallHandler(
+      [&](const flutter::MethodCall<>& call,
+          std::unique_ptr<flutter::MethodResult<>> result) {
+        if (call.method_name() == "isReady") {
+          // Check readiness and respond
+          bool isReady = true;  // Replace with your actual readiness check
+          result->Success(flutter::EncodableValue(isReady));
+        } else {
+          result->NotImplemented();
+        }
+      });
 
-    // Setup EventChannel for readiness events
-    const std::string readinessEventChannel = "plugin.filament_view.readiness";
+  // Setup EventChannel for readiness events
+  const std::string readinessEventChannel = "plugin.filament_view.readiness";
 
-    auto eventChannel = std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
-    registrar->messenger(),
-    readinessEventChannel,
-    &flutter::StandardMethodCodec::GetInstance());
+  auto eventChannel =
+      std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
+          registrar->messenger(), readinessEventChannel,
+          &flutter::StandardMethodCodec::GetInstance());
 
-    eventChannel->SetStreamHandler(std::make_unique<flutter::StreamHandlerFunctions<flutter::EncodableValue>>(
-        [&](const flutter::EncodableValue* /* arguments */,
-               std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events)
-            -> std::unique_ptr<flutter::StreamHandlerError<>> {
-          eventSink_ = std::move(events);
-          sendReadyEvent();  // Proactively send "ready" event
-          return nullptr;
-        },
-        [&](const flutter::EncodableValue* /* arguments */)
-            -> std::unique_ptr<flutter::StreamHandlerError<>> {
-          eventSink_ = nullptr;
-          return nullptr;
-        }));
+  eventChannel->SetStreamHandler(
+      std::make_unique<
+          flutter::StreamHandlerFunctions<flutter::EncodableValue>>(
+          [&](const flutter::EncodableValue* /* arguments */,
+              std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&&
+                  events) -> std::unique_ptr<flutter::StreamHandlerError<>> {
+            eventSink_ = std::move(events);
+            sendReadyEvent();  // Proactively send "ready" event
+            return nullptr;
+          },
+          [&](const flutter::EncodableValue* /* arguments */)
+              -> std::unique_ptr<flutter::StreamHandlerError<>> {
+            eventSink_ = nullptr;
+            return nullptr;
+          }));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 void FilamentViewPlugin::sendReadyEvent() {
-    if (eventSink_) {
-        eventSink_->Success(flutter::EncodableValue("ready"));
-    }
+  if (eventSink_) {
+    eventSink_->Success(flutter::EncodableValue("ready"));
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

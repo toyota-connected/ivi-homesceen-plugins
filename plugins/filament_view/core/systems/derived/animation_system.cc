@@ -175,7 +175,6 @@ void AnimationSystem::vInitSystem() {
       });
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////
 void AnimationSystem::vUpdate(const float fElapsedTime) {
   for (auto& [fst, snd] : _entities) {
@@ -228,7 +227,7 @@ void AnimationSystem::vNotifyOfAnimationEvent(
                              {flutter::EncodableValue(kAnimationEventData),
                               flutter::EncodableValue(eventData)}});
 
-    vSendDataToEventChannel(event);
+  vSendDataToEventChannel(event);
 }
 
 }  // namespace plugin_filament_view

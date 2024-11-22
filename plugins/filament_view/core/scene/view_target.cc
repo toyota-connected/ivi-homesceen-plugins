@@ -18,6 +18,7 @@
 
 #include <core/include/literals.h>
 #include <core/systems/derived/filament_system.h>
+#include <core/systems/derived/view_target_system.h>
 #include <core/systems/ecsystems_manager.h>
 #include <filament/Renderer.h>
 #include <filament/SwapChain.h>
@@ -33,7 +34,6 @@
 #include <wayland/display.h>
 #include <asio/post.hpp>
 #include <utility>
-#include <core/systems/derived/view_target_system.h>
 
 using flutter::EncodableList;
 using flutter::EncodableMap;
@@ -360,15 +360,15 @@ void ViewTarget::SendFrameViewCallback(
     const std::string& methodName,
     std::initializer_list<std::pair<const char*, EncodableValue>> args) const {
   EncodableMap encodableMap;
-  encodableMap.insert({flutter::EncodableValue("method"),
-              flutter::EncodableValue(methodName)});
+  encodableMap.insert(
+      {flutter::EncodableValue("method"), flutter::EncodableValue(methodName)});
   for (const auto& [fst, snd] : args) {
     encodableMap[EncodableValue(fst)] = snd;
   }
 
   const auto viewTargetSystem =
-     ECSystemManager::GetInstance()->poGetSystemAs<ViewTargetSystem>(
-         ViewTargetSystem::StaticGetTypeID(), __FUNCTION__);
+      ECSystemManager::GetInstance()->poGetSystemAs<ViewTargetSystem>(
+          ViewTargetSystem::StaticGetTypeID(), __FUNCTION__);
 
   viewTargetSystem->vSendDataToEventChannel(encodableMap);
 }

@@ -16,11 +16,11 @@
 #include "ecsystem.h"
 
 #include <event_stream_handler_functions.h>
+#include <plugin_registrar.h>
+#include <standard_method_codec.h>
 #include <functional>
 #include <iostream>
-#include <plugin_registrar.h>
 #include <queue>
-#include <standard_method_codec.h>
 #include <unordered_map>
 #include <vector>
 
@@ -136,7 +136,8 @@ void ECSystem::vHandleMessage(const ECSMessage& msg) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-void ECSystem::vSendDataToEventChannel(const flutter::EncodableMap& oDataMap) const {
+void ECSystem::vSendDataToEventChannel(
+    const flutter::EncodableMap& oDataMap) const {
   if (!event_sink_ || !event_channel_) {
     return;
   }
@@ -146,9 +147,9 @@ void ECSystem::vSendDataToEventChannel(const flutter::EncodableMap& oDataMap) co
 
 ////////////////////////////////////////////////////////////////////////////////////
 void ECSystem::vSetupMessageChannels(
-      flutter::PluginRegistrar* poPluginRegistrar,
-      const std::string& szChannelName) {
-  if(event_channel_ != nullptr) {
+    flutter::PluginRegistrar* poPluginRegistrar,
+    const std::string& szChannelName) {
+  if (event_channel_ != nullptr) {
     return;
   }
 
@@ -169,7 +170,7 @@ void ECSystem::vSetupMessageChannels(
   event_channel_->SetStreamHandler(
       std::make_unique<flutter::StreamHandlerFunctions<>>(
           [&](const flutter::EncodableValue* /* arguments */,
-                 std::unique_ptr<flutter::EventSink<>>&& events)
+              std::unique_ptr<flutter::EventSink<>>&& events)
               -> std::unique_ptr<flutter::StreamHandlerError<>> {
             event_sink_ = std::move(events);
             return nullptr;
@@ -184,6 +185,5 @@ void ECSystem::vSetupMessageChannels(
 
 #endif
 }
-
 
 }  // namespace plugin_filament_view

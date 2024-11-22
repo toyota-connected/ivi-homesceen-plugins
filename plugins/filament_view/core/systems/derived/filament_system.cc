@@ -26,8 +26,10 @@ void FilamentSystem::vInitSystem() {
   spdlog::debug("Engine creation Filament API thread: 0x{:x}", pthread_self());
 
   /*filament::Engine::Config config;
-  config.minCommandBufferSizeMB = 10; // Increase from the default (1 MB) to handle larger workloads
-  config.commandBufferSizeMB = config.minCommandBufferSizeMB * 3; // Ensure total command buffer size reflects the minCommandBufferSizeMB
+  config.minCommandBufferSizeMB = 10; // Increase from the default (1 MB) to
+  handle larger workloads config.commandBufferSizeMB =
+  config.minCommandBufferSizeMB * 3; // Ensure total command buffer size
+  reflects the minCommandBufferSizeMB
 
   // Create the Filament Engine with the custom config
   fengine_ = filament::Engine::create(

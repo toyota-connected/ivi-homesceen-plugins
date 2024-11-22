@@ -17,9 +17,9 @@
 #ifndef FLUTTER_PLUGIN_FILAMENT_VIEW_PLUGIN_H_
 #define FLUTTER_PLUGIN_FILAMENT_VIEW_PLUGIN_H_
 
-#include <string>
 #include <event_sink.h>
 #include <memory>
+#include <string>
 
 #include <core/scene/serialization/scene_text_deserializer.h>
 #include <flutter/plugin_registrar.h>
@@ -64,9 +64,8 @@ class FilamentViewPlugin : public flutter::Plugin,
 
   ~FilamentViewPlugin() override;
 
-    static void setupMessageChannels(flutter::PluginRegistrar* registrar);
-    static void sendReadyEvent();
-
+  static void setupMessageChannels(flutter::PluginRegistrar* registrar);
+  static void sendReadyEvent();
 
   void ChangeMaterialParameter(const flutter::EncodableMap& params,
                                const EntityGUID& guid) override;
