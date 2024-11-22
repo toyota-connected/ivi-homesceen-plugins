@@ -20,7 +20,25 @@
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar.h>
 
+#include <wayland-client.h>
+#include <wayland-egl.h>
+#include <EGL/egl.h>
+#include <GLES3/gl32.h>
+
 #include "messages.g.h"
+
+#include <capi/cef_app_capi.h>
+#include <capi/cef_browser_capi.h>
+#include <cef_app.h>
+#include <cef_client.h>
+#include <cef_render_handler.h>
+#include <cef_browser_process_handler.h>
+#include <capi/views/cef_browser_view_capi.h>
+#include <capi/views/cef_browser_view_delegate_capi.h>
+#include <capi/views/cef_display_capi.h>
+#include <capi/cef_render_handler_capi.h>
+#include <include/base/cef_callback.h>
+#include <include/wrapper/cef_closure_task.h>
 
 #include "flutter_desktop_engine_state.h"
 #include "flutter_homescreen.h"
@@ -30,88 +48,133 @@
 
 namespace plugin_webview_flutter {
 
-class WebviewFlutterPlugin final : public flutter::Plugin,
-                                   public InstanceManagerHostApi,
-                                   public WebStorageHostApi,
-                                   public WebViewHostApi,
-                                   public WebSettingsHostApi,
-                                   public WebChromeClientHostApi,
-                                   public WebViewClientHostApi,
-                                   public DownloadListenerHostApi,
-                                   public JavaScriptChannelHostApi,
-                                   public CookieManagerHostApi {
+class WebviewPlatformView final : public PlatformView,
+                                  public CefApp, 
+                                  public CefRenderHandler,
+                                  public CefClient,
+                                  public CefBrowserProcessHandler {
  public:
-  static void RegisterWithRegistrar(flutter::PluginRegistrar* registrar);
+  WebviewPlatformView(int32_t id,
+                      std::string viewType,
+                      int32_t direction,
+                      double top,
+                      double left,
+                      double width,
+                      double height,
+                      const std::vector<uint8_t>& params,
+                      std::string assetDirectory,
+                      FlutterDesktopEngineState* state,
+                      PlatformViewAddListener addListener,
+                      PlatformViewRemoveListener removeListener,
+                      void* platform_view_context);
 
-  static void PlatformViewCreate(int32_t id,
-                                 std::string viewType,
-                                 int32_t direction,
-                                 double top,
-                                 double left,
-                                 double width,
-                                 double height,
-                                 const std::vector<uint8_t>& params,
-                                 std::string assetDirectory,
-                                 FlutterDesktopEngineRef engine,
-                                 PlatformViewAddListener addListener,
-                                 PlatformViewRemoveListener removeListener,
-                                 void* platform_view_context);
+  ~WebviewPlatformView() override = default;
 
-  WebviewFlutterPlugin();
 
-  ~WebviewFlutterPlugin() override;
+  void CefThreadMain();
 
-  class WebviewPlatformView final : public PlatformView {
-   public:
-    WebviewPlatformView(int32_t id,
-                        std::string viewType,
-                        int32_t direction,
-                        double top,
-                        double left,
-                        double width,
-                        double height,
-                        const std::vector<uint8_t>& params,
-                        std::string assetDirectory,
-                        FlutterDesktopEngineState* state,
-                        PlatformViewAddListener addListener,
-                        PlatformViewRemoveListener removeListener,
-                        void* platform_view_context);
+  static bool is_start_cef_done_;
+  static bool is_shutdown_cef_done_;
+  std::thread cef_thread_;
 
-    ~WebviewPlatformView() override = default;
 
-   private:
-    [[maybe_unused]] int32_t id_;
-    void* platformViewsContext_;
-    [[maybe_unused]] PlatformViewRemoveListener removeListener_;
-    const std::string flutterAssetsPath_;
+  // CefApp methods:
+  CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override {
+    return this;
+  }
 
-    wl_display* display_;
-    wl_surface* surface_;
-    wl_surface* parent_surface_;
-    wl_callback* callback_;
-    wl_subsurface* subsurface_;
+  // CefBrowserProcessHandler methods:
+  void OnContextInitialized() override;
 
-    static void on_frame(void* data, wl_callback* callback, uint32_t time);
-    static const wl_callback_listener frame_listener;
+  // CefRenderHandler methods:
+  void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
 
-    static void on_resize(double width, double height, void* data);
-    static void on_set_direction(int32_t direction, void* data);
-    static void on_set_offset(double left, double top, void* data);
-    static void on_touch(int32_t action,
-                         int32_t point_count,
-                         size_t point_data_size,
-                         const double* point_data,
-                         void* data);
-    static void on_dispose(bool hybrid, void* data);
+  void OnPaint(CefRefPtr<CefBrowser> browser,
+               PaintElementType type,
+               const RectList& dirtyRects,
+               const void* buffer,
+               int width,
+               int height) override;
 
-    static const platform_view_listener platform_view_listener_;
-  };
+  void OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
+                          PaintElementType type,
+                          const RectList& dirtyRects,
+                          const CefAcceleratedPaintInfo& info) override;
+
+  // CefClient methods:
+  CefRefPtr<CefRenderHandler> GetRenderHandler() override {
+    return this;
+  }
+
+
+  CefRefPtr<CefBrowser> browser_;
+
+ private:
+  int32_t id_;
+  void* platformViewsContext_;
+  PlatformViewRemoveListener removeListener_;
+  const std::string flutterAssetsPath_;
+
+  wl_display* display_;
+  wl_surface* surface_;
+  wl_surface* parent_surface_;
+  wl_callback* callback_;
+  wl_subsurface* subsurface_;
+
+  EGLDisplay egl_display_;
+  wl_egl_window* egl_window_;
+  int buffer_size_ = 32;
+  EGLContext egl_context_{};
+  EGLConfig egl_config_{};
+  GLuint programObject_{};
+  EGLSurface egl_surface_{};
+  GLuint gl_texture_ = 0;
+  GLuint framebuffer_ = 0;
+  GLuint depthrenderbuffer_ = 0;
+  unsigned int VBO, VAO, EBO;
+  const double width_, height_;
+
+  void InitializeEGL();
+  void InitializeScene();
+  void DrawFrame(uint32_t time) const;
+
+  static void on_frame(void* data, wl_callback* callback, uint32_t time);
+  static const wl_callback_listener frame_listener;
+
+  static void on_resize(double width, double height, void* data);
+  static void on_set_direction(int32_t direction, void* data);
+  static void on_set_offset(double left, double top, void* data);
+  static void on_touch(int32_t action,
+                       int32_t point_count,
+                       size_t point_data_size,
+                       const double* point_data,
+                       void* data);
+  static void on_dispose(bool hybrid, void* data);
+
+  static const platform_view_listener platform_view_listener_;
+  IMPLEMENT_REFCOUNTING(WebviewPlatformView);
+};
+
+class WebviewFlutterInstanceManagerHostApi : public InstanceManagerHostApi {
+ public:
+  ~WebviewFlutterInstanceManagerHostApi() override;
 
   std::optional<FlutterError> Clear() override;
+};
+class WebviewFlutterWebStorageHostApi : public WebStorageHostApi {
+ public:
+  ~WebviewFlutterWebStorageHostApi() override;
 
   std::optional<FlutterError> Create(int64_t instance_id) override;
 
   std::optional<FlutterError> DeleteAllData(int64_t instance_id) override;
+};
+
+class WebviewFlutterWebViewHostApi : public WebViewHostApi {
+ public:
+  ~WebviewFlutterWebViewHostApi() override;
+  
+  std::optional<FlutterError> Create(int64_t instance_id) override;
 
   std::optional<FlutterError> LoadData(int64_t instance_id,
                                        const std::string& data,
@@ -157,8 +220,6 @@ class WebviewFlutterPlugin final : public flutter::Plugin,
       std::function<void(ErrorOr<std::optional<std::string>> reply)> result)
       override;
 
-  std::optional<FlutterError> Create(int64_t instance_id,
-                                     const std::string& channel_name) override;
 
   ErrorOr<std::optional<std::string>> GetTitle(int64_t instance_id) override;
 
@@ -202,6 +263,13 @@ class WebviewFlutterPlugin final : public flutter::Plugin,
   std::optional<FlutterError> SetBackgroundColor(int64_t instance_id,
                                                  int64_t color) override;
 
+};
+
+
+class WebviewFlutterWebSettingsHostApi : public WebSettingsHostApi {
+ public:
+  ~WebviewFlutterWebSettingsHostApi() override;
+
   std::optional<FlutterError> Create(int64_t instance_id,
                                      int64_t web_view_instance_id) override;
 
@@ -235,6 +303,13 @@ class WebviewFlutterPlugin final : public flutter::Plugin,
   std::optional<FlutterError> SetTextZoom(int64_t instance_id,
                                           int64_t text_zoom) override;
   ErrorOr<std::string> GetUserAgentString(int64_t instance_id) override;
+};
+
+class WebviewFlutterWebChromeClientHostApi : public WebChromeClientHostApi {
+ public:
+  ~WebviewFlutterWebChromeClientHostApi() override;
+  
+  std::optional<FlutterError> Create(int64_t instance_id) override;
 
   std::optional<FlutterError> SetSynchronousReturnValueForOnShowFileChooser(
       int64_t instance_id,
@@ -242,10 +317,6 @@ class WebviewFlutterPlugin final : public flutter::Plugin,
   std::optional<FlutterError> SetSynchronousReturnValueForOnConsoleMessage(
       int64_t instance_id,
       bool value) override;
-
-  std::optional<FlutterError>
-  SetSynchronousReturnValueForShouldOverrideUrlLoading(int64_t instance_id,
-                                                       bool value) override;
 
   std::optional<FlutterError> SetSynchronousReturnValueForOnJsAlert(
       int64_t instance_id,
@@ -256,6 +327,43 @@ class WebviewFlutterPlugin final : public flutter::Plugin,
   std::optional<FlutterError> SetSynchronousReturnValueForOnJsPrompt(
       int64_t instance_id,
       bool value) override;
+};
+
+
+class WebviewFlutterWebViewClientHostApi : public WebViewClientHostApi {
+ public:
+  ~WebviewFlutterWebViewClientHostApi() override;
+  
+  std::optional<FlutterError> Create(int64_t instance_id) override;
+
+  std::optional<FlutterError>
+  SetSynchronousReturnValueForShouldOverrideUrlLoading(int64_t instance_id,
+                                                       bool value) override;
+};
+
+
+class WebviewFlutterDownloadListenerHostApi : public DownloadListenerHostApi {
+ public:
+  ~WebviewFlutterDownloadListenerHostApi() override;
+  
+  std::optional<FlutterError> Create(int64_t instance_id) override;
+
+};
+
+
+class WebviewFlutterJavaScriptChannelHostApi : public JavaScriptChannelHostApi {
+ public:
+  ~WebviewFlutterJavaScriptChannelHostApi() override;
+
+  std::optional<FlutterError> Create(int64_t instance_id,
+                                     const std::string& channel_name) override;
+};
+
+
+class WebviewFlutterCookieManagerHostApi : public CookieManagerHostApi {
+ public:
+  ~WebviewFlutterCookieManagerHostApi() override;
+
 
   std::optional<FlutterError> AttachInstance(
       int64_t instance_identifier) override;
@@ -273,9 +381,43 @@ class WebviewFlutterPlugin final : public flutter::Plugin,
       int64_t web_view_identifier,
       bool accept) override;
 
+};
+
+class WebviewFlutterPlugin final : public flutter::Plugin {
+ public:
+  static void RegisterWithRegistrar(flutter::PluginRegistrar* registrar);
+
+  static void PlatformViewCreate(int32_t id,
+                                 std::string viewType,
+                                 int32_t direction,
+                                 double top,
+                                 double left,
+                                 double width,
+                                 double height,
+                                 const std::vector<uint8_t>& params,
+                                 std::string assetDirectory,
+                                 FlutterDesktopEngineRef engine,
+                                 PlatformViewAddListener addListener,
+                                 PlatformViewRemoveListener removeListener,
+                                 void* platform_view_context);
+
+  WebviewFlutterPlugin();
+
+  ~WebviewFlutterPlugin() override;
+
   // Disallow copy and assign.
   WebviewFlutterPlugin(const WebviewFlutterPlugin&) = delete;
   WebviewFlutterPlugin& operator=(const WebviewFlutterPlugin&) = delete;
+
+  WebviewFlutterInstanceManagerHostApi    m_InstanceManagerHostApi;
+  WebviewFlutterWebStorageHostApi         m_WebStorageHostApi;
+  WebviewFlutterWebViewHostApi            m_WebViewHostApi;
+  WebviewFlutterWebSettingsHostApi        m_WebSettingsHostApi;
+  WebviewFlutterWebChromeClientHostApi    m_WebChromeClientHostApi;
+  WebviewFlutterWebViewClientHostApi      m_WebViewClientHostApi;
+  WebviewFlutterDownloadListenerHostApi   m_DownloadListenerHostApi;
+  WebviewFlutterJavaScriptChannelHostApi  m_JavaScriptChannelHostApi;
+  WebviewFlutterCookieManagerHostApi      m_CookieManagerHostApi;
 };
 
 }  // namespace plugin_webview_flutter

@@ -26,26 +26,36 @@ if (NOT CEF_BUILD_TYPE)
     set(CEF_BUILD_TYPE "Release")
 endif ()
 
+message("CEF_BUILD_TYPE: ${CEF_BUILD_TYPE}")
+
 add_library(plugin_webview_flutter_view STATIC
         webview_flutter_view_plugin_c_api.cc
         webview_flutter_view_plugin.cc
         messages.g.cc
 )
 
+add_compile_definitions(CEF_ROOT=\"${CEF_ROOT}\")
+
+set(WEBVIEW_SUBPROCESS_PROJECT_NAME "webview_flutter_subprocess")
+
 add_subdirectory(${CEF_ROOT})
 
 target_include_directories(plugin_webview_flutter_view PRIVATE
         include
         ${CEF_ROOT}
+        ${CEF_ROOT}/include
 )
 
 target_link_directories(plugin_webview_flutter_view PUBLIC
         ${CEF_ROOT}/${CEF_BUILD_TYPE}
 )
 
+add_dependencies(plugin_webview_flutter_view libcef_dll_wrapper)
+
 target_link_libraries(plugin_webview_flutter_view PRIVATE
         flutter
         platform_homescreen
-        cef
         libcef_dll_wrapper
+        GLESv2
+        EGL
 )
