@@ -31,7 +31,8 @@ jobs:
 
       - name: Install runtime packages
         run: |
-          sudo apt-get -y install \
+          sudo apt-get -o DPkg::Lock::Timeout=1200 -y update
+          sudo apt-get -o DPkg::Lock::Timeout=1200 -y install \
             \
             ninja-build \
             \
@@ -60,7 +61,7 @@ jobs:
             \
             libflatpak-dev libxml2-dev zlib1g-dev
 
-          sudo apt-get -y install \
+          sudo apt-get -o DPkg::Lock::Timeout=1200 -y install \
             clang \
             llvm \
             lldb \
