@@ -8,11 +8,6 @@ namespace plugin_common::uuidxx {
 
 enum class Variant { Nil, Version1, Version2, Version3, Version4, Version5 };
 
-class NotImplemented : public std::logic_error {
- public:
-  NotImplemented() : std::logic_error("Function not yet implemented") {};
-};
-
 union uuid {
  private:
   static uuid Generatev4();
@@ -39,12 +34,12 @@ union uuid {
 
   uuid() = default;
 
-  uuid(const char* uuidString);
-  uuid(const std::string& uuidString);
+  explicit uuid(const char* uuidString);
+  explicit uuid(const std::string& uuidString);
   static uuid FromString(const char* uuidString);
   static uuid FromString(const std::string& uuidString);
 
-  static inline uuid Generate(Variant v = Variant::Version4) {
+  static uuid Generate(const Variant v = Variant::Version4) {
     switch (v) {
       case Variant::Nil:
         return uuid(nullptr);  // special case;
@@ -52,14 +47,14 @@ union uuid {
       case Variant::Version2:
       case Variant::Version3:
       case Variant::Version5:
-        throw new NotImplemented();
+        throw std::logic_error("Function not yet implemented");
       case Variant::Version4:
         return Generatev4();
     }
     return uuid(nullptr);
   }
 
-  std::string ToString(bool withBraces = true) const;
+  [[nodiscard]] std::string ToString(bool withBraces = true) const;
 };
 
 static_assert(sizeof(uuid) == 2 * sizeof(int64_t),

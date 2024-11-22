@@ -39,26 +39,28 @@ uuid::uuid(const char* uuidString) {
     return;
   }
 
+  const char* pos = uuidString;
   if (uuidString[0] == '{') {
-    sscanf(uuidString,
-           "{%08" SCNx32 "-%04" SCNx16 "-%04" SCNx16 "-%02" SCNx8 "%02" SCNx8
-           "-%02" SCNx8 "%02" SCNx8 "%02" SCNx8 "%02" SCNx8 "%02" SCNx8
-           "%02" SCNx8 "}",
-           &Uuid.Data1, &Uuid.Data2, &Uuid.Data3, &Uuid.Data4[0],
-           &Uuid.Data4[1], &Uuid.Data4[2], &Uuid.Data4[3], &Uuid.Data4[4],
-           &Uuid.Data4[5], &Uuid.Data4[6], &Uuid.Data4[7]);
-  } else {
-    sscanf(uuidString,
-           "%08" SCNx32 "-%04" SCNx16 "-%04" SCNx16 "-%02" SCNx8 "%02" SCNx8
-           "-%02" SCNx8 "%02" SCNx8 "%02" SCNx8 "%02" SCNx8 "%02" SCNx8
-           "%02" SCNx8 "",
-           &Uuid.Data1, &Uuid.Data2, &Uuid.Data3, &Uuid.Data4[0],
-           &Uuid.Data4[1], &Uuid.Data4[2], &Uuid.Data4[3], &Uuid.Data4[4],
-           &Uuid.Data4[5], &Uuid.Data4[6], &Uuid.Data4[7]);
+    pos++;
+  }
+
+  Uuid.Data1 = static_cast<uint32_t>(strtoul(pos, nullptr, 16));
+  pos = strchr(pos, '-') + 1;
+  Uuid.Data2 = static_cast<uint16_t>(strtoul(pos, nullptr, 16));
+  pos = strchr(pos, '-') + 1;
+  Uuid.Data3 = static_cast<uint16_t>(strtoul(pos, nullptr, 16));
+  pos = strchr(pos, '-') + 1;
+  Uuid.Data4[0] = static_cast<uint8_t>(strtoul(pos, nullptr, 16));
+  pos += 2;
+  Uuid.Data4[1] = static_cast<uint8_t>(strtoul(pos, nullptr, 16));
+  pos = strchr(pos, '-') + 1;
+  for (int i = 2; i < 8; ++i) {
+    Uuid.Data4[i] = static_cast<uint8_t>(strtoul(pos, nullptr, 16));
+    pos += 2;
   }
 }
 
-string uuid::ToString(bool withBraces) const {
+string uuid::ToString(const bool withBraces) const {
   char buffer[39];
   sprintf(buffer, "%s%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X%s",
           withBraces ? "{" : "", Uuid.Data1, Uuid.Data2, Uuid.Data3,
@@ -69,12 +71,12 @@ string uuid::ToString(bool withBraces) const {
 }
 
 uuid uuid::FromString(const char* uuidString) {
-  uuid temp(uuidString);
+  const uuid temp(uuidString);
   return temp;
 }
 
 uuid uuid::FromString(const std::string& uuidString) {
-  uuid temp(uuidString.c_str());
+  const uuid temp(uuidString.c_str());
   return temp;
 }
 

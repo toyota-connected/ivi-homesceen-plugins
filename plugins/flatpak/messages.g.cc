@@ -627,7 +627,7 @@ EncodableValue PigeonInternalCodecSerializer::ReadValueOfType(
   }
 }
 
-void PigeonInternalCodecSerializer::WriteValue(
+void PigeonInternalCodecSerializer::WriteValue(  // NOLINT(misc-no-recursion)
     const EncodableValue& value,
     flutter::ByteStreamWriter* stream) const {
   if (const CustomEncodableValue* custom_value =
