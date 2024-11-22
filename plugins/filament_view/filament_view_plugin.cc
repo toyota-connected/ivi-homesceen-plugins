@@ -29,12 +29,11 @@
 #include <core/systems/derived/skybox_system.h>
 #include <core/systems/derived/view_target_system.h>
 #include <core/systems/ecsystems_manager.h>
+#include <event_sink.h>
 #include <event_stream_handler_functions.h>
 #include <messages.g.h>
 #include <plugins/common/common.h>
 #include <asio/post.hpp>
-#include <memory>
-#include <string>
 
 class FlutterView;
 
@@ -209,7 +208,7 @@ void FilamentViewPlugin::RegisterWithRegistrar(
         assetDirectory, addListener, removeListener, platform_view_context);
 
     // Set up message channels and APIs
-    FilamentViewApi::SetUp(registrar->messenger(), plugin.get(), id);
+    SetUp(registrar->messenger(), plugin.get(), id);
 
     registrar->AddPlugin(std::move(plugin));
 

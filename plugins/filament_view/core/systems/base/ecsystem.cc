@@ -19,7 +19,6 @@
 #include <plugin_registrar.h>
 #include <standard_method_codec.h>
 #include <functional>
-#include <iostream>
 #include <queue>
 #include <unordered_map>
 #include <vector>

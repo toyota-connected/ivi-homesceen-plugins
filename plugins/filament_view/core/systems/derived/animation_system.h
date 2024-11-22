@@ -17,7 +17,6 @@
 #pragma once
 
 #include <core/systems/base/ecsystem.h>
-#include <method_channel.h>
 #include <memory>
 
 #include <core/components/derived/animation.h>

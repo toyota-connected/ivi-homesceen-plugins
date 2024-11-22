@@ -17,7 +17,6 @@
 #ifndef FLUTTER_PLUGIN_FILAMENT_VIEW_PLUGIN_H_
 #define FLUTTER_PLUGIN_FILAMENT_VIEW_PLUGIN_H_
 
-#include <event_sink.h>
 #include <memory>
 #include <string>
 

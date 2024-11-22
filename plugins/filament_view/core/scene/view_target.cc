@@ -24,10 +24,7 @@
 #include <filament/SwapChain.h>
 #include <filament/View.h>
 #include <filament/Viewport.h>
-#include <flutter/basic_message_channel.h>
 #include <flutter/encodable_value.h>
-#include <flutter/method_channel.h>
-#include <flutter/standard_method_codec.h>
 #include <gltfio/Animator.h>
 #include <plugins/common/common.h>
 #include <view/flutter_view.h>
@@ -358,12 +355,12 @@ void ViewTarget::vChangeQualitySettings(
 ////////////////////////////////////////////////////////////////////////////
 void ViewTarget::SendFrameViewCallback(
     const std::string& methodName,
-    std::initializer_list<std::pair<const char*, EncodableValue>> args) const {
+    std::initializer_list<std::pair<const char*, EncodableValue>> args) {
   EncodableMap encodableMap;
   encodableMap.insert(
       {flutter::EncodableValue("method"), flutter::EncodableValue(methodName)});
   for (const auto& [fst, snd] : args) {
-    encodableMap[EncodableValue(fst)] = snd;
+    encodableMap[EncodableValue(fst)] = snd; // NOLINT
   }
 
   const auto viewTargetSystem =
