@@ -77,8 +77,8 @@ void WebviewFlutterPlugin::RegisterWithRegistrar(
 void WebviewPlatformView::GetViewRect(CefRefPtr<CefBrowser> /* browser */,
                                 CefRect& rect) {
   spdlog::debug("[webivew_flutter] GetViewRect");
-  rect.width = 800;
-  rect.height = 600;
+  rect.width = static_cast<int>(width_);
+  rect.height = static_cast<int>(height_);
 }
 
 void WebviewPlatformView::OnPaint(CefRefPtr<CefBrowser> browser,
@@ -180,7 +180,9 @@ WebviewPlatformView::WebviewPlatformView(
       platformViewsContext_(platform_view_context),
       removeListener_(removeListener),
       flutterAssetsPath_(std::move(assetDirectory)),
-      callback_(nullptr) {
+      callback_(nullptr),
+      width_(width),
+      height_(height) {
   spdlog::debug("++WebviewPlatformView::WebviewPlatformView: Top: {}, Left: {}, Width: {}, Height: {}, direction: {}, viewType: {}", top, left, width, height, direction, viewType);
 
   const auto flutter_view = state->view_controller->view;
@@ -227,6 +229,8 @@ void WebviewPlatformView::CefThreadMain() {
   args.push_back("--v=1");
   args.push_back("--use-gl=egl");
   args.push_back("--in-process-gpu");
+  // args.push_back("--off-screen-rendering-enabled"); // For OnAcceleratedPaint callback
+  // args.push_back("--shared-texture-enabled"); // For OnAcceleratedPaint callback
 
   // Setup EGL objects
   egl_display_ = eglGetDisplay(display_);
@@ -238,17 +242,6 @@ void WebviewPlatformView::CefThreadMain() {
       eglCreateWindowSurface(egl_display_, egl_config_, egl_window_, nullptr);
 
   eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_);
-  glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
-  glGenFramebuffers(1, &framebuffer_);
-  GLenum err = 0;
-  err = glGetError();
-  spdlog::debug("glBindFramebuffer: glGetError: {}", (uint32_t)err);
-  glGenTextures(1, &gl_texture_);
-  err = glGetError();
-  spdlog::debug("glBindFramebuffer: glGetError: {}", (uint32_t)err);
-  glGenRenderbuffers(1, &depthrenderbuffer_);
-  err = glGetError();
-  spdlog::debug("glBindFramebuffer: glGetError: {}", (uint32_t)err);
   InitializeScene();
 
   // Load libcef.so
@@ -308,25 +301,23 @@ void WebviewPlatformView::CefThreadMain() {
 
 
 WebviewFlutterPlugin::~WebviewFlutterPlugin() {
-  CefShutdown();
+  CefPostTask(TID_UI, base::BindOnce(CefQuitMessageLoop));
 };
 
 void WebviewPlatformView::OnContextInitialized() {
   spdlog::debug("[webview_flutter] WebviewPlatformView::OnContextInitialized");
   CefWindowInfo window_info;
   window_info.SetAsWindowless(true);
+  // window_info.shared_texture_enabled = true; // For OnAcceleratedPaint callback
+
 
   CefBrowserSettings browserSettings;
   browserSettings.windowless_frame_rate = 60;  // 30 is default
 
-  CefString browser_url_cef_str;
-  const char* browser_url = "http://www.google.com";
-  CefString(browser_url_cef_str).FromASCII(browser_url);
-
   spdlog::debug("[webview_flutter] CreateBrowserSync++");
   browser_ = CefBrowserHost::CreateBrowserSync(
       window_info, this,
-      "http://www.google.com", browserSettings, nullptr,
+      "https://deanm.github.io/pre3d/monster.html", browserSettings, nullptr,
       nullptr);
   spdlog::debug("[webview_flutter] CreateBrowserSync--");
 }
@@ -356,6 +347,11 @@ void WebviewPlatformView::InitializeScene() {
       "{\n"
       "    FragColor = texture(ourTexture, TexCoord).bgra;\n"
       "}\n";
+
+  glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+  glGenFramebuffers(1, &framebuffer_);
+  glGenTextures(1, &gl_texture_);
+  glGenRenderbuffers(1, &depthrenderbuffer_);
 
   const GLuint vertexShader = LoadShader(vShaderStr, GL_VERTEX_SHADER);
   const GLuint fragmentShader = LoadShader(fShaderStr, GL_FRAGMENT_SHADER);
@@ -1127,35 +1123,13 @@ void WebviewPlatformView::on_frame(void* data,
                                    const uint32_t  time ) {
   const auto obj = static_cast<WebviewPlatformView*>(data);
 
-  // spdlog::debug("[webview_flutter] on_frame");
-
-  obj->callback_ = nullptr;
-
-
-  if (callback) {
-    wl_callback_destroy(callback);
-  }
-
-  obj->DrawFrame(time);
-
-  // Z-Order
-  // wl_subsurface_place_above(obj->subsurface_, obj->parent_surface_);
-  wl_subsurface_place_below(obj->subsurface_, obj->parent_surface_);
-
-  obj->callback_ = wl_surface_frame(obj->surface_);
-  wl_callback_add_listener(obj->callback_, &WebviewPlatformView::frame_listener,
-                           data);
-
-  wl_subsurface_set_position(obj->subsurface_, obj->left_, obj->top_);
-
-  wl_surface_commit(obj->surface_);
+  spdlog::debug("[webview_flutter] on_frame");
 }
 
 const wl_callback_listener WebviewPlatformView::frame_listener = {.done =
                                                                       on_frame};
 
 void WebviewPlatformView::DrawFrame(uint32_t  time ) const {
-
 }
 
 }  // namespace plugin_webview_flutter

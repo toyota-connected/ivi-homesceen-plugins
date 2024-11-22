@@ -37,6 +37,8 @@
 #include <capi/views/cef_browser_view_delegate_capi.h>
 #include <capi/views/cef_display_capi.h>
 #include <capi/cef_render_handler_capi.h>
+#include <include/base/cef_callback.h>
+#include <include/wrapper/cef_closure_task.h>
 
 #include "flutter_desktop_engine_state.h"
 #include "flutter_homescreen.h"
@@ -130,6 +132,7 @@ class WebviewPlatformView final : public PlatformView,
   GLuint framebuffer_ = 0;
   GLuint depthrenderbuffer_ = 0;
   unsigned int VBO, VAO, EBO;
+  const double width_, height_;
 
   void InitializeEGL();
   void InitializeScene();
