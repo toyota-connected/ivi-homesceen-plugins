@@ -20,23 +20,23 @@
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar.h>
 
-#include <wayland-client.h>
-#include <wayland-egl.h>
 #include <EGL/egl.h>
 #include <GLES3/gl32.h>
+#include <wayland-client.h>
+#include <wayland-egl.h>
 
 #include "messages.g.h"
 
 #include <capi/cef_app_capi.h>
 #include <capi/cef_browser_capi.h>
-#include <cef_app.h>
-#include <cef_client.h>
-#include <cef_render_handler.h>
-#include <cef_browser_process_handler.h>
+#include <capi/cef_render_handler_capi.h>
 #include <capi/views/cef_browser_view_capi.h>
 #include <capi/views/cef_browser_view_delegate_capi.h>
 #include <capi/views/cef_display_capi.h>
-#include <capi/cef_render_handler_capi.h>
+#include <cef_app.h>
+#include <cef_browser_process_handler.h>
+#include <cef_client.h>
+#include <cef_render_handler.h>
 #include <include/base/cef_callback.h>
 #include <include/wrapper/cef_closure_task.h>
 
@@ -49,7 +49,7 @@
 namespace plugin_webview_flutter {
 
 class WebviewPlatformView final : public PlatformView,
-                                  public CefApp, 
+                                  public CefApp,
                                   public CefRenderHandler,
                                   public CefClient,
                                   public CefBrowserProcessHandler {
@@ -70,13 +70,11 @@ class WebviewPlatformView final : public PlatformView,
 
   ~WebviewPlatformView() override = default;
 
-
   void CefThreadMain();
 
   static bool is_start_cef_done_;
   static bool is_shutdown_cef_done_;
   std::thread cef_thread_;
-
 
   // CefApp methods:
   CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override {
@@ -102,10 +100,7 @@ class WebviewPlatformView final : public PlatformView,
                           const CefAcceleratedPaintInfo& info) override;
 
   // CefClient methods:
-  CefRefPtr<CefRenderHandler> GetRenderHandler() override {
-    return this;
-  }
-
+  CefRefPtr<CefRenderHandler> GetRenderHandler() override { return this; }
 
   CefRefPtr<CefBrowser> browser_;
 
@@ -173,7 +168,7 @@ class WebviewFlutterWebStorageHostApi : public WebStorageHostApi {
 class WebviewFlutterWebViewHostApi : public WebViewHostApi {
  public:
   ~WebviewFlutterWebViewHostApi() override;
-  
+
   std::optional<FlutterError> Create(int64_t instance_id) override;
 
   std::optional<FlutterError> LoadData(int64_t instance_id,
@@ -220,7 +215,6 @@ class WebviewFlutterWebViewHostApi : public WebViewHostApi {
       std::function<void(ErrorOr<std::optional<std::string>> reply)> result)
       override;
 
-
   ErrorOr<std::optional<std::string>> GetTitle(int64_t instance_id) override;
 
   std::optional<FlutterError> ScrollTo(int64_t instance_id,
@@ -262,9 +256,7 @@ class WebviewFlutterWebViewHostApi : public WebViewHostApi {
 
   std::optional<FlutterError> SetBackgroundColor(int64_t instance_id,
                                                  int64_t color) override;
-
 };
-
 
 class WebviewFlutterWebSettingsHostApi : public WebSettingsHostApi {
  public:
@@ -308,7 +300,7 @@ class WebviewFlutterWebSettingsHostApi : public WebSettingsHostApi {
 class WebviewFlutterWebChromeClientHostApi : public WebChromeClientHostApi {
  public:
   ~WebviewFlutterWebChromeClientHostApi() override;
-  
+
   std::optional<FlutterError> Create(int64_t instance_id) override;
 
   std::optional<FlutterError> SetSynchronousReturnValueForOnShowFileChooser(
@@ -329,11 +321,10 @@ class WebviewFlutterWebChromeClientHostApi : public WebChromeClientHostApi {
       bool value) override;
 };
 
-
 class WebviewFlutterWebViewClientHostApi : public WebViewClientHostApi {
  public:
   ~WebviewFlutterWebViewClientHostApi() override;
-  
+
   std::optional<FlutterError> Create(int64_t instance_id) override;
 
   std::optional<FlutterError>
@@ -341,15 +332,12 @@ class WebviewFlutterWebViewClientHostApi : public WebViewClientHostApi {
                                                        bool value) override;
 };
 
-
 class WebviewFlutterDownloadListenerHostApi : public DownloadListenerHostApi {
  public:
   ~WebviewFlutterDownloadListenerHostApi() override;
-  
+
   std::optional<FlutterError> Create(int64_t instance_id) override;
-
 };
-
 
 class WebviewFlutterJavaScriptChannelHostApi : public JavaScriptChannelHostApi {
  public:
@@ -359,11 +347,9 @@ class WebviewFlutterJavaScriptChannelHostApi : public JavaScriptChannelHostApi {
                                      const std::string& channel_name) override;
 };
 
-
 class WebviewFlutterCookieManagerHostApi : public CookieManagerHostApi {
  public:
   ~WebviewFlutterCookieManagerHostApi() override;
-
 
   std::optional<FlutterError> AttachInstance(
       int64_t instance_identifier) override;
@@ -380,7 +366,6 @@ class WebviewFlutterCookieManagerHostApi : public CookieManagerHostApi {
       int64_t identifier,
       int64_t web_view_identifier,
       bool accept) override;
-
 };
 
 class WebviewFlutterPlugin final : public flutter::Plugin {
@@ -409,15 +394,15 @@ class WebviewFlutterPlugin final : public flutter::Plugin {
   WebviewFlutterPlugin(const WebviewFlutterPlugin&) = delete;
   WebviewFlutterPlugin& operator=(const WebviewFlutterPlugin&) = delete;
 
-  WebviewFlutterInstanceManagerHostApi    m_InstanceManagerHostApi;
-  WebviewFlutterWebStorageHostApi         m_WebStorageHostApi;
-  WebviewFlutterWebViewHostApi            m_WebViewHostApi;
-  WebviewFlutterWebSettingsHostApi        m_WebSettingsHostApi;
-  WebviewFlutterWebChromeClientHostApi    m_WebChromeClientHostApi;
-  WebviewFlutterWebViewClientHostApi      m_WebViewClientHostApi;
-  WebviewFlutterDownloadListenerHostApi   m_DownloadListenerHostApi;
-  WebviewFlutterJavaScriptChannelHostApi  m_JavaScriptChannelHostApi;
-  WebviewFlutterCookieManagerHostApi      m_CookieManagerHostApi;
+  WebviewFlutterInstanceManagerHostApi m_InstanceManagerHostApi;
+  WebviewFlutterWebStorageHostApi m_WebStorageHostApi;
+  WebviewFlutterWebViewHostApi m_WebViewHostApi;
+  WebviewFlutterWebSettingsHostApi m_WebSettingsHostApi;
+  WebviewFlutterWebChromeClientHostApi m_WebChromeClientHostApi;
+  WebviewFlutterWebViewClientHostApi m_WebViewClientHostApi;
+  WebviewFlutterDownloadListenerHostApi m_DownloadListenerHostApi;
+  WebviewFlutterJavaScriptChannelHostApi m_JavaScriptChannelHostApi;
+  WebviewFlutterCookieManagerHostApi m_CookieManagerHostApi;
 };
 
 }  // namespace plugin_webview_flutter
