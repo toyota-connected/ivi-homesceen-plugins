@@ -39,7 +39,7 @@ void LayerPlaygroundPluginCApiRegisterWithRegistrar(
       RegisterWithRegistrar(
           flutter::PluginRegistrarManager::GetInstance()
               ->GetRegistrar<flutter::PluginRegistrar>(registrar),
-          id, viewType, direction, top, left, width, height, params,
-          assetDirectory, engine, add_listener, remove_listener,
+          id, std::move(viewType), direction, top, left, width, height, params,
+          std::move(assetDirectory), engine, add_listener, remove_listener,
           platform_views_context);
 }

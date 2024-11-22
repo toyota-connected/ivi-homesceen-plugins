@@ -20,7 +20,7 @@
 
 namespace plugin_common::Encodable {
 
-void PrintFlutterEncodableMap(const char* name,
+void PrintFlutterEncodableMap(const char* name,  // NOLINT(misc-no-recursion)
                               const flutter::EncodableMap& args) {
   spdlog::warn("[{}]", name);
   for (const auto& [fst, snd] : args) {
@@ -29,7 +29,7 @@ void PrintFlutterEncodableMap(const char* name,
   }
 }
 
-void PrintFlutterEncodableList(const char* name,
+void PrintFlutterEncodableList(const char* name,  // NOLINT(misc-no-recursion)
                                const flutter::EncodableList& list) {
   spdlog::warn("[EncodableList]");
   for (auto& it : list) {
@@ -37,7 +37,7 @@ void PrintFlutterEncodableList(const char* name,
   }
 }
 
-void PrintFlutterEncodableValue(const char* key,
+void PrintFlutterEncodableValue(const char* key,  // NOLINT(misc-no-recursion)
                                 const flutter::EncodableValue& it) {
   if (std::holds_alternative<std::monostate>(it)) {
     spdlog::warn("\t{}: []", key);

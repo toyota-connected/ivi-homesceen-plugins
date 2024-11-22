@@ -99,7 +99,7 @@ NavRenderSurface::NavRenderSurface(int32_t id,
   }
 
   if (map_flutter_assets) {
-    asset_path = assetDirectory;
+    asset_path = flutterAssetsPath_;
   }
 
   if (!LibNavRender::IsPresent()) {
