@@ -17,8 +17,6 @@
 #pragma once
 
 #include <core/systems/base/ecsystem.h>
-#include <core/utils/ibl_profiler.h>
-#include <event_channel.h>
 #include <method_channel.h>
 #include <memory>
 
@@ -62,17 +60,9 @@ class AnimationSystem : public ECSystem {
                                const AnimationEventType& eType,
                                const std::string& eventData) const;
 
-  void setupMessageChannels(flutter::PluginRegistrar* plugin_registrar);
 
   std::map<EntityGUID, std::shared_ptr<EntityObject>> _entities;
 
-  std::unique_ptr<flutter::MethodChannel<>> animationInfoCallback_;
 
-  std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>>
-      event_channel_;
-
-  // The internal Flutter event sink instance, used to send events to the Dart
-  // side.
-  std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> event_sink_;
 };
 }  // namespace plugin_filament_view

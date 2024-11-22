@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <event_channel.h>
 #include <core/components/derived/collidable.h>
 #include <core/entity/derived/shapes/baseshape.h>
 #include <core/include/literals.h>
@@ -87,9 +88,6 @@ class CollisionSystem : public ECSystem {
 
   void vMatchCollidablesToRenderingModelsTransforms();
   void vMatchCollidablesToDebugDrawingTransforms();
-
-  // Used for sending messages back over to Dart for hitResults.
-  std::unique_ptr<flutter::MethodChannel<>> collisionInfoCallback_;
 
   std::list<EntityObject*> collidables_;
   std::map<EntityGUID, shapes::BaseShape*>

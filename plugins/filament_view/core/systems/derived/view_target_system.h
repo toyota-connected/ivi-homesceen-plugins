@@ -56,7 +56,6 @@ class ViewTargetSystem : public ECSystem {
                                                    uint32_t height) const;
   void vKickOffFrameRenderingLoops() const;
   void vSetCameraFromSerializedData() const;
-  void vSetupMessageChannels(flutter::PluginRegistrar* plugin_registrar) const;
   void vResizeViewTarget(size_t nWhich, double width, double height) const;
   void vSetViewTargetOffSet(size_t nWhich, double left, double top) const;
 

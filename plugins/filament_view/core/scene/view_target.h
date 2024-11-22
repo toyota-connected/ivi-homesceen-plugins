@@ -24,6 +24,7 @@
 #include <viewer/Settings.h>
 #include <asio/io_context_strand.hpp>
 #include <cstdint>
+#include <event_channel.h>
 
 namespace plugin_filament_view {
 
@@ -92,8 +93,6 @@ class ViewTarget {
   int32_t top_;
 
   bool initialized_{};
-
-  std::unique_ptr<flutter::MethodChannel<>> frameViewCallback_;
 
   wl_display* display_{};
   wl_surface* surface_{};

@@ -18,7 +18,6 @@
 #include <core/entity/base/entityobject.h>
 #include <core/include/literals.h>
 #include <core/systems/ecsystems_manager.h>
-#include <event_stream_handler_functions.h>
 #include <plugin_registrar.h>
 #include <plugins/common/common.h>
 #include <standard_method_codec.h>
@@ -27,18 +26,6 @@ namespace plugin_filament_view {
 
 ////////////////////////////////////////////////////////////////////////////////////
 void AnimationSystem::vInitSystem() {
-  vRegisterMessageHandler(
-      ECSMessageType::SetupMessageChannels, [this](const ECSMessage& msg) {
-        spdlog::debug("SetupMessageChannels");
-
-        const auto registrar = msg.getData<flutter::PluginRegistrar*>(
-            ECSMessageType::SetupMessageChannels);
-
-        setupMessageChannels(registrar);
-
-        spdlog::debug("SetupMessageChannels Complete");
-      });
-
   // Handler for AnimationEnqueue
   vRegisterMessageHandler(
       ECSMessageType::AnimationEnqueue, [this](const ECSMessage& msg) {
@@ -188,43 +175,6 @@ void AnimationSystem::vInitSystem() {
       });
 }
 
-////////////////////////////////////////////////////////////////////////////////////
-void AnimationSystem::setupMessageChannels(
-    flutter::PluginRegistrar* plugin_registrar) {
-  const auto channel_name = std::string("plugin.filament_view.animation_info");
-
-#if 0
-  animationInfoCallback_ = std::make_unique<flutter::MethodChannel<>>(
-      plugin_registrar->messenger(), channel_name,
-      &flutter::StandardMethodCodec::GetInstance());
-#else
-
-    spdlog::debug("Initing setupmessageChannels");
-
-  event_channel_ = std::make_unique<flutter::EventChannel<>>(
-      plugin_registrar->messenger(),
-      /*std::string("flutter.io/videoPlayer/videoEvents") +
-          std::to_string(m_texture_id),*/
-      channel_name, &flutter::StandardMethodCodec::GetInstance());
-
-  event_channel_->SetStreamHandler(
-      std::make_unique<flutter::StreamHandlerFunctions<>>(
-          [this](const flutter::EncodableValue* /* arguments */,
-                 std::unique_ptr<flutter::EventSink<>>&& events)
-              -> std::unique_ptr<flutter::StreamHandlerError<>> {
-            event_sink_ = std::move(events);
-            return nullptr;
-          },
-          [this](const flutter::EncodableValue* /* arguments */)
-              -> std::unique_ptr<flutter::StreamHandlerError<>> {
-            event_sink_ = nullptr;
-            return nullptr;
-          }));
-
-    spdlog::debug("done Initing setupmessageChannels");
-
-#endif
-}
 
 ////////////////////////////////////////////////////////////////////////////////////
 void AnimationSystem::vUpdate(const float fElapsedTime) {
@@ -268,29 +218,6 @@ void AnimationSystem::vNotifyOfAnimationEvent(
     const EntityGUID& entityGuid,
     const AnimationEventType& eType,
     const std::string& eventData) const {
-#if 0
-    if (animationInfoCallback_ == nullptr) {
-        return;
-    }
-
-  flutter::EncodableMap encodableMap;
-
-  encodableMap[flutter::EncodableValue(kAnimationEventType)] =
-      static_cast<int>(eType);
-
-  // source guid
-  encodableMap[flutter::EncodableValue(kGlobalGuid)] = entityGuid;
-
-  // event data.
-  encodableMap[flutter::EncodableValue(kAnimationEventData)] = eventData;
-
-  animationInfoCallback_->InvokeMethod(
-      kAnimationEvent, std::move(std::make_unique<flutter::EncodableValue>(
-                           flutter::EncodableValue(std::move(encodableMap)))));
-#else
-  if (!event_sink_) {
-    return;
-  }
   const auto event =
       flutter::EncodableMap({{flutter::EncodableValue("event"),
                               flutter::EncodableValue(kAnimationEvent)},
@@ -301,8 +228,7 @@ void AnimationSystem::vNotifyOfAnimationEvent(
                              {flutter::EncodableValue(kAnimationEventData),
                               flutter::EncodableValue(eventData)}});
 
-  event_sink_->Success(flutter::EncodableValue(event));
-#endif
+    vSendDataToEventChannel(event);
 }
 
 }  // namespace plugin_filament_view

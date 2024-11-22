@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 #pragma once
+
+#include <encodable_value.h>
+#include <event_channel.h>
 #include <functional>
-#include <iostream>
 #include <mutex>
 #include <queue>
 #include <unordered_map>
@@ -23,6 +25,11 @@
 
 #include <core/systems/messages/ecs_message.h>
 #include <core/systems/messages/ecs_message_types.h>
+
+namespace flutter {
+ class PluginRegistrar;
+ class EncodableValue;
+}
 
 namespace plugin_filament_view {
 
@@ -62,6 +69,12 @@ class ECSystem {
 
   virtual void DebugPrint() = 0;
 
+ void vSetupMessageChannels(
+      flutter::PluginRegistrar* poPluginRegistrar,
+      const std::string& szChannelName);
+
+ void vSendDataToEventChannel(const flutter::EncodableMap& oDataMap) const;
+
  protected:
   // Handle a specific message type by invoking the registered handlers
   virtual void vHandleMessage(const ECSMessage& msg);
@@ -75,6 +88,13 @@ class ECSystem {
 
   std::mutex messagesMutex;
   std::mutex handlersMutex;
+
+ std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>>
+    event_channel_;
+
+ // The internal Flutter event sink instance, used to send events to the Dart
+ // side.
+ std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> event_sink_;
 };
 
 }  // namespace plugin_filament_view

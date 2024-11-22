@@ -15,9 +15,12 @@
  */
 #include "ecsystem.h"
 
+#include <event_stream_handler_functions.h>
 #include <functional>
 #include <iostream>
+#include <plugin_registrar.h>
 #include <queue>
+#include <standard_method_codec.h>
 #include <unordered_map>
 #include <vector>
 
@@ -131,5 +134,56 @@ void ECSystem::vHandleMessage(const ECSMessage& msg) {
   }
   SPDLOG_TRACE("[vHandleMessage] Handlers invocation completed");
 }
+
+////////////////////////////////////////////////////////////////////////////////////
+void ECSystem::vSendDataToEventChannel(const flutter::EncodableMap& oDataMap) const {
+  if (!event_sink_ || !event_channel_) {
+    return;
+  }
+
+  event_sink_->Success(flutter::EncodableValue(oDataMap));
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+void ECSystem::vSetupMessageChannels(
+      flutter::PluginRegistrar* poPluginRegistrar,
+      const std::string& szChannelName) {
+  if(event_channel_ != nullptr) {
+    return;
+  }
+
+#if 0
+  animationInfoCallback_ = std::make_unique<flutter::MethodChannel<>>(
+      plugin_registrar->messenger(), channel_name,
+      &flutter::StandardMethodCodec::GetInstance());
+#else
+
+  spdlog::debug("Creating Event Channel {}::{}}", __FUNCTION__, szChannelName);
+
+  event_channel_ = std::make_unique<flutter::EventChannel<>>(
+      poPluginRegistrar->messenger(),
+      /*std::string("flutter.io/videoPlayer/videoEvents") +
+          std::to_string(m_texture_id),*/
+      szChannelName, &flutter::StandardMethodCodec::GetInstance());
+
+  event_channel_->SetStreamHandler(
+      std::make_unique<flutter::StreamHandlerFunctions<>>(
+          [&](const flutter::EncodableValue* /* arguments */,
+                 std::unique_ptr<flutter::EventSink<>>&& events)
+              -> std::unique_ptr<flutter::StreamHandlerError<>> {
+            event_sink_ = std::move(events);
+            return nullptr;
+          },
+          [&](const flutter::EncodableValue* /* arguments */)
+              -> std::unique_ptr<flutter::StreamHandlerError<>> {
+            event_sink_ = nullptr;
+            return nullptr;
+          }));
+
+  spdlog::debug("Event Channel creation Complete for {}", szChannelName);
+
+#endif
+}
+
 
 }  // namespace plugin_filament_view

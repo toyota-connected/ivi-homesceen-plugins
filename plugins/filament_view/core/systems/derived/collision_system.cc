@@ -263,24 +263,10 @@ std::list<HitResult> CollisionSystem::lstCheckForCollidable(
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void CollisionSystem::setupMessageChannels(
-    flutter::PluginRegistrar* plugin_registrar) {
-  auto channel_name = std::string("plugin.filament_view.collision_info");
-
-  collisionInfoCallback_ = std::make_unique<flutter::MethodChannel<>>(
-      plugin_registrar->messenger(), channel_name,
-      &flutter::StandardMethodCodec::GetInstance());
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 void CollisionSystem::SendCollisionInformationCallback(
     const std::list<HitResult>& lstHitResults,
     std::string sourceQuery,
     const CollisionEventType eType) const {
-  if (collisionInfoCallback_ == nullptr) {
-    return;
-  }
-
   flutter::EncodableMap encodableMap;
 
   // event type
@@ -302,9 +288,8 @@ void CollisionSystem::SendCollisionInformationCallback(
 
     ++iter;
   }
-  collisionInfoCallback_->InvokeMethod(
-      kCollisionEvent, std::make_unique<flutter::EncodableValue>(
-                           flutter::EncodableValue(encodableMap)));
+
+  vSendDataToEventChannel(encodableMap);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -320,18 +305,6 @@ void CollisionSystem::vInitSystem() {
         const auto hitList = lstCheckForCollidable(rayInfo, 0);
 
         SendCollisionInformationCallback(hitList, requestor, type);
-      });
-
-  vRegisterMessageHandler(
-      ECSMessageType::SetupMessageChannels, [this](const ECSMessage& msg) {
-        spdlog::debug("SetupMessageChannels");
-
-        const auto registrar = msg.getData<flutter::PluginRegistrar*>(
-            ECSMessageType::SetupMessageChannels);
-
-        setupMessageChannels(registrar);
-
-        spdlog::debug("SetupMessageChannels Complete");
       });
 
   vRegisterMessageHandler(

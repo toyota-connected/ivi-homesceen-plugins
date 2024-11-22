@@ -33,6 +33,7 @@
 #include <wayland/display.h>
 #include <asio/post.hpp>
 #include <utility>
+#include <core/systems/derived/view_target_system.h>
 
 using flutter::EncodableList;
 using flutter::EncodableMap;
@@ -54,7 +55,6 @@ ViewTarget::ViewTarget(const int32_t top,
     : state_(state),
       left_(left),
       top_(top),
-      frameViewCallback_(nullptr),
       callback_(nullptr),
       fanimator_(nullptr),
       cameraManager_(nullptr) {
@@ -92,19 +92,6 @@ ViewTarget::~ViewTarget() {
     surface_ = nullptr;
   }
   SPDLOG_TRACE("--{}::{}", __FILE__, __FUNCTION__);
-}
-
-////////////////////////////////////////////////////////////////////////////
-void ViewTarget::setupMessageChannels(
-    flutter::PluginRegistrar* plugin_registrar) {
-  auto channel_name = std::string("plugin.filament_view.frame_view");
-  if (frameViewCallback_ != nullptr) {
-    return;
-  }
-
-  frameViewCallback_ = std::make_unique<flutter::MethodChannel<>>(
-      plugin_registrar->messenger(), channel_name,
-      &flutter::StandardMethodCodec::GetInstance());
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -372,18 +359,18 @@ void ViewTarget::vChangeQualitySettings(
 void ViewTarget::SendFrameViewCallback(
     const std::string& methodName,
     std::initializer_list<std::pair<const char*, EncodableValue>> args) const {
-  if (frameViewCallback_ == nullptr) {
-    return;
-  }
-
   EncodableMap encodableMap;
+  encodableMap.insert({flutter::EncodableValue("method"),
+              flutter::EncodableValue(methodName)});
   for (const auto& [fst, snd] : args) {
     encodableMap[EncodableValue(fst)] = snd;
   }
 
-  frameViewCallback_->InvokeMethod(
-      methodName,
-      std::make_unique<EncodableValue>(EncodableValue(encodableMap)));
+  const auto viewTargetSystem =
+     ECSystemManager::GetInstance()->poGetSystemAs<ViewTargetSystem>(
+         ViewTargetSystem::StaticGetTypeID(), __FUNCTION__);
+
+  viewTargetSystem->vSendDataToEventChannel(encodableMap);
 }
 
 /////////////////////////////////////////////////////////////////////////
