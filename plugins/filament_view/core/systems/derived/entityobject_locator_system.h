@@ -23,6 +23,8 @@
 namespace plugin_filament_view {
 
 class EntityObjectLocatorSystem : public ECSystem {
+  friend class EntityObject;
+
  public:
   EntityObjectLocatorSystem() = default;
 
@@ -42,14 +44,14 @@ class EntityObjectLocatorSystem : public ECSystem {
   void vShutdownSystem() override;
   void DebugPrint() override;
 
-  void vRegisterEntityObject(const std::shared_ptr<EntityObject>& entity);
-  void vUnregisterEntityObject(const std::shared_ptr<EntityObject>& entity);
-
   [[nodiscard]] std::shared_ptr<EntityObject> poGetEntityObjectById(
       EntityGUID id) const;
 
  private:
   std::map<EntityGUID, std::shared_ptr<EntityObject>> _entities;
+
+  void vRegisterEntityObject(const std::shared_ptr<EntityObject>& entity);
+  void vUnregisterEntityObject(const std::shared_ptr<EntityObject>& entity);
 };
 
 }  // namespace plugin_filament_view

@@ -266,21 +266,6 @@ void FilamentViewPlugin::ChangeMaterialDefinition(
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-void FilamentViewPlugin::ChangeDirectLightByIndex(
-    const int32_t index,
-    const std::string color,
-    const int32_t intensity,
-    std::function<void(std::optional<FlutterError> reply)> /*result*/) {
-  ECSMessage lightData;
-  lightData.addData(ECSMessageType::ChangeSceneLightProperties, index);
-  lightData.addData(ECSMessageType::ChangeSceneLightPropertiesColorValue,
-                    color);
-  lightData.addData(ECSMessageType::ChangeSceneLightPropertiesIntensity,
-                    static_cast<float>(intensity));
-  ECSystemManager::GetInstance()->vRouteMessage(lightData);
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
 void FilamentViewPlugin::ToggleShapesInScene(
     const bool value,
     std::function<void(std::optional<FlutterError> reply)> /*result*/) {

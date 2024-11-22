@@ -22,12 +22,12 @@
 #include <core/entity/derived/shapes/baseshape.h>
 #include <core/scene/camera/camera.h>
 #include <core/scene/indirect_light/indirect_light.h>
-#include <core/scene/light/light.h>
 #include <core/scene/skybox/skybox.h>
 #include <encodable_value.h>
 #include <vector>
 
 namespace plugin_filament_view {
+class Light;
 
 class SceneTextDeserializer {
  public:
@@ -38,9 +38,9 @@ class SceneTextDeserializer {
 
  private:
   // These get released to the Model_system / obj locator
-  std::vector<std::unique_ptr<Model>> models_;
+  std::vector<std::shared_ptr<Model>> models_;
   // These get released to the Shape_System / obj locator
-  std::vector<std::unique_ptr<shapes::BaseShape>> shapes_;
+  std::vector<std::shared_ptr<shapes::BaseShape>> shapes_;
 
   void vDeserializeRootLevel(const std::vector<uint8_t>& params,
                              const std::string& flutterAssetsPath);
@@ -50,15 +50,15 @@ class SceneTextDeserializer {
 
   void setUpLoadingModels();
   void setUpSkybox() const;
-  void setUpLight() const;
+  void setUpLights();
   void setUpIndirectLight() const;
   void setUpShapes();
 
-  static void loadModel(std::unique_ptr<Model>& model);
+  static void loadModel(std::shared_ptr<Model>& model);
 
   std::unique_ptr<Skybox> skybox_;
   std::unique_ptr<IndirectLight> indirect_light_;
-  std::vector<std::unique_ptr<Light>> lights_;
+  std::map<EntityGUID, std::shared_ptr<Light>> lights_;
   std::unique_ptr<Camera> camera_;
 };
 

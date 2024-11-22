@@ -34,7 +34,7 @@ class ShapeSystem : public ECSystem {
   ShapeSystem() = default;
 
   void addShapesToScene(
-      std::vector<std::unique_ptr<shapes::BaseShape>>* shapes);
+      std::vector<std::shared_ptr<shapes::BaseShape>>* shapes);
 
   // Disallow copy and assign.
   ShapeSystem(const ShapeSystem&) = delete;

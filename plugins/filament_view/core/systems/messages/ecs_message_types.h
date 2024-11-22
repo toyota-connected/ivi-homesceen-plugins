@@ -41,6 +41,9 @@ enum class ECSMessageType {
   ChangeSceneLightProperties,
   ChangeSceneLightPropertiesColorValue,
   ChangeSceneLightPropertiesIntensity,
+  ChangeSceneLightTransform,
+  Position,
+  Direction,
 
   ChangeSceneIndirectLightProperties,
   ChangeSceneIndirectLightPropertiesIntensity,

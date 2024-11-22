@@ -16,147 +16,132 @@
 
 #include "light_system.h"
 
+#include <core/components/derived/light.h>
+#include <core/entity/derived/nonrenderable_entityobject.h>
 #include <core/include/color.h>
 #include <core/systems/derived/filament_system.h>
 #include <core/systems/ecsystems_manager.h>
 #include <filament/Color.h>
 #include <filament/LightManager.h>
+#include <filament/Scene.h>
 #include <plugins/common/common.h>
+#include <utils/EntityManager.h>
 #include <asio/post.hpp>
 
 namespace plugin_filament_view {
-
 using filament::math::float3;
 using filament::math::mat3f;
 using filament::math::mat4f;
 
 ////////////////////////////////////////////////////////////////////////////////////
-void LightSystem::setDefaultLight() {
-  SPDLOG_TRACE("++LightManager::setDefaultLight");
-  defaultlight_ = std::make_unique<Light>();
-  changeLight(defaultlight_.get());
-  // f.wait();
-  // light.reset();
-  // SPDLOG_TRACE("--LightManager::setDefaultLight: {}", f.get().getMessage());
+void LightSystem::vCreateDefaultLight() {
+  SPDLOG_DEBUG("{}", __FUNCTION__);
+  m_poDefaultLight =
+      std::make_shared<NonRenderableEntityObject>("DefaultLight");
+  const auto oLightComp = std::make_shared<Light>();
+  m_poDefaultLight->vAddComponent(oLightComp);
+
+  oLightComp->SetIntensity(200);
+  oLightComp->SetDirection({0, -1, 0});
+  oLightComp->SetPosition({0, 5, 0});
+  oLightComp->SetCastLight(true);
+  // if you're in an closed space (IE Garage), it will self shadow cast
+  oLightComp->SetCastShadows(false);
+
+  vBuildLightAndAddToScene(*oLightComp);
+
+  m_poDefaultLight->vRegisterEntity();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-std::future<Resource<std::string_view>> LightSystem::changeLight(Light* light) {
-  SPDLOG_TRACE("++{}::{}", __FILE__, __FUNCTION__);
+void LightSystem::vBuildLightAndAddToScene(Light& light) {
+  vBuildLight(light);
+  vAddLightToScene(light);
+}
 
-  // Use the copy assignment operator to copy the contents
-  *defaultlight_ = *light;
+////////////////////////////////////////////////////////////////////////////////////
+void LightSystem::vBuildLight(Light& light) {
+  const auto filamentSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
+          FilamentSystem::StaticGetTypeID(), "vBuildLight");
+  const auto engine = filamentSystem->getFilamentEngine();
 
-  const asio::io_context::strand& strand_(
-      *ECSystemManager::GetInstance()->GetStrand());
-
-  if (entityLight_.isNull()) {
-    post(strand_, [&] {
-      const auto filamentSystem =
-          ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
-              FilamentSystem::StaticGetTypeID(), "changeLight");
-      const auto engine = filamentSystem->getFilamentEngine();
-
-      entityLight_ = engine->getEntityManager().create();
-    });
+  if (light.m_poFilamentEntityLight == nullptr) {
+    light.m_poFilamentEntityLight =
+        std::make_shared<utils::Entity>(engine->getEntityManager().create());
+  } else {
+    vRemoveLightFromScene(light);
   }
 
-  const auto promise(
-      std::make_shared<std::promise<Resource<std::string_view>>>());
-  auto future(promise->get_future());
+  auto builder = filament::LightManager::Builder(light.GetLightType());
 
-  if (!light) {
-    promise->set_value(
-        Resource<std::string_view>::Error("Light type must be provided"));
-    SPDLOG_TRACE("--LightManager::changeLight");
-    return future;
+  // As of 11.18.2024 it seems like the color ranges are not the same
+  // as their documentation expects 0-1 values, but the actual is 0-255 value
+  if (!light.GetColor().empty()) {
+    auto colorValue = colorOf(light.GetColor());
+    builder.color({colorValue[0], colorValue[1], colorValue[2]});
+  } else if (light.GetColorTemperature() > 0) {
+    auto cct = filament::Color::cct(light.GetColorTemperature());
+    auto red = cct.r;
+    auto green = cct.g;
+    auto blue = cct.b;
+    builder.color({red * 255, green * 255, blue * 255});
+  } else {
+    builder.color({255, 255, 255});
   }
 
-  post(strand_, [&, promise, light] {
-    auto builder = filament::LightManager::Builder(light->type_);
+  // Note while not all of these vars are used in every scenario
+  // we're expecting filament to throw away the values that are
+  // not needed.
+  builder.intensity(light.GetIntensity());
+  builder.position(light.GetPosition());
+  builder.direction(light.GetDirection());
+  builder.castLight(light.GetCastLight());
+  builder.castShadows(light.GetCastShadows());
+  builder.falloff(light.GetFalloffRadius());
 
-    if (light->color_.has_value()) {
-      auto colorValue = colorOf(light->color_.value());
-      builder.color({colorValue[0], colorValue[1], colorValue[2]});
-    } else if (light->colorTemperature_.has_value()) {
-      auto cct = filament::Color::cct(light->colorTemperature_.value());
-      auto red = cct.r;
-      auto green = cct.g;
-      auto blue = cct.b;
-      builder.color({red, green, blue});
-    }
-    if (light->intensity_.has_value()) {
-      builder.intensity(light->intensity_.value());
-    }
-    if (light->position_) {
-      builder.position(*light->position_);
-    }
-    if (light->direction_) {
-      // Note if Direction is 0,0,0 and you're on a spotlight
-      // nothing will show.
-      if (*light->direction_ == float3(0, 0, 0) &&
-          light->type_ == filament::LightManager::Type::SPOT) {
-        spdlog::warn(
-            "You've created a spot light without a direction, nothing will "
-            "show. Undefined behavior.");
-      }
+  builder.spotLightCone(light.GetSpotLightConeInner(),
+                        light.GetSpotLightConeOuter());
 
-      builder.direction(*light->direction_);
-    }
-    if (light->castLight_.has_value()) {
-      builder.castLight(light->castLight_.value());
-    }
-    if (light->castShadows_.has_value()) {
-      builder.castShadows(light->castShadows_.value());
-    }
-    if (light->falloffRadius_.has_value()) {
-      builder.falloff(light->falloffRadius_.value());
-    }
-    if (light->spotLightConeInner_.has_value() &&
-        light->spotLightConeOuter_.has_value()) {
-      builder.spotLightCone(light->spotLightConeInner_.value(),
-                            light->spotLightConeOuter_.value());
-    }
-    if (light->sunAngularRadius_.has_value()) {
-      builder.sunAngularRadius(light->sunAngularRadius_.value());
-    }
-    if (light->sunHaloSize_.has_value()) {
-      builder.sunHaloSize(light->sunHaloSize_.value());
-    }
-    if (light->sunHaloFalloff_.has_value()) {
-      builder.sunHaloSize(light->sunHaloFalloff_.value());
-    }
+  builder.sunAngularRadius(light.GetSunAngularRadius());
+  builder.sunHaloSize(light.GetSunHaloSize());
+  builder.sunHaloFalloff(light.GetSunHaloFalloff());
 
-    auto filamentSystem =
-        ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
-            FilamentSystem::StaticGetTypeID(), "lightManager::changelight");
+  builder.build(*engine, *light.m_poFilamentEntityLight);
+}
 
-    const auto engine = filamentSystem->getFilamentEngine();
+////////////////////////////////////////////////////////////////////////////////////
+void LightSystem::vRemoveLightFromScene(const Light& light) {
+  const auto filamentSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
+          FilamentSystem::StaticGetTypeID(),
+          "lightManager::vRemoveLightFromScene");
 
-    builder.build(*engine, entityLight_);
+  const auto scene = filamentSystem->getFilamentScene();
 
-    auto scene = filamentSystem->getFilamentScene();
+  scene->removeEntities(light.m_poFilamentEntityLight.get(), 1);
+}
 
-    // this remove looks sus; seems like it should be the first thing
-    // in the function, todo investigate.
-    scene->removeEntities(&entityLight_, 1);
+////////////////////////////////////////////////////////////////////////////////////
+void LightSystem::vAddLightToScene(const Light& light) {
+  const auto filamentSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
+          FilamentSystem::StaticGetTypeID(), "lightManager::vAddLightToScene");
 
-    scene->addEntity(entityLight_);
-    promise->set_value(
-        Resource<std::string_view>::Success("Light created Successfully"));
-  });
-  SPDLOG_TRACE("--{}::{}", __FILE__, __FUNCTION__);
-  return future;
+  const auto scene = filamentSystem->getFilamentScene();
+
+  scene->addEntity(*light.m_poFilamentEntityLight);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 void LightSystem::vInitSystem() {
-  setDefaultLight();
-
   vRegisterMessageHandler(
       ECSMessageType::ChangeSceneLightProperties,
       [this](const ECSMessage& msg) {
-        spdlog::debug("ChangeSceneLightProperties");
+        SPDLOG_TRACE("ChangeSceneLightProperties");
+
+        const auto guid = msg.getData<std::string>(
+            ECSMessageType::ChangeSceneLightProperties);
 
         const auto colorValue = msg.getData<std::string>(
             ECSMessageType::ChangeSceneLightPropertiesColorValue);
@@ -164,12 +149,49 @@ void LightSystem::vInitSystem() {
         const auto intensityValue = msg.getData<float>(
             ECSMessageType::ChangeSceneLightPropertiesIntensity);
 
-        defaultlight_->ChangeColor(colorValue);
-        defaultlight_->ChangeIntensity(intensityValue);
+        // find the entity in our list:
+        if (const auto ourEntity = m_mapGuidToEntity.find(guid);
+            ourEntity != m_mapGuidToEntity.end()) {
+          const auto theLight = dynamic_cast<Light*>(
+              ourEntity->second
+                  ->GetComponentByStaticTypeID(Light::StaticGetTypeID())
+                  .get());
+          theLight->SetIntensity(intensityValue);
+          theLight->SetColor(colorValue);
 
-        changeLight(defaultlight_.get());
+          vRemoveLightFromScene(*theLight);
+          vBuildLightAndAddToScene(*theLight);
+        }
 
-        spdlog::debug("ChangeSceneLightProperties Complete");
+        SPDLOG_TRACE("ChangeSceneLightProperties Complete");
+      });
+
+  vRegisterMessageHandler(
+      ECSMessageType::ChangeSceneLightTransform, [this](const ECSMessage& msg) {
+        SPDLOG_TRACE("ChangeSceneLightTransform");
+
+        const auto guid =
+            msg.getData<std::string>(ECSMessageType::ChangeSceneLightTransform);
+
+        const auto position = msg.getData<float3>(ECSMessageType::Position);
+
+        const auto rotation = msg.getData<float3>(ECSMessageType::Direction);
+
+        // find the entity in our list:
+        if (auto ourEntity = m_mapGuidToEntity.find(guid);
+            ourEntity != m_mapGuidToEntity.end()) {
+          auto theLight = dynamic_cast<Light*>(
+              ourEntity->second
+                  ->GetComponentByStaticTypeID(Light::StaticGetTypeID())
+                  .get());
+          theLight->SetPosition(position);
+          theLight->SetDirection(rotation);
+
+          vRemoveLightFromScene(*theLight);
+          vBuildLightAndAddToScene(*theLight);
+        }
+
+        SPDLOG_TRACE("ChangeSceneLightTransform Complete");
       });
 }
 
@@ -178,11 +200,41 @@ void LightSystem::vUpdate(float /*fElapsedTime*/) {}
 
 ////////////////////////////////////////////////////////////////////////////////////
 void LightSystem::vShutdownSystem() {
-  defaultlight_.reset();
+  if (m_poDefaultLight != nullptr) {
+    const auto component = dynamic_cast<Light*>(
+        m_poDefaultLight->GetComponentByStaticTypeID(Light::StaticGetTypeID())
+            .get());
+    vRemoveLightFromScene(*component);
+
+    m_poDefaultLight.reset();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 void LightSystem::DebugPrint() {
   spdlog::debug("{}::{}", __FILE__, __FUNCTION__);
+
+  // TODO Update print out list of lights
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+void LightSystem::vRegisterEntityObject(
+    const std::shared_ptr<EntityObject>& entity) {
+  if (m_mapGuidToEntity.find(entity->GetGlobalGuid()) !=
+      m_mapGuidToEntity.end()) {
+    spdlog::error("{}::{}: Entity {} already registered", __FILE__,
+                  __FUNCTION__, entity->GetGlobalGuid());
+    return;
+  }
+
+  spdlog::debug("Adding entity with {}", entity->GetGlobalGuid());
+
+  m_mapGuidToEntity.insert(std::pair(entity->GetGlobalGuid(), entity));
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+void LightSystem::vUnregisterEntityObject(
+    const std::shared_ptr<EntityObject>& entity) {
+  m_mapGuidToEntity.erase(entity->GetGlobalGuid());
 }
 }  // namespace plugin_filament_view

@@ -50,11 +50,8 @@ void ShapeSystem::vToggleAllShapesInScene(const bool bValue) const {
 void ShapeSystem::vRemoveAllShapesInScene() {
   vToggleAllShapesInScene(false);
 
-  const auto objectLocatorSystem =
-      ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
-          EntityObjectLocatorSystem::StaticGetTypeID(), "addShapesToScene");
-  for (auto& shape : shapes_) {
-    objectLocatorSystem->vUnregisterEntityObject(shape);
+  for (const auto& shape : shapes_) {
+    shape->vUnregisterEntity();
   }
 
   shapes_.clear();
@@ -99,7 +96,7 @@ std::unique_ptr<BaseShape> ShapeSystem::poDeserializeShapeFromData(
 
 ////////////////////////////////////////////////////////////////////////////////////
 void ShapeSystem::addShapesToScene(
-    std::vector<std::unique_ptr<BaseShape>>* shapes) {
+    std::vector<std::shared_ptr<BaseShape>>* shapes) {
   SPDLOG_TRACE("++{} {}", __FILE__, __FUNCTION__);
 
   // TODO remove this, just debug info print for now;
@@ -114,18 +111,14 @@ void ShapeSystem::addShapesToScene(
 
   filament::Engine* poFilamentEngine = engine;
   filament::Scene* poFilamentScene = filamentSystem->getFilamentScene();
-  utils::EntityManager& oEntitymanager = poFilamentEngine->getEntityManager();
+  utils::EntityManager& oEntityManager = poFilamentEngine->getEntityManager();
   // Ideally this is changed to create all entities on the first go, then
   // we pass them through, upon use this failed in filament engine, more R&D
   // needed
   // oEntitymanager.create(shapes.size(), lstEntities);
 
-  const auto objectLocatorSystem =
-      ECSystemManager::GetInstance()->poGetSystemAs<EntityObjectLocatorSystem>(
-          EntityObjectLocatorSystem::StaticGetTypeID(), "addShapesToScene");
-
   for (auto& shape : *shapes) {
-    auto oEntity = std::make_shared<Entity>(oEntitymanager.create());
+    auto oEntity = std::make_shared<Entity>(oEntityManager.create());
 
     shape->bInitAndCreateShape(poFilamentEngine, oEntity);
 
@@ -141,7 +134,8 @@ void ShapeSystem::addShapesToScene(
     std::shared_ptr<BaseShape> sharedPtr = std::move(shape);
 
     shapes_.push_back(sharedPtr);
-    objectLocatorSystem->vRegisterEntityObject(sharedPtr);
+
+    sharedPtr->vRegisterEntity();
   }
 
   SPDLOG_TRACE("--{} {}", __FILE__, __FUNCTION__);

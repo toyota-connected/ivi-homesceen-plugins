@@ -33,6 +33,7 @@ namespace plugin_filament_view {
 
 class AnimationSystem : public ECSystem {
   friend class Animation;
+  friend class EntityObject;
 
  public:
   AnimationSystem() = default;
@@ -52,10 +53,10 @@ class AnimationSystem : public ECSystem {
   void vShutdownSystem() override;
   void DebugPrint() override;
 
+ private:
   void vRegisterEntityObject(const std::shared_ptr<EntityObject>& entity);
   void vUnregisterEntityObject(const std::shared_ptr<EntityObject>& entity);
 
- private:
   void vNotifyOfAnimationEvent(const EntityGUID& entityGuid,
                                const AnimationEventType& eType,
                                const std::string& eventData) const;

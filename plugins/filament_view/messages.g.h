@@ -110,12 +110,6 @@ class FilamentViewApi {
   virtual void ChangeMaterialDefinition(const flutter::EncodableMap& params,
                                         const EntityGUID& guid) = 0;
 
-  virtual void ChangeDirectLightByIndex(
-      int32_t index,
-      std::string color,
-      int32_t intensity,
-      std::function<void(std::optional<FlutterError> reply)> result) = 0;
-
   virtual void ToggleShapesInScene(
       bool value,
       std::function<void(std::optional<FlutterError> reply)> result) = 0;

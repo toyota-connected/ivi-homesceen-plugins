@@ -15,8 +15,10 @@
  */
 #include "scene_text_deserializer.h"
 
+#include <core/entity/derived/nonrenderable_entityobject.h>
 #include <core/include/literals.h>
 #include <core/systems/derived/collision_system.h>
+#include <core/systems/derived/entityobject_locator_system.h>
 #include <core/systems/derived/indirect_light_system.h>
 #include <core/systems/derived/light_system.h>
 #include <core/systems/derived/model_system.h>
@@ -142,6 +144,35 @@ void SceneTextDeserializer::vDeserializeSceneLevel(
       continue;
     }
 
+    if (key == kLights && std::holds_alternative<flutter::EncodableList>(snd)) {
+      auto list = std::get<flutter::EncodableList>(snd);
+      for (const auto& iter : list) {
+        if (iter.IsNull()) {
+          spdlog::warn("CreationParamName unable to cast {}", key.c_str());
+          continue;
+        }
+
+        auto encodableMap = std::get<flutter::EncodableMap>(iter);
+
+        // This will get placed on an entity
+        std::string overWriteGuid;
+        Deserialize::DecodeParameterWithDefault(kGlobalGuid, &overWriteGuid,
+                                                encodableMap, std::string(""));
+
+        if (overWriteGuid.empty()) {
+          spdlog::warn(
+              "Your {} on light is empty string, will not add to scene",
+              kGlobalGuid);
+          continue;
+        }
+
+        lights_.insert(
+            std::pair(overWriteGuid, std::make_shared<Light>(encodableMap)));
+      }
+
+      continue;
+    }
+
     // everything in this loop looks to make sure its a map, we can continue
     // on if its not.
     if (!std::holds_alternative<flutter::EncodableMap>(snd)) {
@@ -150,10 +181,42 @@ void SceneTextDeserializer::vDeserializeSceneLevel(
 
     auto encodableMap = std::get<flutter::EncodableMap>(snd);
 
+    // All of these need to become entities.
+
+#if 0
+    else if (key == kModels &&
+               std::holds_alternative<flutter::EncodableList>(snd)) {
+
+      auto list = std::get<flutter::EncodableList>(snd);
+      for (const auto& iter : list) {
+        if (iter.IsNull()) {
+          spdlog::warn("CreationParamName unable to cast {}", key.c_str());
+          continue;
+        }
+
+        auto deserializedModel = Model::Deserialize(
+            flutterAssetsPath, std::get<flutter::EncodableMap>(iter));
+        if (deserializedModel == nullptr) {
+          // load fallback
+          auto fallbackToDeserialize =
+              Deserialize::DeserializeParameter(kFallback, iter);
+          deserializedModel = Model::Deserialize(
+              flutterAssetsPath,
+              std::get<flutter::EncodableMap>(fallbackToDeserialize));
+        }
+        if (deserializedModel == nullptr) {
+          spdlog::error("Unable to load model and fallback model");
+          continue;
+        }
+        models_.emplace_back(std::move(deserializedModel));
+      }
+    }
+#endif
+
+    SPDLOG_DEBUG("KEY {} ", key);
+
     if (key == kSkybox) {
       skybox_ = Skybox::Deserialize(encodableMap);
-    } else if (key == kLight) {
-      lights_.emplace_back(std::make_unique<Light>(encodableMap));
     } else if (key == kIndirectLight) {
       indirect_light_ = IndirectLight::Deserialize(encodableMap);
     } else if (key == kCamera) {
@@ -174,7 +237,7 @@ void SceneTextDeserializer::vDeserializeSceneLevel(
 void SceneTextDeserializer::vRunPostSetupLoad() {
   setUpLoadingModels();
   setUpSkybox();
-  setUpLight();
+  setUpLights();
   setUpIndirectLight();
   setUpShapes();
 
@@ -224,12 +287,13 @@ void SceneTextDeserializer::setUpShapes() {
     }
   }
 
-  // This method releases shapes,
   shapeSystem->addShapesToScene(&shapes_);
+
+  shapes_.clear();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-void SceneTextDeserializer::loadModel(std::unique_ptr<Model>& model) {
+void SceneTextDeserializer::loadModel(std::shared_ptr<Model>& model) {
   const auto ecsManager = ECSystemManager::GetInstance();
   const auto& strand = *ecsManager->GetStrand();
 
@@ -257,14 +321,13 @@ void SceneTextDeserializer::loadModel(std::unique_ptr<Model>& model) {
     } else if (dynamic_cast<GltfModel*>(model.get())) {
       const auto gltf_model = dynamic_cast<GltfModel*>(model.get());
       if (!gltf_model->szGetAssetPath().empty()) {
-        ModelSystem::loadGltfFromAsset(
-            std::move(model), gltf_model->szGetAssetPath(),
-            gltf_model->szGetPrefix(), gltf_model->szGetPostfix());
+        ModelSystem::loadGltfFromAsset(model, gltf_model->szGetAssetPath(),
+                                       gltf_model->szGetPrefix(),
+                                       gltf_model->szGetPostfix());
       }
 
       if (!gltf_model->szGetURLPath().empty()) {
-        ModelSystem::loadGltfFromUrl(std::move(model),
-                                     gltf_model->szGetURLPath());
+        ModelSystem::loadGltfFromUrl(model, gltf_model->szGetURLPath());
       }
     }
   });
@@ -314,20 +377,32 @@ void SceneTextDeserializer::setUpSkybox() const {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-void SceneTextDeserializer::setUpLight() const {
-  // Todo move to a message.
-
+void SceneTextDeserializer::setUpLights() {
   const auto lightSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<LightSystem>(
           LightSystem::StaticGetTypeID(), __FUNCTION__);
 
-  // Note, currently copied over in the changeLight function, for multi-lights
-  // we'll need to expand this functionality .
-  if (!lights_.empty()) {
-    lightSystem->changeLight(lights_[0].get());
-  } else {
-    lightSystem->setDefaultLight();
+  // Note, this introduces a fire and forget functionality for entities
+  // there's no "one" owner system, but its propagated to whomever cares for it.
+  for (const auto& [fst, snd] : lights_) {
+    const auto newEntity = std::make_shared<NonRenderableEntityObject>(
+        "SceneTextDeserializer::setUpLights");
+
+    newEntity->vOverrideGlobalGuid(fst);
+    newEntity->vAddComponent(snd);
+
+    LightSystem::vBuildLightAndAddToScene(*snd);
+
+    newEntity->vRegisterEntity();
   }
+
+  // if a light didnt get deserialized, tell light system to create a default
+  // one.
+  if (lights_.empty()) {
+    lightSystem->vCreateDefaultLight();
+  }
+
+  lights_.clear();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
