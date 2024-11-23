@@ -16,7 +16,6 @@
 #include <map>
 #include <optional>
 #include <string>
-#include <utility>
 
 namespace firebase_storage_linux {
 using flutter::BasicMessageChannel;
@@ -27,17 +26,17 @@ using flutter::EncodableValue;
 
 // PigeonStorageFirebaseApp
 
-PigeonStorageFirebaseApp::PigeonStorageFirebaseApp(std::string app_name,
-                                                   std::string bucket)
-    : app_name_(std::move(app_name)), bucket_(std::move(bucket)) {}
+PigeonStorageFirebaseApp::PigeonStorageFirebaseApp(const std::string& app_name,
+                                                   const std::string& bucket)
+    : app_name_(app_name), bucket_(bucket) {}
 
-PigeonStorageFirebaseApp::PigeonStorageFirebaseApp(std::string app_name,
+PigeonStorageFirebaseApp::PigeonStorageFirebaseApp(const std::string& app_name,
                                                    const std::string* tenant_id,
-                                                   std::string bucket)
-    : app_name_(std::move(app_name)),
+                                                   const std::string& bucket)
+    : app_name_(app_name),
       tenant_id_(tenant_id ? std::optional<std::string>(*tenant_id)
                            : std::nullopt),
-      bucket_(std::move(bucket)) {}
+      bucket_(bucket) {}
 
 const std::string& PigeonStorageFirebaseApp::app_name() const {
   return app_name_;
@@ -61,9 +60,7 @@ void PigeonStorageFirebaseApp::set_tenant_id(std::string_view value_arg) {
   tenant_id_ = value_arg;
 }
 
-const std::string& PigeonStorageFirebaseApp::bucket() const {
-  return bucket_;
-}
+const std::string& PigeonStorageFirebaseApp::bucket() const { return bucket_; }
 
 void PigeonStorageFirebaseApp::set_bucket(std::string_view value_arg) {
   bucket_ = value_arg;
@@ -96,9 +93,7 @@ PigeonStorageReference::PigeonStorageReference(const std::string& bucket,
                                                const std::string& name)
     : bucket_(bucket), full_path_(full_path), name_(name) {}
 
-const std::string& PigeonStorageReference::bucket() const {
-  return bucket_;
-}
+const std::string& PigeonStorageReference::bucket() const { return bucket_; }
 
 void PigeonStorageReference::set_bucket(std::string_view value_arg) {
   bucket_ = value_arg;
@@ -112,9 +107,7 @@ void PigeonStorageReference::set_full_path(std::string_view value_arg) {
   full_path_ = value_arg;
 }
 
-const std::string& PigeonStorageReference::name() const {
-  return name_;
-}
+const std::string& PigeonStorageReference::name() const { return name_; }
 
 void PigeonStorageReference::set_name(std::string_view value_arg) {
   name_ = value_arg;
@@ -186,9 +179,7 @@ PigeonListOptions::PigeonListOptions(int64_t max_results,
       page_token_(page_token ? std::optional<std::string>(*page_token)
                              : std::nullopt) {}
 
-int64_t PigeonListOptions::max_results() const {
-  return max_results_;
-}
+int64_t PigeonListOptions::max_results() const { return max_results_; }
 
 void PigeonListOptions::set_max_results(int64_t value_arg) {
   max_results_ = value_arg;
@@ -230,12 +221,9 @@ PigeonListOptions PigeonListOptions::FromEncodableList(
 PigeonSettableMetadata::PigeonSettableMetadata() {}
 
 PigeonSettableMetadata::PigeonSettableMetadata(
-    const std::string* cache_control,
-    const std::string* content_disposition,
-    const std::string* content_encoding,
-    const std::string* content_language,
-    const std::string* content_type,
-    const EncodableMap* custom_metadata)
+    const std::string* cache_control, const std::string* content_disposition,
+    const std::string* content_encoding, const std::string* content_language,
+    const std::string* content_type, const EncodableMap* custom_metadata)
     : cache_control_(cache_control ? std::optional<std::string>(*cache_control)
                                    : std::nullopt),
       content_disposition_(
@@ -405,9 +393,7 @@ PigeonListResult::PigeonListResult(const EncodableList& items,
                              : std::nullopt),
       prefixs_(prefixs) {}
 
-const EncodableList& PigeonListResult::items() const {
-  return items_;
-}
+const EncodableList& PigeonListResult::items() const { return items_; }
 
 void PigeonListResult::set_items(const EncodableList& value_arg) {
   items_ = value_arg;
@@ -426,9 +412,7 @@ void PigeonListResult::set_page_token(std::string_view value_arg) {
   page_token_ = value_arg;
 }
 
-const EncodableList& PigeonListResult::prefixs() const {
-  return prefixs_;
-}
+const EncodableList& PigeonListResult::prefixs() const { return prefixs_; }
 
 void PigeonListResult::set_prefixs(const EncodableList& value_arg) {
   prefixs_ = value_arg;
@@ -458,8 +442,7 @@ FirebaseStorageHostApiCodecSerializer::FirebaseStorageHostApiCodecSerializer() {
 }
 
 EncodableValue FirebaseStorageHostApiCodecSerializer::ReadValueOfType(
-    uint8_t type,
-    flutter::ByteStreamReader* stream) const {
+    uint8_t type, flutter::ByteStreamReader* stream) const {
   switch (type) {
     case 128:
       return CustomEncodableValue(PigeonFullMetaData::FromEncodableList(
@@ -485,8 +468,7 @@ EncodableValue FirebaseStorageHostApiCodecSerializer::ReadValueOfType(
 }
 
 void FirebaseStorageHostApiCodecSerializer::WriteValue(
-    const EncodableValue& value,
-    flutter::ByteStreamWriter* stream) const {
+    const EncodableValue& value, flutter::ByteStreamWriter* stream) const {
   if (const CustomEncodableValue* custom_value =
           std::get_if<CustomEncodableValue>(&value)) {
     if (custom_value->type() == typeid(PigeonFullMetaData)) {
@@ -1141,7 +1123,7 @@ void FirebaseStorageHostApi::SetUp(flutter::BinaryMessenger* binary_messenger,
               const int64_t handle_arg = encodable_handle_arg.LongValue();
               api->ReferencePutData(
                   app_arg, reference_arg, data_arg, settable_meta_data_arg,
-                  (uint64_t)handle_arg, [reply](ErrorOr<std::string>&& output) {
+                  handle_arg, [reply](ErrorOr<std::string>&& output) {
                     if (output.has_error()) {
                       reply(WrapError(output.error()));
                       return;
@@ -1216,7 +1198,7 @@ void FirebaseStorageHostApi::SetUp(flutter::BinaryMessenger* binary_messenger,
               const int64_t handle_arg = encodable_handle_arg.LongValue();
               api->ReferencePutString(
                   app_arg, reference_arg, data_arg, format_arg,
-                  settable_meta_data_arg, (uint64_t)handle_arg,
+                  settable_meta_data_arg, handle_arg,
                   [reply](ErrorOr<std::string>&& output) {
                     if (output.has_error()) {
                       reply(WrapError(output.error()));
@@ -1271,14 +1253,10 @@ void FirebaseStorageHostApi::SetUp(flutter::BinaryMessenger* binary_messenger,
               const auto& file_path_arg =
                   std::get<std::string>(encodable_file_path_arg);
               const auto& encodable_settable_meta_data_arg = args.at(3);
-              if (encodable_settable_meta_data_arg.IsNull()) {
-                reply(WrapError("settable_meta_data_arg unexpectedly null."));
-                return;
-              }
-              const auto& settable_meta_data_arg =
-                  std::any_cast<const PigeonSettableMetadata&>(
+              const auto* settable_meta_data_arg =
+                  &(std::any_cast<const PigeonSettableMetadata&>(
                       std::get<CustomEncodableValue>(
-                          encodable_settable_meta_data_arg));
+                          encodable_settable_meta_data_arg)));
               const auto& encodable_handle_arg = args.at(4);
               if (encodable_handle_arg.IsNull()) {
                 reply(WrapError("handle_arg unexpectedly null."));
@@ -1287,7 +1265,7 @@ void FirebaseStorageHostApi::SetUp(flutter::BinaryMessenger* binary_messenger,
               const int64_t handle_arg = encodable_handle_arg.LongValue();
               api->ReferencePutFile(
                   app_arg, reference_arg, file_path_arg, settable_meta_data_arg,
-                  (uint64_t)handle_arg, [reply](ErrorOr<std::string>&& output) {
+                  handle_arg, [reply](ErrorOr<std::string>&& output) {
                     if (output.has_error()) {
                       reply(WrapError(output.error()));
                       return;
@@ -1347,7 +1325,7 @@ void FirebaseStorageHostApi::SetUp(flutter::BinaryMessenger* binary_messenger,
               }
               const int64_t handle_arg = encodable_handle_arg.LongValue();
               api->ReferenceDownloadFile(
-                  app_arg, reference_arg, file_path_arg, (uint64_t)handle_arg,
+                  app_arg, reference_arg, file_path_arg, handle_arg,
                   [reply](ErrorOr<std::string>&& output) {
                     if (output.has_error()) {
                       reply(WrapError(output.error()));
@@ -1448,17 +1426,17 @@ void FirebaseStorageHostApi::SetUp(flutter::BinaryMessenger* binary_messenger,
                 return;
               }
               const int64_t handle_arg = encodable_handle_arg.LongValue();
-              api->TaskPause(app_arg, (uint64_t)handle_arg,
-                             [reply](ErrorOr<EncodableMap>&& output) {
-                               if (output.has_error()) {
-                                 reply(WrapError(output.error()));
-                                 return;
-                               }
-                               EncodableList wrapped;
-                               wrapped.push_back(EncodableValue(
-                                   std::move(output).TakeValue()));
-                               reply(EncodableValue(std::move(wrapped)));
-                             });
+              api->TaskPause(
+                  app_arg, handle_arg, [reply](ErrorOr<EncodableMap>&& output) {
+                    if (output.has_error()) {
+                      reply(WrapError(output.error()));
+                      return;
+                    }
+                    EncodableList wrapped;
+                    wrapped.push_back(
+                        EncodableValue(std::move(output).TakeValue()));
+                    reply(EncodableValue(std::move(wrapped)));
+                  });
             } catch (const std::exception& exception) {
               reply(WrapError(exception.what()));
             }
@@ -1493,17 +1471,17 @@ void FirebaseStorageHostApi::SetUp(flutter::BinaryMessenger* binary_messenger,
                 return;
               }
               const int64_t handle_arg = encodable_handle_arg.LongValue();
-              api->TaskResume(app_arg, (uint64_t)handle_arg,
-                              [reply](ErrorOr<EncodableMap>&& output) {
-                                if (output.has_error()) {
-                                  reply(WrapError(output.error()));
-                                  return;
-                                }
-                                EncodableList wrapped;
-                                wrapped.push_back(EncodableValue(
-                                    std::move(output).TakeValue()));
-                                reply(EncodableValue(std::move(wrapped)));
-                              });
+              api->TaskResume(
+                  app_arg, handle_arg, [reply](ErrorOr<EncodableMap>&& output) {
+                    if (output.has_error()) {
+                      reply(WrapError(output.error()));
+                      return;
+                    }
+                    EncodableList wrapped;
+                    wrapped.push_back(
+                        EncodableValue(std::move(output).TakeValue()));
+                    reply(EncodableValue(std::move(wrapped)));
+                  });
             } catch (const std::exception& exception) {
               reply(WrapError(exception.what()));
             }
@@ -1538,17 +1516,17 @@ void FirebaseStorageHostApi::SetUp(flutter::BinaryMessenger* binary_messenger,
                 return;
               }
               const int64_t handle_arg = encodable_handle_arg.LongValue();
-              api->TaskCancel(app_arg, (uint64_t)handle_arg,
-                              [reply](ErrorOr<EncodableMap>&& output) {
-                                if (output.has_error()) {
-                                  reply(WrapError(output.error()));
-                                  return;
-                                }
-                                EncodableList wrapped;
-                                wrapped.push_back(EncodableValue(
-                                    std::move(output).TakeValue()));
-                                reply(EncodableValue(std::move(wrapped)));
-                              });
+              api->TaskCancel(
+                  app_arg, handle_arg, [reply](ErrorOr<EncodableMap>&& output) {
+                    if (output.has_error()) {
+                      reply(WrapError(output.error()));
+                      return;
+                    }
+                    EncodableList wrapped;
+                    wrapped.push_back(
+                        EncodableValue(std::move(output).TakeValue()));
+                    reply(EncodableValue(std::move(wrapped)));
+                  });
             } catch (const std::exception& exception) {
               reply(WrapError(exception.what()));
             }

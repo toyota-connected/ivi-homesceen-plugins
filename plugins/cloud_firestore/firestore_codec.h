@@ -2,16 +2,22 @@
  * Copyright 2023, the Chromium project authors.  Please see the AUTHORS file
  * for details. All rights reserved. Use of this source code is governed by a
  * BSD-style license that can be found in the LICENSE file.
- * Copyright 2023, Toyota Connected North America
  */
 
-#ifndef FIRESTORE_CODEC_H
-#define FIRESTORE_CODEC_H
+#ifndef FIRESTORE_CODEC_H_
+#define FIRESTORE_CODEC_H_
 
+#include <flutter/basic_message_channel.h>
+#include <flutter/binary_messenger.h>
 #include <flutter/encodable_value.h>
 #include <flutter/standard_message_codec.h>
 
+#include <map>
 #include <memory>
+#include <optional>
+#include <string>
+
+#include "firebase/firestore/field_value.h"
 
 namespace cloud_firestore_linux {
 class FirestoreCodec : public flutter::StandardCodecSerializer {
@@ -47,9 +53,8 @@ class FirestoreCodec : public flutter::StandardCodecSerializer {
 
  protected:
   flutter::EncodableValue ReadValueOfType(
-      uint8_t type,
-      flutter::ByteStreamReader* stream) const override;
+      uint8_t type, flutter::ByteStreamReader* stream) const override;
 };
 }  // namespace cloud_firestore_linux
 
-#endif  // FIRESTORE_CODEC_H
+#endif  // FIRESTORE_CODEC_H_

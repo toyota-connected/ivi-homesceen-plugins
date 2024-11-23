@@ -6,6 +6,7 @@
 
 #ifndef PIGEON_MESSAGES_G_H_
 #define PIGEON_MESSAGES_G_H_
+#include <flutter/basic_message_channel.h>
 #include <flutter/binary_messenger.h>
 #include <flutter/encodable_value.h>
 #include <flutter/standard_message_codec.h>
@@ -23,8 +24,7 @@ class FlutterError {
   explicit FlutterError(const std::string& code) : code_(code) {}
   explicit FlutterError(const std::string& code, const std::string& message)
       : code_(code), message_(message) {}
-  explicit FlutterError(const std::string& code,
-                        const std::string& message,
+  explicit FlutterError(const std::string& code, const std::string& message,
                         const flutter::EncodableValue& details)
       : code_(code), message_(message), details_(details) {}
 
@@ -185,8 +185,7 @@ class FirebaseCoreHostApiCodecSerializer
 
  protected:
   flutter::EncodableValue ReadValueOfType(
-      uint8_t type,
-      flutter::ByteStreamReader* stream) const override;
+      uint8_t type, flutter::ByteStreamReader* stream) const override;
 };
 
 // Generated interface from Pigeon that represents a handler of messages from
@@ -225,12 +224,10 @@ class FirebaseAppHostApi {
   FirebaseAppHostApi& operator=(const FirebaseAppHostApi&) = delete;
   virtual ~FirebaseAppHostApi() {}
   virtual void SetAutomaticDataCollectionEnabled(
-      const std::string& app_name,
-      bool enabled,
+      const std::string& app_name, bool enabled,
       std::function<void(std::optional<FlutterError> reply)> result) = 0;
   virtual void SetAutomaticResourceManagementEnabled(
-      const std::string& app_name,
-      bool enabled,
+      const std::string& app_name, bool enabled,
       std::function<void(std::optional<FlutterError> reply)> result) = 0;
   virtual void Delete(
       const std::string& app_name,
