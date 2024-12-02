@@ -122,11 +122,6 @@ void DeserializeDataAndSetupMessageChannels(
     initFuture.wait();
   }
 
-  // Ok to be called infinite times.
-  /*ECSMessage setupMessageChannels;
-  setupMessageChannels.addData(ECSMessageType::SetupMessageChannels, registrar);
-  ECSystemManager::GetInstance()->vRouteMessage(setupMessageChannels);*/
-
   const auto animationSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<AnimationSystem>(
           AnimationSystem::StaticGetTypeID(), __FUNCTION__);

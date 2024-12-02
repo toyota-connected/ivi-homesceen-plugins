@@ -25,7 +25,9 @@ namespace plugin_filament_view {
 void FilamentSystem::vInitSystem() {
   spdlog::debug("Engine creation Filament API thread: 0x{:x}", pthread_self());
 
-  /*filament::Engine::Config config;
+  /* Note; this is checked in for future reference, on some systems this might
+  be needed. TBD
+  filament::Engine::Config config;
   config.minCommandBufferSizeMB = 10; // Increase from the default (1 MB) to
   handle larger workloads config.commandBufferSizeMB =
   config.minCommandBufferSizeMB * 3; // Ensure total command buffer size

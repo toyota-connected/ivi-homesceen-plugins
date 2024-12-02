@@ -152,19 +152,11 @@ void ECSystem::vSetupMessageChannels(
     return;
   }
 
-#if 0
-  animationInfoCallback_ = std::make_unique<flutter::MethodChannel<>>(
-      plugin_registrar->messenger(), channel_name,
-      &flutter::StandardMethodCodec::GetInstance());
-#else
-
-  spdlog::debug("Creating Event Channel {}::{}}", __FUNCTION__, szChannelName);
+  SPDLOG_DEBUG("Creating Event Channel {}::{}}", __FUNCTION__, szChannelName);
 
   event_channel_ = std::make_unique<flutter::EventChannel<>>(
-      poPluginRegistrar->messenger(),
-      /*std::string("flutter.io/videoPlayer/videoEvents") +
-          std::to_string(m_texture_id),*/
-      szChannelName, &flutter::StandardMethodCodec::GetInstance());
+      poPluginRegistrar->messenger(), szChannelName,
+      &flutter::StandardMethodCodec::GetInstance());
 
   event_channel_->SetStreamHandler(
       std::make_unique<flutter::StreamHandlerFunctions<>>(
@@ -180,9 +172,7 @@ void ECSystem::vSetupMessageChannels(
             return nullptr;
           }));
 
-  spdlog::debug("Event Channel creation Complete for {}", szChannelName);
-
-#endif
+  SPDLOG_DEBUG("Event Channel creation Complete for {}", szChannelName);
 }
 
 }  // namespace plugin_filament_view

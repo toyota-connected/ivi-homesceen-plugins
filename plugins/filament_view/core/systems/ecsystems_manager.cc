@@ -60,18 +60,6 @@ void ECSystemManager::StartRunLoop() {
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/*void ECSystemManager::vSetupThreadingInternals() {
-  filament_api_thread_ = std::thread([&] { io_context_->run(); });
-  post(*strand_, [&] {
-    filament_api_thread_id_ = pthread_self();
-
-    pthread_setname_np(pthread_self(), "ECSystemManagerThreadRunner");
-
-    spdlog::debug("ECSystemManager Filament API thread: 0x{:x}",
-                  filament_api_thread_id_);
-  });
-}*/
-
 void ECSystemManager::vSetupThreadingInternals() {
   filament_api_thread_ = std::thread([this] {
     // Save this thread's ID as it runs io_context_->run()
@@ -83,11 +71,8 @@ void ECSystemManager::vSetupThreadingInternals() {
     spdlog::debug("ECSystemManager Filament API thread started: 0x{:x}",
                   filament_api_thread_id_);
 
-    // Run the io_context
     io_context_->run();
   });
-
-  // Optional: Detach or join the thread based on your use case
 }
 
 ////////////////////////////////////////////////////////////////////////////
