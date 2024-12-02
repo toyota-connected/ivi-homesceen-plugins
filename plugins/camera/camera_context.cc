@@ -176,8 +176,7 @@ std::string CameraContext::Initialize(
   constexpr bool exposure_point_supported{};
   const std::string focusMode("locked");
   bool focus_point_supported{};
-
-  // Note: EventChannel methods are preferred over InvokeMethod
+  
   camera_channel_->InvokeMethod(
       "initialized",
       std::make_unique<flutter::EncodableValue>(
