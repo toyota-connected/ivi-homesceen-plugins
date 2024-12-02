@@ -18,15 +18,13 @@
 
 #include <core/include/literals.h>
 #include <core/systems/derived/filament_system.h>
+#include <core/systems/derived/view_target_system.h>
 #include <core/systems/ecsystems_manager.h>
 #include <filament/Renderer.h>
 #include <filament/SwapChain.h>
 #include <filament/View.h>
 #include <filament/Viewport.h>
-#include <flutter/basic_message_channel.h>
 #include <flutter/encodable_value.h>
-#include <flutter/method_channel.h>
-#include <flutter/standard_method_codec.h>
 #include <gltfio/Animator.h>
 #include <plugins/common/common.h>
 #include <view/flutter_view.h>
@@ -54,7 +52,6 @@ ViewTarget::ViewTarget(const int32_t top,
     : state_(state),
       left_(left),
       top_(top),
-      frameViewCallback_(nullptr),
       callback_(nullptr),
       fanimator_(nullptr),
       cameraManager_(nullptr) {
@@ -92,19 +89,6 @@ ViewTarget::~ViewTarget() {
     surface_ = nullptr;
   }
   SPDLOG_TRACE("--{}::{}", __FILE__, __FUNCTION__);
-}
-
-////////////////////////////////////////////////////////////////////////////
-void ViewTarget::setupMessageChannels(
-    flutter::PluginRegistrar* plugin_registrar) {
-  auto channel_name = std::string("plugin.filament_view.frame_view");
-  if (frameViewCallback_ != nullptr) {
-    return;
-  }
-
-  frameViewCallback_ = std::make_unique<flutter::MethodChannel<>>(
-      plugin_registrar->messenger(), channel_name,
-      &flutter::StandardMethodCodec::GetInstance());
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -371,19 +355,19 @@ void ViewTarget::vChangeQualitySettings(
 ////////////////////////////////////////////////////////////////////////////
 void ViewTarget::SendFrameViewCallback(
     const std::string& methodName,
-    std::initializer_list<std::pair<const char*, EncodableValue>> args) const {
-  if (frameViewCallback_ == nullptr) {
-    return;
-  }
-
+    std::initializer_list<std::pair<const char*, EncodableValue>> args) {
   EncodableMap encodableMap;
+  encodableMap.insert(
+      {EncodableValue("method"), flutter::EncodableValue(methodName)});
   for (const auto& [fst, snd] : args) {
-    encodableMap[EncodableValue(fst)] = snd;
+    encodableMap[EncodableValue(fst)] = snd;  // NOLINT
   }
 
-  frameViewCallback_->InvokeMethod(
-      methodName,
-      std::make_unique<EncodableValue>(EncodableValue(encodableMap)));
+  const auto viewTargetSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<ViewTargetSystem>(
+          ViewTargetSystem::StaticGetTypeID(), __FUNCTION__);
+
+  viewTargetSystem->vSendDataToEventChannel(encodableMap);
 }
 
 /////////////////////////////////////////////////////////////////////////

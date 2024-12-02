@@ -47,17 +47,6 @@ void ViewTargetSystem::vInitSystem() {
       });
 
   vRegisterMessageHandler(
-      ECSMessageType::SetupMessageChannels, [this](const ECSMessage& msg) {
-        spdlog::debug("SetupMessageChannels");
-
-        const auto registrar = msg.getData<flutter::PluginRegistrar*>(
-            ECSMessageType::SetupMessageChannels);
-        vSetupMessageChannels(registrar);
-
-        spdlog::debug("SetupMessageChannels Complete");
-      });
-
-  vRegisterMessageHandler(
       ECSMessageType::ViewTargetStartRenderingLoops,
       [this](const ECSMessage& /*msg*/) {
         spdlog::debug("ViewTargetStartRenderingLoops");
@@ -189,14 +178,6 @@ size_t ViewTargetSystem::nSetupViewTargetFromDesktopState(
     FlutterDesktopEngineState* state) {
   m_lstViewTargets.emplace_back(std::make_unique<ViewTarget>(top, left, state));
   return m_lstViewTargets.size() - 1;
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-void ViewTargetSystem::vSetupMessageChannels(
-    flutter::PluginRegistrar* plugin_registrar) const {
-  for (const auto& viewTarget : m_lstViewTargets) {
-    viewTarget->setupMessageChannels(plugin_registrar);
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

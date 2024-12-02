@@ -18,7 +18,6 @@
 #include <core/entity/base/entityobject.h>
 #include <core/include/literals.h>
 #include <core/systems/ecsystems_manager.h>
-#include <method_channel.h>
 #include <plugin_registrar.h>
 #include <plugins/common/common.h>
 #include <standard_method_codec.h>
@@ -27,18 +26,6 @@ namespace plugin_filament_view {
 
 ////////////////////////////////////////////////////////////////////////////////////
 void AnimationSystem::vInitSystem() {
-  vRegisterMessageHandler(
-      ECSMessageType::SetupMessageChannels, [this](const ECSMessage& msg) {
-        spdlog::debug("SetupMessageChannels");
-
-        const auto registrar = msg.getData<flutter::PluginRegistrar*>(
-            ECSMessageType::SetupMessageChannels);
-
-        setupMessageChannels(registrar);
-
-        spdlog::debug("SetupMessageChannels Complete");
-      });
-
   // Handler for AnimationEnqueue
   vRegisterMessageHandler(
       ECSMessageType::AnimationEnqueue, [this](const ECSMessage& msg) {
@@ -189,16 +176,6 @@ void AnimationSystem::vInitSystem() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-void AnimationSystem::setupMessageChannels(
-    flutter::PluginRegistrar* plugin_registrar) {
-  auto channel_name = std::string("plugin.filament_view.animation_info");
-
-  animationInfoCallback_ = std::make_unique<flutter::MethodChannel<>>(
-      plugin_registrar->messenger(), channel_name,
-      &flutter::StandardMethodCodec::GetInstance());
-}
-
-////////////////////////////////////////////////////////////////////////////////////
 void AnimationSystem::vUpdate(const float fElapsedTime) {
   for (auto& [fst, snd] : _entities) {
     const auto animator = dynamic_cast<Animation*>(
@@ -240,24 +217,17 @@ void AnimationSystem::vNotifyOfAnimationEvent(
     const EntityGUID& entityGuid,
     const AnimationEventType& eType,
     const std::string& eventData) const {
-  if (animationInfoCallback_ == nullptr) {
-    return;
-  }
+  const auto event =
+      flutter::EncodableMap({{flutter::EncodableValue("event"),
+                              flutter::EncodableValue(kAnimationEvent)},
+                             {flutter::EncodableValue(kAnimationEventType),
+                              flutter::EncodableValue(static_cast<int>(eType))},
+                             {flutter::EncodableValue(kGlobalGuid),
+                              flutter::EncodableValue(entityGuid)},
+                             {flutter::EncodableValue(kAnimationEventData),
+                              flutter::EncodableValue(eventData)}});
 
-  flutter::EncodableMap encodableMap;
-
-  encodableMap[flutter::EncodableValue(kAnimationEventType)] =
-      static_cast<int>(eType);
-
-  // source guid
-  encodableMap[flutter::EncodableValue(kGlobalGuid)] = entityGuid;
-
-  // event data.
-  encodableMap[flutter::EncodableValue(kAnimationEventData)] = eventData;
-
-  animationInfoCallback_->InvokeMethod(
-      kAnimationEvent, std::make_unique<flutter::EncodableValue>(
-                           flutter::EncodableValue(encodableMap)));
+  vSendDataToEventChannel(event);
 }
 
 }  // namespace plugin_filament_view

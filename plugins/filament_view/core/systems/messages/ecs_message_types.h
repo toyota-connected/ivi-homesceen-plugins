@@ -29,8 +29,6 @@ enum class ECSMessageType {
   ViewTargetCreateRequestWidth,
   ViewTargetCreateRequestHeight,
 
-  SetupMessageChannels,
-
   ViewTargetStartRenderingLoops,
 
   SetCameraFromDeserializedLoad,

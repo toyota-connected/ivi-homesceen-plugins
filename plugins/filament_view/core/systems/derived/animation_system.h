@@ -17,8 +17,6 @@
 #pragma once
 
 #include <core/systems/base/ecsystem.h>
-#include <core/utils/ibl_profiler.h>
-#include <method_channel.h>
 #include <memory>
 
 #include <core/components/derived/animation.h>
@@ -61,10 +59,6 @@ class AnimationSystem : public ECSystem {
                                const AnimationEventType& eType,
                                const std::string& eventData) const;
 
-  void setupMessageChannels(flutter::PluginRegistrar* plugin_registrar);
-
   std::map<EntityGUID, std::shared_ptr<EntityObject>> _entities;
-
-  std::unique_ptr<flutter::MethodChannel<>> animationInfoCallback_;
 };
 }  // namespace plugin_filament_view

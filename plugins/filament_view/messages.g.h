@@ -81,14 +81,6 @@ class ErrorOr {
  private:
   friend class FilamentViewApi;
 
-  friend class ModelStateChannelApi;
-
-  friend class SceneStateApi;
-
-  friend class ShapeStateApi;
-
-  friend class RendererChannelApi;
-
   ErrorOr() = default;
 
   T TakeValue() && { return std::get<T>(std::move(v_)); }
@@ -223,114 +215,6 @@ class FilamentViewApi {
 
  protected:
   FilamentViewApi() = default;
-};
-
-class ModelStateChannelApi {
- public:
-  ModelStateChannelApi(const ModelStateChannelApi&) = delete;
-
-  ModelStateChannelApi& operator=(const ModelStateChannelApi&) = delete;
-
-  virtual ~ModelStateChannelApi() = default;
-
-  // TODO
-
-  // The codec used by ModelStateChannelApi.
-  static const flutter::StandardMethodCodec& GetCodec();
-
-  // Sets up an instance of `ModelStateChannelApi` to handle messages
-  // through the `binary_messenger`.
-  static void SetUp(flutter::BinaryMessenger* binary_messenger,
-                    const FilamentViewApi* api,
-                    int32_t id);
-
-  static flutter::EncodableValue WrapError(std::string_view error_message);
-
-  static flutter::EncodableValue WrapError(const FlutterError& error);
-
- protected:
-  ModelStateChannelApi() = default;
-};
-
-class SceneStateApi {
- public:
-  SceneStateApi(const SceneStateApi&) = delete;
-
-  SceneStateApi& operator=(const SceneStateApi&) = delete;
-
-  virtual ~SceneStateApi() = default;
-
-  // TODO
-
-  // The codec used by SceneStateApi.
-  static const flutter::StandardMethodCodec& GetCodec();
-
-  // Sets up an instance of `SceneStateApi` to handle messages
-  // through the `binary_messenger`.
-  static void SetUp(flutter::BinaryMessenger* binary_messenger,
-                    const FilamentViewApi* api,
-                    int32_t id);
-
-  static flutter::EncodableValue WrapError(std::string_view error_message);
-
-  static flutter::EncodableValue WrapError(const FlutterError& error);
-
- protected:
-  SceneStateApi() = default;
-};
-
-class ShapeStateApi {
- public:
-  ShapeStateApi(const ShapeStateApi&) = delete;
-
-  ShapeStateApi& operator=(const ShapeStateApi&) = delete;
-
-  virtual ~ShapeStateApi() = default;
-
-  // TODO
-
-  // The codec used by ShapeStateApi.
-  static const flutter::StandardMethodCodec& GetCodec();
-
-  // Sets up an instance of `ShapeStateApi` to handle messages
-  // through the `binary_messenger`.
-  static void SetUp(flutter::BinaryMessenger* binary_messenger,
-                    const FilamentViewApi* api,
-                    int32_t id);
-
-  static flutter::EncodableValue WrapError(std::string_view error_message);
-
-  static flutter::EncodableValue WrapError(const FlutterError& error);
-
- protected:
-  ShapeStateApi() = default;
-};
-
-class RendererChannelApi {
- public:
-  RendererChannelApi(const RendererChannelApi&) = delete;
-
-  RendererChannelApi& operator=(const RendererChannelApi&) = delete;
-
-  virtual ~RendererChannelApi() = default;
-
-  // TODO
-
-  // The codec used by RendererChannelApi.
-  static const flutter::StandardMethodCodec& GetCodec();
-
-  // Sets up an instance of `RendererChannelApi` to handle messages
-  // through the `binary_messenger`.
-  static void SetUp(flutter::BinaryMessenger* binary_messenger,
-                    const FilamentViewApi* api,
-                    int32_t id);
-
-  static flutter::EncodableValue WrapError(std::string_view error_message);
-
-  static flutter::EncodableValue WrapError(const FlutterError& error);
-
- protected:
-  RendererChannelApi() = default;
 };
 
 }  // namespace plugin_filament_view

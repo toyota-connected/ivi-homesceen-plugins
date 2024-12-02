@@ -25,6 +25,22 @@ namespace plugin_filament_view {
 void FilamentSystem::vInitSystem() {
   spdlog::debug("Engine creation Filament API thread: 0x{:x}", pthread_self());
 
+  /* Note; this is checked in for future reference, on some systems this might
+  be needed. TBD
+  filament::Engine::Config config;
+  config.minCommandBufferSizeMB = 10; // Increase from the default (1 MB) to
+  handle larger workloads config.commandBufferSizeMB =
+  config.minCommandBufferSizeMB * 3; // Ensure total command buffer size
+  reflects the minCommandBufferSizeMB
+
+  // Create the Filament Engine with the custom config
+  fengine_ = filament::Engine::create(
+      filament::Engine::Backend::VULKAN, // Use the default backend
+      nullptr,                            // Use the default platform
+      nullptr,                            // No shared context
+      &config                             // Pass the custom config
+  );*/
+
   fengine_ = filament::Engine::create(filament::Engine::Backend::VULKAN);
   iblProfiler_ = std::make_unique<IBLProfiler>(fengine_);
   frenderer_ = fengine_->createRenderer();

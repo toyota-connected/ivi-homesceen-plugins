@@ -18,6 +18,7 @@
 
 #include <core/scene/camera/camera.h>
 #include <core/scene/camera/camera_manager.h>
+#include <event_channel.h>
 #include <filament/Engine.h>
 #include <flutter_desktop_plugin_registrar.h>
 #include <gltfio/AssetLoader.h>
@@ -93,8 +94,6 @@ class ViewTarget {
 
   bool initialized_{};
 
-  std::unique_ptr<flutter::MethodChannel<>> frameViewCallback_;
-
   wl_display* display_{};
   wl_surface* surface_{};
   wl_surface* parent_surface_{};
@@ -114,10 +113,10 @@ class ViewTarget {
   // todo to be moved
   ::filament::gltfio::Animator* fanimator_;
 
-  void SendFrameViewCallback(
+  static void SendFrameViewCallback(
       const std::string& methodName,
       std::initializer_list<std::pair<const char*, flutter::EncodableValue>>
-          args) const;
+          args);
 
   static void OnFrame(void* data, wl_callback* callback, uint32_t time);
 
