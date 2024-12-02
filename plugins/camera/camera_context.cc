@@ -256,4 +256,3 @@ std::string CameraContext::stopVideoRecording() {
 }
 
 }  // namespace camera_plugin
-
