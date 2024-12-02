@@ -99,8 +99,7 @@ std::string CameraContext::Initialize(
 
   std::string channel_name =
       std::string("flutter.io/cameraPlugin/camera") + std::to_string(camera_id);
-
-  // Note: EventChannel methods are preferred over InvokeMethod
+  
   camera_channel_ = std::make_unique<flutter::MethodChannel<>>(
       plugin_registrar->messenger(), channel_name,
       &flutter::StandardMethodCodec::GetInstance());
