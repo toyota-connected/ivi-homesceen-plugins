@@ -155,12 +155,11 @@ void WebviewFlutterPlugin::PlatformViewCreate(
     PlatformViewAddListener addListener,
     PlatformViewRemoveListener removeListener,
     void* platform_view_context) {
-  /* If CEF not initialized, do so here */
-
   auto webview = std::make_unique<WebviewPlatformView>(
       id, std::move(viewType), direction, top, left, width, height, params,
       std::move(assetDirectory), engine, addListener, removeListener,
       platform_view_context);
+
   m_WebViews.emplace_back(std::move(webview));
 }
 
@@ -1203,8 +1202,10 @@ void WebviewPlatformView::on_touch(int32_t action,
                                    const double* point_data,
                                    void* data) {
   spdlog::trace(
-      "[webview_flutter] on_touch: action: {}  point_count: {}  data_size: {}  location: {}x:{}y",
-      action, point_count, point_data_size, *(point_data + 7), *(point_data + 8));
+      "[webview_flutter] on_touch: action: {}  point_count: {}  data_size: {}  "
+      "location: {}x:{}y",
+      action, point_count, point_data_size, *(point_data + 7),
+      *(point_data + 8));
   if (const auto plugin = static_cast<WebviewPlatformView*>(data); plugin) {
     cef_touch_event_type_t type;
     float data_x, data_y;
