@@ -27,6 +27,7 @@
 
 #include "messages.g.h"
 
+#include <base/cef_bind.h>
 #include <capi/cef_app_capi.h>
 #include <capi/cef_browser_capi.h>
 #include <capi/cef_render_handler_capi.h>
@@ -37,6 +38,7 @@
 #include <cef_browser_process_handler.h>
 #include <cef_client.h>
 #include <cef_render_handler.h>
+#include <cef_task.h>
 #include <include/base/cef_callback.h>
 #include <include/wrapper/cef_closure_task.h>
 
@@ -68,7 +70,7 @@ class WebviewPlatformView final : public PlatformView,
                       PlatformViewRemoveListener removeListener,
                       void* platform_view_context);
 
-  ~WebviewPlatformView() override = default;
+  ~WebviewPlatformView() override;
 
   void CefThreadMain();
 
@@ -145,6 +147,12 @@ class WebviewPlatformView final : public PlatformView,
                        const double* point_data,
                        void* data);
   static void on_dispose(bool hybrid, void* data);
+
+  static void SendTouch(int id,
+                        float data_x,
+                        float data_y,
+                        cef_touch_event_type_t action_type,
+                        CefRefPtr<CefBrowserHost> host);
 
   static const platform_view_listener platform_view_listener_;
   IMPLEMENT_REFCOUNTING(WebviewPlatformView);
@@ -403,6 +411,8 @@ class WebviewFlutterPlugin final : public flutter::Plugin {
   WebviewFlutterDownloadListenerHostApi m_DownloadListenerHostApi;
   WebviewFlutterJavaScriptChannelHostApi m_JavaScriptChannelHostApi;
   WebviewFlutterCookieManagerHostApi m_CookieManagerHostApi;
+
+  static std::vector<std::unique_ptr<WebviewPlatformView>> m_WebViews;
 };
 
 }  // namespace plugin_webview_flutter
