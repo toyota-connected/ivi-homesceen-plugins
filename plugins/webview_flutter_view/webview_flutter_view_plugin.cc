@@ -29,6 +29,9 @@
 
 namespace plugin_webview_flutter {
 
+std::vector<std::unique_ptr<WebviewPlatformView>>
+    WebviewFlutterPlugin::m_WebViews;
+
 GLuint LoadShader(const GLchar* shaderSrc, const GLenum type) {
   // Create the shader object
   const GLuint shader = glCreateShader(type);
@@ -83,7 +86,7 @@ void WebviewFlutterPlugin::RegisterWithRegistrar(
 
 void WebviewPlatformView::GetViewRect(CefRefPtr<CefBrowser> /* browser */,
                                       CefRect& rect) {
-  spdlog::debug("[webivew_flutter] GetViewRect");
+  spdlog::debug("[webview_flutter] GetViewRect");
   rect.width = static_cast<int>(width_);
   rect.height = static_cast<int>(height_);
 }
@@ -94,7 +97,7 @@ void WebviewPlatformView::OnPaint(CefRefPtr<CefBrowser> browser,
                                   const void* buffer,
                                   int width,
                                   int height) {
-  spdlog::debug("[webivew_flutter] OnPaint, width: {}, height: {}, type: {}",
+  spdlog::trace("[webview_flutter] OnPaint, width: {}, height: {}, type: {}",
                 width, height, (uint8_t)type);
   if (eglGetCurrentContext() != egl_context_) {
     eglMakeCurrent(egl_display_, egl_surface_, egl_surface_, egl_context_);
@@ -133,7 +136,7 @@ void WebviewPlatformView::OnAcceleratedPaint(
     PaintElementType /* type */,
     const RectList& /* dirtyRects */,
     const CefAcceleratedPaintInfo& /* info */) {
-  spdlog::debug("[webivew_flutter] OnAcceleratedPaint");
+  spdlog::trace("[webview_flutter] OnAcceleratedPaint");
 }
 
 WebviewFlutterPlugin::WebviewFlutterPlugin() {}
@@ -152,10 +155,12 @@ void WebviewFlutterPlugin::PlatformViewCreate(
     PlatformViewAddListener addListener,
     PlatformViewRemoveListener removeListener,
     void* platform_view_context) {
-  auto plugin = std::make_unique<WebviewPlatformView>(
+  auto webview = std::make_unique<WebviewPlatformView>(
       id, std::move(viewType), direction, top, left, width, height, params,
       std::move(assetDirectory), engine, addListener, removeListener,
       platform_view_context);
+
+  m_WebViews.emplace_back(std::move(webview));
 }
 
 WebviewPlatformView::WebviewPlatformView(
@@ -217,7 +222,10 @@ WebviewPlatformView::WebviewPlatformView(
   cef_thread_ = std::thread(&WebviewPlatformView::CefThreadMain, this);
 
   // on_frame(this, callback_, 0);
-  cef_thread_.join();
+}
+
+WebviewPlatformView::~WebviewPlatformView() {
+  spdlog::debug("[webview_flutter] ~WebviewPlatformView");
 }
 
 void WebviewPlatformView::CefThreadMain() {
@@ -304,6 +312,8 @@ void WebviewPlatformView::CefThreadMain() {
 }
 
 WebviewFlutterPlugin::~WebviewFlutterPlugin() {
+  spdlog::debug(
+      "[webview_cef_thread] WebviewFlutterPlugin::~WebviewFlutterPlugin");
   CefPostTask(TID_UI, base::BindOnce(CefQuitMessageLoop));
 };
 
@@ -319,8 +329,8 @@ void WebviewPlatformView::OnContextInitialized() {
 
   spdlog::debug("[webview_flutter] CreateBrowserSync++");
   browser_ = CefBrowserHost::CreateBrowserSync(
-      window_info, this, "https://deanm.github.io/pre3d/monster.html",
-      browserSettings, nullptr, nullptr);
+      window_info, this, "https://www.google.com", browserSettings, nullptr,
+      nullptr);
   spdlog::debug("[webview_flutter] CreateBrowserSync--");
 }
 
@@ -1186,13 +1196,58 @@ void WebviewPlatformView::on_set_offset(const double left,
   }
 }
 
-void WebviewPlatformView::on_touch(int32_t /* action */,
-                                   int32_t /* point_count */,
-                                   const size_t /* point_data_size */,
-                                   const double* /* point_data */,
-                                   void* /* data */) {
-  spdlog::debug("[webview_flutter] on_touch");
-  // auto plugin = static_cast<WebviewFlutterPlugin*>(data);
+void WebviewPlatformView::on_touch(int32_t action,
+                                   int32_t point_count,
+                                   const size_t point_data_size,
+                                   const double* point_data,
+                                   void* data) {
+  spdlog::trace(
+      "[webview_flutter] on_touch: action: {}  point_count: {}  data_size: {}  "
+      "location: {}x:{}y",
+      action, point_count, point_data_size, *(point_data + 7),
+      *(point_data + 8));
+  if (const auto plugin = static_cast<WebviewPlatformView*>(data); plugin) {
+    cef_touch_event_type_t type;
+    float data_x, data_y;
+    int id = 0;
+
+    switch (action) {
+      case 0:
+        type = CEF_TET_PRESSED;
+        break;
+      case 1:
+        type = CEF_TET_RELEASED;
+        break;
+      case 2:
+        type = CEF_TET_MOVED;
+        break;
+      default:
+        type = CEF_TET_CANCELLED;
+        break;
+    }
+
+    data_x = *(point_data + 7);
+    data_y = *(point_data + 8);
+
+    CefPostTask(TID_UI,
+                base::BindOnce(&WebviewPlatformView::SendTouch, id, data_x,
+                               data_y, type, plugin->browser_->GetHost()));
+  }
+}
+
+void WebviewPlatformView::SendTouch(int id,
+                                    float data_x,
+                                    float data_y,
+                                    cef_touch_event_type_t action_type,
+                                    CefRefPtr<CefBrowserHost> host) {
+  CefTouchEvent touch_event;
+  touch_event.id = id;
+  touch_event.x = data_x;
+  touch_event.y = data_y;
+  touch_event.type = action_type;
+
+  spdlog::trace("[webview_flutter] SendTouch");
+  host->SendTouchEvent(touch_event);
 }
 
 void WebviewPlatformView::on_dispose(bool /* hybrid */, void* data) {
