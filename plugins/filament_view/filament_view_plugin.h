@@ -66,77 +66,61 @@ class FilamentViewPlugin : public flutter::Plugin,
   static void setupMessageChannels(flutter::PluginRegistrar* registrar);
   static void sendReadyEvent();
 
-  void ChangeMaterialParameter(const flutter::EncodableMap& params,
-                               const EntityGUID& guid) override;
-
-  void ChangeMaterialDefinition(const flutter::EncodableMap& params,
-                                const EntityGUID& guid) override;
-
-  void ToggleShapesInScene(
-      bool value,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ToggleDebugCollidableViewsInScene(
-      bool value,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ChangeCameraMode(
-      std::string szValue,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void vResetInertiaCameraToDefaultValues(
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ChangeViewQualitySettings(
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void SetCameraRotation(
-      float fValue,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ChangeSkyboxByAsset(
-      std::string path,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ChangeSkyboxByUrl(
-      std::string url,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ChangeSkyboxByHdrAsset(
-      std::string path,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ChangeSkyboxByHdrUrl(
-      std::string url,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ChangeSkyboxColor(
-      std::string color,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ChangeToTransparentSkybox(
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ChangeLightByKtxAsset(
-      std::string path,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ChangeLightByKtxUrl(
-      std::string url,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ChangeLightByIndirectLight(
-      std::string path,
-      double intensity,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ChangeLightByHdrUrl(
-      std::string path,
-      double intensity,
-      std::function<void(std::optional<FlutterError> reply)> result) override;
-
-  void ChangeToDefaultIndirectLight(
-      std::function<void(std::optional<FlutterError> reply)> result) override;
+  std::optional<FlutterError> ChangeMaterialParameter(
+      const flutter::EncodableMap& params,
+      const std::string& guid) override;
+  // Change material definition for the given entity.
+  std::optional<FlutterError> ChangeMaterialDefinition(
+      const flutter::EncodableMap& params,
+      const std::string& guid) override;
+  // Toggle shapes visibility in the scene.
+  std::optional<FlutterError> ToggleShapesInScene(bool value) override;
+  // Toggle debug collidable visuals in the scene.
+  std::optional<FlutterError> ToggleDebugCollidableViewsInScene(
+      bool value) override;
+  // Change the camera mode by name.
+  std::optional<FlutterError> ChangeCameraMode(
+      const std::string& mode) override;
+  // Reset inertia camera to default values.
+  std::optional<FlutterError> ResetInertiaCameraToDefaultValues() override;
+  // Change view quality settings.
+  std::optional<FlutterError> ChangeViewQualitySettings() override;
+  // Set camera rotation by a float value.
+  std::optional<FlutterError> SetCameraRotation(double value) override;
+  std::optional<FlutterError> ChangeLightTransformByGUID(
+      const std::string& guid,
+      double posx,
+      double posy,
+      double posz,
+      double dirx,
+      double diry,
+      double dirz) override;
+  std::optional<FlutterError> ChangeLightColorByGUID(
+      const std::string& guid,
+      const std::string& color,
+      int64_t intensity) override;
+  std::optional<FlutterError> EnqueueAnimation(
+      const std::string& guid,
+      int64_t animation_index) override;
+  std::optional<FlutterError> ClearAnimationQueue(
+      const std::string& guid) override;
+  std::optional<FlutterError> PlayAnimation(const std::string& guid,
+                                            int64_t animation_index) override;
+  std::optional<FlutterError> ChangeAnimationSpeed(const std::string& guid,
+                                                   double speed) override;
+  std::optional<FlutterError> PauseAnimation(const std::string& guid) override;
+  std::optional<FlutterError> ResumeAnimation(const std::string& guid) override;
+  std::optional<FlutterError> SetAnimationLooping(const std::string& guid,
+                                                  bool looping) override;
+  std::optional<FlutterError> RequestCollisionCheckFromRay(
+      const std::string& query_id,
+      double origin_x,
+      double origin_y,
+      double origin_z,
+      double direction_x,
+      double direction_y,
+      double direction_z,
+      double length) override;
 
   // Disallow copy and assign.
   FilamentViewPlugin(const FilamentViewPlugin&) = delete;
