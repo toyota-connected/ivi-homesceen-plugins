@@ -44,7 +44,6 @@ class FlutterView;
 class FilamentViewPlugin;
 
 namespace plugin_filament_view {
-
 ////////////////////////////////////////////////////////////////////////////
 ViewTarget::ViewTarget(const int32_t top,
                        const int32_t left,
@@ -379,104 +378,101 @@ const wl_callback_listener ViewTarget::frame_listener = {.done = OnFrame};
  * @param time - timestamp of running program
  * rendered
  */
-void ViewTarget::DrawFrame(uint32_t time) {
-  post(*ECSystemManager::GetInstance()->GetStrand(), [&, time] {
-    static bool bonce = true;
-    if (bonce) {
-      bonce = false;
+void ViewTarget::DrawFrame(const uint32_t time) {
+  static bool bonce = true;
+  if (bonce) {
+    bonce = false;
 
-      // will set the first frame of a cameras features.
-      doCameraFeatures(0);
+    // will set the first frame of a cameras features.
+    doCameraFeatures(0);
+  }
+
+  if (m_LastTime == 0) {
+    m_LastTime = time;
+  }
+
+  // Frames from Native to dart, currently run in order of
+  // - updateFrame - Called regardless if a frame is going to be drawn or not
+  // - preRenderFrame - Called before native <features>, but we know we're
+  // going to draw a frame
+  // - renderFrame - Called after native <features>, right before drawing a
+  // frame
+  // - postRenderFrame - Called after we've drawn natively, right after
+  // drawing a frame.
+
+  SendFrameViewCallback(
+      kUpdateFrame,
+      {std::make_pair(kParam_ElapsedFrameTime, EncodableValue(m_LastTime))});
+
+  // Render the scene, unless the renderer wants to skip the frame.
+  if (const auto filamentSystem =
+          ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
+              FilamentSystem::StaticGetTypeID(), "DrawFrame");
+      filamentSystem->getFilamentRenderer()->beginFrame(fswapChain_, time)) {
+    // Note you might want render time and gameplay time to be different
+    // but for smooth animation you don't. (physics would be simulated w/o
+    // render)
+    //
+    // Future tasking for making a more featured timing / frame info class.
+    const uint32_t deltaTimeMS = time - m_LastTime;
+    float timeSinceLastRenderedSec =
+        static_cast<float>(deltaTimeMS) / 1000.0f;  // convert to seconds
+    if (timeSinceLastRenderedSec == 0.0f) {
+      timeSinceLastRenderedSec += 1.0f;
     }
-
-    if (m_LastTime == 0) {
-      m_LastTime = time;
-    }
-
-    // Frames from Native to dart, currently run in order of
-    // - updateFrame - Called regardless if a frame is going to be drawn or not
-    // - preRenderFrame - Called before native <features>, but we know we're
-    // going to draw a frame
-    // - renderFrame - Called after native <features>, right before drawing a
-    // frame
-    // - postRenderFrame - Called after we've drawn natively, right after
-    // drawing a frame.
+    float fps = 1.0f / timeSinceLastRenderedSec;  // calculate FPS
 
     SendFrameViewCallback(
-        kUpdateFrame,
-        {std::make_pair(kParam_ElapsedFrameTime, EncodableValue(m_LastTime))});
+        kPreRenderFrame,
+        {std::make_pair(kParam_TimeSinceLastRenderedSec,
+                        EncodableValue(timeSinceLastRenderedSec)),
+         std::make_pair(kParam_FPS, EncodableValue(fps))});
 
-    const auto filamentSystem =
-        ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
-            FilamentSystem::StaticGetTypeID(), "DrawFrame");
+    doCameraFeatures(timeSinceLastRenderedSec);
 
-    // Render the scene, unless the renderer wants to skip the frame.
-    if (filamentSystem->getFilamentRenderer()->beginFrame(fswapChain_, time)) {
-      // Note you might want render time and gameplay time to be different
-      // but for smooth animation you don't. (physics would be simulated w/o
-      // render)
-      //
-      // Future tasking for making a more featured timing / frame info class.
-      const uint32_t deltaTimeMS = time - m_LastTime;
-      float timeSinceLastRenderedSec =
-          static_cast<float>(deltaTimeMS) / 1000.0f;  // convert to seconds
-      if (timeSinceLastRenderedSec == 0.0f) {
-        timeSinceLastRenderedSec += 1.0f;
-      }
-      float fps = 1.0f / timeSinceLastRenderedSec;  // calculate FPS
+    SendFrameViewCallback(
+        kRenderFrame, {std::make_pair(kParam_TimeSinceLastRenderedSec,
+                                      EncodableValue(timeSinceLastRenderedSec)),
+                       std::make_pair(kParam_FPS, EncodableValue(fps))});
 
-      SendFrameViewCallback(
-          kPreRenderFrame,
-          {std::make_pair(kParam_TimeSinceLastRenderedSec,
-                          EncodableValue(timeSinceLastRenderedSec)),
-           std::make_pair(kParam_FPS, EncodableValue(fps))});
+    filamentSystem->getFilamentRenderer()->render(fview_);
 
-      doCameraFeatures(timeSinceLastRenderedSec);
+    filamentSystem->getFilamentRenderer()->endFrame();
 
-      SendFrameViewCallback(
-          kRenderFrame,
-          {std::make_pair(kParam_TimeSinceLastRenderedSec,
-                          EncodableValue(timeSinceLastRenderedSec)),
-           std::make_pair(kParam_FPS, EncodableValue(fps))});
+    SendFrameViewCallback(
+        kPostRenderFrame,
+        {std::make_pair(kParam_TimeSinceLastRenderedSec,
+                        EncodableValue(timeSinceLastRenderedSec)),
+         std::make_pair(kParam_FPS, EncodableValue(fps))});
+  }
 
-      filamentSystem->getFilamentRenderer()->render(fview_);
-
-      filamentSystem->getFilamentRenderer()->endFrame();
-
-      SendFrameViewCallback(
-          kPostRenderFrame,
-          {std::make_pair(kParam_TimeSinceLastRenderedSec,
-                          EncodableValue(timeSinceLastRenderedSec)),
-           std::make_pair(kParam_FPS, EncodableValue(fps))});
-    }
-
-    m_LastTime = time;
-  });
+  m_LastTime = time;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 void ViewTarget::OnFrame(void* data,
                          wl_callback* callback,
                          const uint32_t time) {
-  const auto obj = static_cast<ViewTarget*>(data);
+  post(*ECSystemManager::GetInstance()->GetStrand(), [data, callback, time] {
+    const auto obj = static_cast<ViewTarget*>(data);
+    obj->callback_ = nullptr;
 
-  obj->callback_ = nullptr;
+    if (callback) {
+      wl_callback_destroy(callback);
+    }
 
-  if (callback) {
-    wl_callback_destroy(callback);
-  }
+    obj->DrawFrame(time);
 
-  obj->DrawFrame(time);
+    obj->callback_ = wl_surface_frame(obj->surface_);
+    wl_callback_add_listener(obj->callback_, &ViewTarget::frame_listener, data);
 
-  obj->callback_ = wl_surface_frame(obj->surface_);
-  wl_callback_add_listener(obj->callback_, &ViewTarget::frame_listener, data);
+    // Z-Order
+    // These do not need <seem> to need to be called every frame.
+    // wl_subsurface_place_below(obj->subsurface_, obj->parent_surface_);
+    wl_subsurface_set_position(obj->subsurface_, obj->left_, obj->top_);
 
-  // Z-Order
-  // These do not need <seem> to need to be called every frame.
-  // wl_subsurface_place_below(obj->subsurface_, obj->parent_surface_);
-  wl_subsurface_set_position(obj->subsurface_, obj->left_, obj->top_);
-
-  wl_surface_commit(obj->surface_);
+    wl_surface_commit(obj->surface_);
+  });
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -539,5 +535,4 @@ void ViewTarget::vOnTouch(const int32_t action,
     cameraManager_->onAction(action, point_count, point_data_size, point_data);
   }
 }
-
 }  // namespace plugin_filament_view

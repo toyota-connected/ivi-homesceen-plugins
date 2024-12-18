@@ -152,7 +152,7 @@ void ECSystem::vSetupMessageChannels(
     return;
   }
 
-  SPDLOG_DEBUG("Creating Event Channel {}::{}}", __FUNCTION__, szChannelName);
+  SPDLOG_DEBUG("Creating Event Channel {}::{}", __FUNCTION__, szChannelName);
 
   event_channel_ = std::make_unique<flutter::EventChannel<>>(
       poPluginRegistrar->messenger(), szChannelName,
