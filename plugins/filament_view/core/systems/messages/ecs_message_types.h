@@ -68,6 +68,12 @@ enum class ECSMessageType {
   AnimationPause,
   AnimationResume,
   AnimationSetLooping,
+
+  ChangeTranslationByGUID,
+  ChangeRotationByGUID,
+  ChangeScaleByGUID,
+  floatVec3,
+  floatVec4,
 };
 
 }

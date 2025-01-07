@@ -88,6 +88,8 @@ class EntityTransforms {
                               const filament::math::float3& scale,
                               const filament::math::float3& translation,
                               ::filament::Engine* engine);
+  static void vApplyTransform(const std::shared_ptr<Entity>& poEntity,
+                              const BaseTransform& transform);
   static void vApplyShear(const std::shared_ptr<utils::Entity>& poEntity,
                           const filament::math::float3& shear,  // NOLINT
                           ::filament::Engine* engine);

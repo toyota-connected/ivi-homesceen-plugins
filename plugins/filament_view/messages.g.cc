@@ -840,6 +840,171 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
       channel.SetMessageHandler(nullptr);
     }
   }
+  {
+    BasicMessageChannel channel(
+        binary_messenger,
+        "dev.flutter.pigeon.my_fox_example.FilamentViewApi.changeScaleByGUID" +
+            prepended_suffix,
+        &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler(
+          [api](const EncodableValue& message,
+                const flutter::MessageReply<EncodableValue>& reply) {
+            try {
+              const auto& args = std::get<EncodableList>(message);
+              const auto& encodable_guid_arg = args.at(0);
+              if (encodable_guid_arg.IsNull()) {
+                reply(WrapError("guid_arg unexpectedly null."));
+                return;
+              }
+              const auto& guid_arg = std::get<std::string>(encodable_guid_arg);
+              const auto& encodable_x_arg = args.at(1);
+              if (encodable_x_arg.IsNull()) {
+                reply(WrapError("x_arg unexpectedly null."));
+                return;
+              }
+              const auto& x_arg = std::get<double>(encodable_x_arg);
+              const auto& encodable_y_arg = args.at(2);
+              if (encodable_y_arg.IsNull()) {
+                reply(WrapError("y_arg unexpectedly null."));
+                return;
+              }
+              const auto& y_arg = std::get<double>(encodable_y_arg);
+              const auto& encodable_z_arg = args.at(3);
+              if (encodable_z_arg.IsNull()) {
+                reply(WrapError("z_arg unexpectedly null."));
+                return;
+              }
+              const auto& z_arg = std::get<double>(encodable_z_arg);
+              const std::optional<FlutterError> output =
+                  api->ChangeScaleByGUID(guid_arg, x_arg, y_arg, z_arg);
+              if (output.has_value()) {
+                reply(WrapError(output.value()));
+                return;
+              }
+              EncodableList wrapped;
+              wrapped.emplace_back();
+              reply(EncodableValue(std::move(wrapped)));
+            } catch (const std::exception& exception) {
+              reply(WrapError(exception.what()));
+            }
+          });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
+    BasicMessageChannel channel(binary_messenger,
+                                  "dev.flutter.pigeon.my_fox_example."
+                                  "FilamentViewApi.changeTranslationByGUID" +
+                                      prepended_suffix,
+                                  &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler(
+          [api](const EncodableValue& message,
+                const flutter::MessageReply<EncodableValue>& reply) {
+            try {
+              const auto& args = std::get<EncodableList>(message);
+              const auto& encodable_guid_arg = args.at(0);
+              if (encodable_guid_arg.IsNull()) {
+                reply(WrapError("guid_arg unexpectedly null."));
+                return;
+              }
+              const auto& guid_arg = std::get<std::string>(encodable_guid_arg);
+              const auto& encodable_x_arg = args.at(1);
+              if (encodable_x_arg.IsNull()) {
+                reply(WrapError("x_arg unexpectedly null."));
+                return;
+              }
+              const auto& x_arg = std::get<double>(encodable_x_arg);
+              const auto& encodable_y_arg = args.at(2);
+              if (encodable_y_arg.IsNull()) {
+                reply(WrapError("y_arg unexpectedly null."));
+                return;
+              }
+              const auto& y_arg = std::get<double>(encodable_y_arg);
+              const auto& encodable_z_arg = args.at(3);
+              if (encodable_z_arg.IsNull()) {
+                reply(WrapError("z_arg unexpectedly null."));
+                return;
+              }
+              const auto& z_arg = std::get<double>(encodable_z_arg);
+              const std::optional<FlutterError> output =
+                  api->ChangeTranslationByGUID(guid_arg, x_arg, y_arg, z_arg);
+              if (output.has_value()) {
+                reply(WrapError(output.value()));
+                return;
+              }
+              EncodableList wrapped;
+              wrapped.emplace_back();
+              reply(EncodableValue(std::move(wrapped)));
+            } catch (const std::exception& exception) {
+              reply(WrapError(exception.what()));
+            }
+          });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
+    BasicMessageChannel channel(binary_messenger,
+                                  "dev.flutter.pigeon.my_fox_example."
+                                  "FilamentViewApi.changeRotationByGUID" +
+                                      prepended_suffix,
+                                  &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler(
+          [api](const EncodableValue& message,
+                const flutter::MessageReply<EncodableValue>& reply) {
+            try {
+              const auto& args = std::get<EncodableList>(message);
+              const auto& encodable_guid_arg = args.at(0);
+              if (encodable_guid_arg.IsNull()) {
+                reply(WrapError("guid_arg unexpectedly null."));
+                return;
+              }
+              const auto& guid_arg = std::get<std::string>(encodable_guid_arg);
+              const auto& encodable_x_arg = args.at(1);
+              if (encodable_x_arg.IsNull()) {
+                reply(WrapError("x_arg unexpectedly null."));
+                return;
+              }
+              const auto& x_arg = std::get<double>(encodable_x_arg);
+              const auto& encodable_y_arg = args.at(2);
+              if (encodable_y_arg.IsNull()) {
+                reply(WrapError("y_arg unexpectedly null."));
+                return;
+              }
+              const auto& y_arg = std::get<double>(encodable_y_arg);
+              const auto& encodable_z_arg = args.at(3);
+              if (encodable_z_arg.IsNull()) {
+                reply(WrapError("z_arg unexpectedly null."));
+                return;
+              }
+              const auto& z_arg = std::get<double>(encodable_z_arg);
+              const auto& encodable_w_arg = args.at(4);
+              if (encodable_w_arg.IsNull()) {
+                reply(WrapError("w_arg unexpectedly null."));
+                return;
+              }
+              const auto& w_arg = std::get<double>(encodable_w_arg);
+              const std::optional<FlutterError> output = api->ChangeRotationByGUID(
+                  guid_arg, x_arg, y_arg, z_arg, w_arg);
+              if (output.has_value()) {
+                reply(WrapError(output.value()));
+                return;
+              }
+              EncodableList wrapped;
+              wrapped.emplace_back();
+              reply(EncodableValue(std::move(wrapped)));
+            } catch (const std::exception& exception) {
+              reply(WrapError(exception.what()));
+            }
+          });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
 }
 
 EncodableValue FilamentViewApi::WrapError(

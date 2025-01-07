@@ -456,6 +456,131 @@ void ModelSystem::vInitSystem() {
   const auto decoder = filament::gltfio::createStbProvider(engine);
   resourceLoader_->addTextureProvider("image/png", decoder);
   resourceLoader_->addTextureProvider("image/jpeg", decoder);
+
+  // ChangeTranslationByGUID
+  vRegisterMessageHandler(
+      ECSMessageType::ChangeTranslationByGUID, [this](const ECSMessage& msg) {
+        SPDLOG_TRACE("ChangeTranslationByGUID");
+
+        const auto guid =
+            msg.getData<std::string>(ECSMessageType::ChangeTranslationByGUID);
+
+        const auto position =
+            msg.getData<filament::math::float3>(ECSMessageType::floatVec3);
+
+        // find the entity in our list:
+        if (const auto ourEntity = m_mapszoAssets.find(guid);
+            ourEntity != m_mapszoAssets.end()) {
+          const auto theObject = dynamic_cast<BaseTransform*>(
+              ourEntity->second
+                  ->GetComponentByStaticTypeID(BaseTransform::StaticGetTypeID())
+                  .get());
+
+          // change stuff.
+          theObject->SetCenterPosition(position);
+
+          EntityTransforms::vApplyTransform(ourEntity->second->getAsset(),
+                                            *theObject);
+
+          // and change the collision
+          vRemoveAndReaddModelToCollisionSystem(ourEntity->first,
+                                                ourEntity->second);
+        }
+
+        SPDLOG_TRACE("ChangeTranslationByGUID Complete");
+      });
+
+  // ChangeRotationByGUID
+  vRegisterMessageHandler(
+      ECSMessageType::ChangeRotationByGUID, [this](const ECSMessage& msg) {
+        SPDLOG_TRACE("ChangeRotationByGUID");
+
+        const auto guid =
+            msg.getData<std::string>(ECSMessageType::ChangeRotationByGUID);
+
+        const auto values =
+            msg.getData<filament::math::float4>(ECSMessageType::floatVec4);
+        filament::math::quatf rotation(values);
+
+        // find the entity in our list:
+        if (const auto ourEntity = m_mapszoAssets.find(guid);
+            ourEntity != m_mapszoAssets.end()) {
+          const auto theObject = dynamic_cast<BaseTransform*>(
+              ourEntity->second
+                  ->GetComponentByStaticTypeID(BaseTransform::StaticGetTypeID())
+                  .get());
+
+          // change stuff.
+          theObject->SetRotation(rotation);
+
+          EntityTransforms::vApplyTransform(ourEntity->second->getAsset(),
+                                            *theObject);
+
+          // and change the collision
+          vRemoveAndReaddModelToCollisionSystem(ourEntity->first,
+                                                ourEntity->second);
+        }
+
+        SPDLOG_TRACE("ChangeRotationByGUID Complete");
+      });
+
+  // ChangeScaleByGUID
+  vRegisterMessageHandler(
+      ECSMessageType::ChangeScaleByGUID, [this](const ECSMessage& msg) {
+        SPDLOG_TRACE("ChangeScaleByGUID");
+
+        const auto guid =
+            msg.getData<std::string>(ECSMessageType::ChangeScaleByGUID);
+
+        const auto values =
+            msg.getData<filament::math::float3>(ECSMessageType::floatVec3);
+
+        // find the entity in our list:
+        if (const auto ourEntity = m_mapszoAssets.find(guid);
+            ourEntity != m_mapszoAssets.end()) {
+          const auto theObject = dynamic_cast<BaseTransform*>(
+              ourEntity->second
+                  ->GetComponentByStaticTypeID(BaseTransform::StaticGetTypeID())
+                  .get());
+
+          // change stuff.
+          theObject->SetScale(values);
+
+          EntityTransforms::vApplyTransform(ourEntity->second->getAsset(),
+                                            *theObject);
+
+          // and change the collision
+          vRemoveAndReaddModelToCollisionSystem(ourEntity->first,
+                                                ourEntity->second);
+        }
+
+        SPDLOG_TRACE("ChangeScaleByGUID Complete");
+      });
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+void ModelSystem::vRemoveAndReaddModelToCollisionSystem(
+    const EntityGUID& guid,
+    const std::shared_ptr<Model>& model) {
+    const auto collisionSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<CollisionSystem>(
+          CollisionSystem::StaticGetTypeID(),
+          "vRemoveAndReaddModelToCollisionSystem");
+  if (collisionSystem == nullptr) {
+    spdlog::warn(
+        "Failed to get collision system when "
+        "vRemoveAndReaddModelToCollisionSystem");
+    return;
+  }
+
+  // if we are marked for collidable, have one in the scene, remove and readd
+  // if this is a performance issue, we can do the transform move in the future
+  // instead.
+  if (model->HasComponentByStaticTypeID(Collidable::StaticGetTypeID()) &&
+      collisionSystem->bHasEntityObjectRepresentation(guid)) {
+    collisionSystem->vRemoveCollidable(model.get());
+    collisionSystem->vAddCollidable(model.get());
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

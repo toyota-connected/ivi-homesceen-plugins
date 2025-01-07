@@ -31,6 +31,7 @@ class EntityObject : public std::enable_shared_from_this<EntityObject> {
   friend class CollisionSystem;
   friend class MaterialSystem;
   friend class ModelSystem;
+  friend class ShapeSystem;
   friend class AnimationSystem;
   friend class LightSystem;
   friend class SceneTextDeserializer;

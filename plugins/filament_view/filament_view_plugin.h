@@ -122,6 +122,20 @@ class FilamentViewPlugin : public flutter::Plugin,
       double direction_z,
       double length) override;
 
+  std::optional<FlutterError> ChangeScaleByGUID(const std::string& guid,
+                                                double x,
+                                                double y,
+                                                double z) override;
+  std::optional<FlutterError> ChangeTranslationByGUID(const std::string& guid,
+                                                      double x,
+                                                      double y,
+                                                      double z) override;
+  std::optional<FlutterError> ChangeRotationByGUID(const std::string& guid,
+                                                   double x,
+                                                   double y,
+                                                   double z,
+                                                   double w) override;
+
   // Disallow copy and assign.
   FilamentViewPlugin(const FilamentViewPlugin&) = delete;
 

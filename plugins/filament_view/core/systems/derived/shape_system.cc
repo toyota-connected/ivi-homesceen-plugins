@@ -15,6 +15,9 @@
  */
 
 #include "shape_system.h"
+
+#include <core/components/derived/collidable.h>
+
 #include "filament_system.h"
 
 #include <core/entity/derived/shapes/baseshape.h>
@@ -22,10 +25,12 @@
 #include <core/entity/derived/shapes/plane.h>
 #include <core/entity/derived/shapes/sphere.h>
 #include <core/systems/ecsystems_manager.h>
+#include <core/utils/entitytransforms.h>
 #include <filament/Engine.h>
 #include <filament/Scene.h>
 #include <plugins/common/common.h>
 
+#include "collision_system.h"
 #include "entityobject_locator_system.h"
 
 namespace plugin_filament_view {
@@ -36,12 +41,12 @@ using utils::Entity;
 ////////////////////////////////////////////////////////////////////////////////////
 void ShapeSystem::vToggleAllShapesInScene(const bool bValue) const {
   if (bValue) {
-    for (const auto& shape : shapes_) {
-      shape->vAddEntityToScene();
+    for (const auto&[fst, snd] : m_mapszoShapes) {
+      snd->vAddEntityToScene();
     }
   } else {
-    for (const auto& shape : shapes_) {
-      shape->vRemoveEntityFromScene();
+    for (const auto&[fst, snd] : m_mapszoShapes) {
+      snd->vRemoveEntityFromScene();
     }
   }
 }
@@ -50,11 +55,11 @@ void ShapeSystem::vToggleAllShapesInScene(const bool bValue) const {
 void ShapeSystem::vRemoveAllShapesInScene() {
   vToggleAllShapesInScene(false);
 
-  for (const auto& shape : shapes_) {
-    shape->vUnregisterEntity();
+  for (const auto&[fst, snd] : m_mapszoShapes) {
+    snd->vUnregisterEntity();
   }
 
-  shapes_.clear();
+  m_mapszoShapes.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +96,31 @@ std::unique_ptr<BaseShape> ShapeSystem::poDeserializeShapeFromData(
       // Handle unknown shape type
       spdlog::error("Unknown shape type: {}", static_cast<int32_t>(type));
       return nullptr;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+void ShapeSystem::vRemoveAndReaddShapeToCollisionSystem(
+    const EntityGUID& guid,
+    const std::shared_ptr<BaseShape>& shape) {
+    const auto collisionSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<CollisionSystem>(
+          CollisionSystem::StaticGetTypeID(),
+          "vRemoveAndReaddShapeToCollisionSystem");
+  if (collisionSystem == nullptr) {
+    spdlog::warn(
+        "Failed to get collision system when "
+        "vRemoveAndReaddShapeToCollisionSystem");
+    return;
+  }
+
+  // if we are marked for collidable, have one in the scene, remove and readd
+  // if this is a performance issue, we can do the transform move in the future
+  // instead.
+  if (shape->HasComponentByStaticTypeID(Collidable::StaticGetTypeID()) &&
+      collisionSystem->bHasEntityObjectRepresentation(guid)) {
+    collisionSystem->vRemoveCollidable(shape.get());
+    collisionSystem->vAddCollidable(shape.get());
   }
 }
 
@@ -133,7 +163,7 @@ void ShapeSystem::addShapesToScene(
 
     std::shared_ptr<BaseShape> sharedPtr = std::move(shape);
 
-    shapes_.push_back(sharedPtr);
+    m_mapszoShapes.insert(std::pair(sharedPtr->GetGlobalGuid(), sharedPtr));
 
     sharedPtr->vRegisterEntity();
   }
@@ -153,6 +183,120 @@ void ShapeSystem::vInitSystem() {
         vToggleAllShapesInScene(value);
 
         spdlog::debug("ToggleShapesInScene Complete");
+      });
+
+  // ChangeTranslationByGUID
+  vRegisterMessageHandler(
+      ECSMessageType::ChangeTranslationByGUID, [this](const ECSMessage& msg) {
+        SPDLOG_TRACE("ChangeTranslationByGUID");
+
+        const auto guid =
+            msg.getData<std::string>(ECSMessageType::ChangeTranslationByGUID);
+
+        const auto position =
+            msg.getData<filament::math::float3>(ECSMessageType::floatVec3);
+
+        // find the entity in our list:
+        if (const auto ourEntity = m_mapszoShapes.find(guid);
+            ourEntity != m_mapszoShapes.end()) {
+          const auto baseTransform = dynamic_cast<BaseTransform*>(
+              ourEntity->second
+                  ->GetComponentByStaticTypeID(BaseTransform::StaticGetTypeID())
+                  .get());
+
+          const auto collidable = dynamic_cast<Collidable*>(
+              ourEntity->second
+                  ->GetComponentByStaticTypeID(Collidable::StaticGetTypeID())
+                  .get());
+
+          // this ideally checks for SetShouldMatchAttachedObject in the future
+          // - todo
+          baseTransform->SetCenterPosition(position);
+          collidable->SetCenterPoint(position);
+
+          EntityTransforms::vApplyTransform(ourEntity->second->poGetEntity(),
+                                            *baseTransform);
+
+          // and change the collision
+          vRemoveAndReaddShapeToCollisionSystem(ourEntity->first,
+                                                ourEntity->second);
+        }
+
+        SPDLOG_TRACE("ChangeTranslationByGUID Complete");
+      });
+
+  // ChangeRotationByGUID
+  vRegisterMessageHandler(
+      ECSMessageType::ChangeRotationByGUID, [this](const ECSMessage& msg) {
+        SPDLOG_TRACE("ChangeRotationByGUID");
+
+        const auto guid =
+            msg.getData<std::string>(ECSMessageType::ChangeRotationByGUID);
+
+        const auto values =
+            msg.getData<filament::math::float4>(ECSMessageType::floatVec4);
+        filament::math::quatf rotation(values);
+
+        // find the entity in our list:
+        if (const auto ourEntity = m_mapszoShapes.find(guid);
+            ourEntity != m_mapszoShapes.end()) {
+          const auto baseTransform = dynamic_cast<BaseTransform*>(
+              ourEntity->second
+                  ->GetComponentByStaticTypeID(BaseTransform::StaticGetTypeID())
+                  .get());
+
+          // change stuff.
+          baseTransform->SetRotation(rotation);
+
+          EntityTransforms::vApplyTransform(ourEntity->second->poGetEntity(),
+                                            *baseTransform);
+
+          // and change the collision
+          vRemoveAndReaddShapeToCollisionSystem(ourEntity->first,
+                                                ourEntity->second);
+        }
+
+        SPDLOG_TRACE("ChangeRotationByGUID Complete");
+      });
+
+  // ChangeScaleByGUID
+  vRegisterMessageHandler(
+      ECSMessageType::ChangeScaleByGUID, [this](const ECSMessage& msg) {
+        SPDLOG_TRACE("ChangeScaleByGUID");
+
+        const auto guid =
+            msg.getData<std::string>(ECSMessageType::ChangeScaleByGUID);
+
+        const auto values =
+            msg.getData<filament::math::float3>(ECSMessageType::floatVec3);
+
+        // find the entity in our list:
+        if (const auto ourEntity = m_mapszoShapes.find(guid);
+            ourEntity != m_mapszoShapes.end()) {
+          const auto baseTransform = dynamic_cast<BaseTransform*>(
+              ourEntity->second
+                  ->GetComponentByStaticTypeID(BaseTransform::StaticGetTypeID())
+                  .get());
+
+          const auto collidable = dynamic_cast<Collidable*>(
+              ourEntity->second
+                  ->GetComponentByStaticTypeID(Collidable::StaticGetTypeID())
+                  .get());
+
+          // this ideally checks for SetShouldMatchAttachedObject in the future
+          // - todo
+          collidable->SetExtentsSize(values);
+          baseTransform->SetScale(values);
+
+          EntityTransforms::vApplyTransform(ourEntity->second->poGetEntity(),
+                                            *baseTransform);
+
+          // and change the collision
+          vRemoveAndReaddShapeToCollisionSystem(ourEntity->first,
+                                                ourEntity->second);
+        }
+
+        SPDLOG_TRACE("ChangeScaleByGUID Complete");
       });
 }
 

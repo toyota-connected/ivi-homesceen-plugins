@@ -62,6 +62,8 @@ class BaseShape : public RenderableEntityObject {
   void vRemoveEntityFromScene() const;
   void vAddEntityToScene() const;
 
+  [[nodiscard]] std::shared_ptr<Entity> poGetEntity() { return m_poEntity; }
+
  protected:
   ::filament::VertexBuffer* m_poVertexBuffer;
   ::filament::IndexBuffer* m_poIndexBuffer;

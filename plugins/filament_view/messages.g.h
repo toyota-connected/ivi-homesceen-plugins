@@ -169,6 +169,22 @@ class FilamentViewApi {
       double direction_z,
       double length) = 0;
 
+  virtual std::optional<FlutterError> ChangeScaleByGUID(const std::string& guid,
+                                                        double x,
+                                                        double y,
+                                                        double z) = 0;
+  virtual std::optional<FlutterError> ChangeTranslationByGUID(
+      const std::string& guid,
+      double x,
+      double y,
+      double z) = 0;
+  virtual std::optional<FlutterError> ChangeRotationByGUID(
+      const std::string& guid,
+      double x,
+      double y,
+      double z,
+      double w) = 0;
+
   // The codec used by FilamentViewApi.
   static const flutter::StandardMessageCodec& GetCodec();
   // Sets up an instance of `FilamentViewApi` to handle messages through the
