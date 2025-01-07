@@ -74,7 +74,6 @@ class BaseShape : public RenderableEntityObject {
   // using all the internal variables.
   void vBuildRenderable(::filament::Engine* engine_);
 
-  int id{};
   ShapeType type_{};
 
   // Components - saved off here for faster
