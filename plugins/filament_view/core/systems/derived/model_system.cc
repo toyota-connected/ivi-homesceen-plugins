@@ -562,7 +562,7 @@ void ModelSystem::vInitSystem() {
 void ModelSystem::vRemoveAndReaddModelToCollisionSystem(
     const EntityGUID& guid,
     const std::shared_ptr<Model>& model) {
-    const auto collisionSystem =
+  const auto collisionSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<CollisionSystem>(
           CollisionSystem::StaticGetTypeID(),
           "vRemoveAndReaddModelToCollisionSystem");

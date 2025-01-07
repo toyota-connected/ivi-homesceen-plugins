@@ -895,10 +895,10 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
   }
   {
     BasicMessageChannel channel(binary_messenger,
-                                  "dev.flutter.pigeon.my_fox_example."
-                                  "FilamentViewApi.changeTranslationByGUID" +
-                                      prepended_suffix,
-                                  &GetCodec());
+                                "dev.flutter.pigeon.my_fox_example."
+                                "FilamentViewApi.changeTranslationByGUID" +
+                                    prepended_suffix,
+                                &GetCodec());
     if (api != nullptr) {
       channel.SetMessageHandler(
           [api](const EncodableValue& message,
@@ -948,10 +948,10 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
   }
   {
     BasicMessageChannel channel(binary_messenger,
-                                  "dev.flutter.pigeon.my_fox_example."
-                                  "FilamentViewApi.changeRotationByGUID" +
-                                      prepended_suffix,
-                                  &GetCodec());
+                                "dev.flutter.pigeon.my_fox_example."
+                                "FilamentViewApi.changeRotationByGUID" +
+                                    prepended_suffix,
+                                &GetCodec());
     if (api != nullptr) {
       channel.SetMessageHandler(
           [api](const EncodableValue& message,
@@ -988,8 +988,9 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
                 return;
               }
               const auto& w_arg = std::get<double>(encodable_w_arg);
-              const std::optional<FlutterError> output = api->ChangeRotationByGUID(
-                  guid_arg, x_arg, y_arg, z_arg, w_arg);
+              const std::optional<FlutterError> output =
+                  api->ChangeRotationByGUID(guid_arg, x_arg, y_arg, z_arg,
+                                            w_arg);
               if (output.has_value()) {
                 reply(WrapError(output.value()));
                 return;

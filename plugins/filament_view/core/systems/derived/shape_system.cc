@@ -41,11 +41,11 @@ using utils::Entity;
 ////////////////////////////////////////////////////////////////////////////////////
 void ShapeSystem::vToggleAllShapesInScene(const bool bValue) const {
   if (bValue) {
-    for (const auto&[fst, snd] : m_mapszoShapes) {
+    for (const auto& [fst, snd] : m_mapszoShapes) {
       snd->vAddEntityToScene();
     }
   } else {
-    for (const auto&[fst, snd] : m_mapszoShapes) {
+    for (const auto& [fst, snd] : m_mapszoShapes) {
       snd->vRemoveEntityFromScene();
     }
   }
@@ -55,7 +55,7 @@ void ShapeSystem::vToggleAllShapesInScene(const bool bValue) const {
 void ShapeSystem::vRemoveAllShapesInScene() {
   vToggleAllShapesInScene(false);
 
-  for (const auto&[fst, snd] : m_mapszoShapes) {
+  for (const auto& [fst, snd] : m_mapszoShapes) {
     snd->vUnregisterEntity();
   }
 
@@ -103,7 +103,7 @@ std::unique_ptr<BaseShape> ShapeSystem::poDeserializeShapeFromData(
 void ShapeSystem::vRemoveAndReaddShapeToCollisionSystem(
     const EntityGUID& guid,
     const std::shared_ptr<BaseShape>& shape) {
-    const auto collisionSystem =
+  const auto collisionSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<CollisionSystem>(
           CollisionSystem::StaticGetTypeID(),
           "vRemoveAndReaddShapeToCollisionSystem");

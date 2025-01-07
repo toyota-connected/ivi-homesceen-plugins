@@ -567,8 +567,8 @@ std::optional<FlutterError> FilamentViewPlugin::ChangeScaleByGUID(
     const double x,
     const double y,
     const double z) {
-  const filament::math::float3 values(static_cast<float>(x), static_cast<float>(y),
-                                      static_cast<float>(z));
+  const filament::math::float3 values(
+      static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
 
   ECSMessage changeRequest;
   changeRequest.addData(ECSMessageType::ChangeScaleByGUID, guid);
@@ -584,8 +584,8 @@ std::optional<FlutterError> FilamentViewPlugin::ChangeTranslationByGUID(
     const double x,
     const double y,
     const double z) {
-  const filament::math::float3 values(static_cast<float>(x), static_cast<float>(y),
-                                      static_cast<float>(z));
+  const filament::math::float3 values(
+      static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
 
   ECSMessage changeRequest;
   changeRequest.addData(ECSMessageType::ChangeTranslationByGUID, guid);
@@ -602,8 +602,9 @@ std::optional<FlutterError> FilamentViewPlugin::ChangeRotationByGUID(
     const double y,
     const double z,
     const double w) {
-  const filament::math::float4 values(static_cast<float>(x), static_cast<float>(y),
-                                      static_cast<float>(z), static_cast<float>(w));
+  const filament::math::float4 values(
+      static_cast<float>(x), static_cast<float>(y), static_cast<float>(z),
+      static_cast<float>(w));
 
   ECSMessage changeRequest;
   changeRequest.addData(ECSMessageType::ChangeRotationByGUID, guid);

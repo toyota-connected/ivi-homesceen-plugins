@@ -108,7 +108,7 @@ class ModelSystem : public ECSystem {
 
   static void vRemoveAndReaddModelToCollisionSystem(
       const EntityGUID& guid,
-      const std::shared_ptr<Model>& model) ;
+      const std::shared_ptr<Model>& model);
 
   using PromisePtr = std::shared_ptr<std::promise<Resource<std::string_view>>>;
   void handleFile(
