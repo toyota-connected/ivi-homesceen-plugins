@@ -266,8 +266,8 @@ void BaseShape::DebugPrint() const {
 ////////////////////////////////////////////////////////////////////////////
 void BaseShape::DebugPrint(const char* tag) const {
   spdlog::debug("++++++++ (Shape) ++++++++");
-  spdlog::debug("Tag {} Type {} Wireframe {}", tag,
-                static_cast<int>(type_), m_bIsWireframe);
+  spdlog::debug("Tag {} Type {} Wireframe {}", tag, static_cast<int>(type_),
+                m_bIsWireframe);
   spdlog::debug("Normal: x={}, y={}, z={}", m_f3Normal.x, m_f3Normal.y,
                 m_f3Normal.z);
 
