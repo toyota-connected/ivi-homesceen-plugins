@@ -561,6 +561,59 @@ std::optional<FlutterError> FilamentViewPlugin::RequestCollisionCheckFromRay(
   return std::nullopt;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+std::optional<FlutterError> FilamentViewPlugin::ChangeScaleByGUID(
+    const std::string& guid,
+    const double x,
+    const double y,
+    const double z) {
+  const filament::math::float3 values(
+      static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+
+  ECSMessage changeRequest;
+  changeRequest.addData(ECSMessageType::ChangeScaleByGUID, guid);
+  changeRequest.addData(ECSMessageType::floatVec3, values);
+  ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
+
+  return std::nullopt;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+std::optional<FlutterError> FilamentViewPlugin::ChangeTranslationByGUID(
+    const std::string& guid,
+    const double x,
+    const double y,
+    const double z) {
+  const filament::math::float3 values(
+      static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+
+  ECSMessage changeRequest;
+  changeRequest.addData(ECSMessageType::ChangeTranslationByGUID, guid);
+  changeRequest.addData(ECSMessageType::floatVec3, values);
+  ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
+
+  return std::nullopt;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+std::optional<FlutterError> FilamentViewPlugin::ChangeRotationByGUID(
+    const std::string& guid,
+    const double x,
+    const double y,
+    const double z,
+    const double w) {
+  const filament::math::float4 values(
+      static_cast<float>(x), static_cast<float>(y), static_cast<float>(z),
+      static_cast<float>(w));
+
+  ECSMessage changeRequest;
+  changeRequest.addData(ECSMessageType::ChangeRotationByGUID, guid);
+  changeRequest.addData(ECSMessageType::floatVec4, values);
+  ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
+
+  return std::nullopt;
+}
+
 // TODO this function will need to change to say 'which' view is being changed.
 void FilamentViewPlugin::on_resize(const double width,
                                    const double height,

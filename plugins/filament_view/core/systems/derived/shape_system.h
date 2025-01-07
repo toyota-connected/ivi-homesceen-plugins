@@ -63,6 +63,11 @@ class ShapeSystem : public ECSystem {
   void DebugPrint() override;
 
  private:
-  std::list<std::shared_ptr<shapes::BaseShape>> shapes_;
+  static void vRemoveAndReaddShapeToCollisionSystem(
+      const EntityGUID& guid,
+      const std::shared_ptr<shapes::BaseShape>& shape);
+
+  std::map<EntityGUID, std::shared_ptr<shapes::BaseShape>>
+      m_mapszoShapes;  // NOLINT
 };
 }  // namespace plugin_filament_view

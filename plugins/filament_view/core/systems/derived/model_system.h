@@ -106,6 +106,10 @@ class ModelSystem : public ECSystem {
 
   void populateSceneWithAsyncLoadedAssets(const Model* model);
 
+  static void vRemoveAndReaddModelToCollisionSystem(
+      const EntityGUID& guid,
+      const std::shared_ptr<Model>& model);
+
   using PromisePtr = std::shared_ptr<std::promise<Resource<std::string_view>>>;
   void handleFile(
       std::shared_ptr<Model>&& oOurModel,

@@ -138,6 +138,28 @@ void EntityTransforms::vApplyTransform(const std::shared_ptr<Entity>& poEntity,
 }
 
 ////////////////////////////////////////////////////////////////////////////
+void EntityTransforms::vApplyTransform(const std::shared_ptr<Entity>& poEntity,
+                                       const BaseTransform& transform) {
+  const auto filamentSystem =
+      ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
+          FilamentSystem::StaticGetTypeID(), "EntityTransforms");
+  const auto engine = filamentSystem->getFilamentEngine();
+
+  // Create the rotation, scaling, and translation matrices
+  const auto rotationMatrix = QuaternionToMat4f(transform.GetRotation());
+  const auto scalingMatrix =
+      filament::math::mat4f::scaling(transform.GetScale());
+  const auto translationMatrix =
+      filament::math::mat4f::translation(transform.GetCenterPosition());
+
+  // Combine the transformations: translate * rotate * scale
+  const auto combinedTransform =
+      translationMatrix * rotationMatrix * scalingMatrix;
+
+  vApplyTransform(poEntity, combinedTransform, engine);
+}
+
+////////////////////////////////////////////////////////////////////////////
 void EntityTransforms::vApplyTransform(
     const std::shared_ptr<Entity>& poEntity,
     const filament::math::quatf& rotation,
