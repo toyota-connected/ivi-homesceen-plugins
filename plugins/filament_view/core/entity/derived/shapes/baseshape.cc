@@ -62,8 +62,6 @@ BaseShape::BaseShape(const flutter::EncodableMap& params)
           Resource<filament::MaterialInstance*>::Error("Unset")) {
   SPDLOG_TRACE("++{} {}", __FILE__, __FUNCTION__);
 
-  Deserialize::DecodeParameterWithDefault(kId, &id, params, 0);
-
   DeserializeNameAndGlobalGuid(params);
 
   auto oTransform = std::make_shared<BaseTransform>(params);
@@ -268,7 +266,7 @@ void BaseShape::DebugPrint() const {
 ////////////////////////////////////////////////////////////////////////////
 void BaseShape::DebugPrint(const char* tag) const {
   spdlog::debug("++++++++ (Shape) ++++++++");
-  spdlog::debug("Tag {} ID {} Type {} Wireframe {}", tag, id,
+  spdlog::debug("Tag {} Type {} Wireframe {}", tag,
                 static_cast<int>(type_), m_bIsWireframe);
   spdlog::debug("Normal: x={}, y={}, z={}", m_f3Normal.x, m_f3Normal.y,
                 m_f3Normal.z);
