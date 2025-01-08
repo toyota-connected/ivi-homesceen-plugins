@@ -355,9 +355,9 @@ void CameraManager::updateCamerasFeatures(float fElapsedTime) {
     primaryCamera_->fCurrentOrbitAngle_ += fElapsedTime * speed;
 
     filament::math::float3 eye;
-    eye.x = radius * std::cos(primaryCamera_->fCurrentOrbitAngle_);
+    eye.x = primaryCamera_->orbitHomePosition_->x + radius * std::cos(primaryCamera_->fCurrentOrbitAngle_);
     eye.y = primaryCamera_->orbitHomePosition_->y;
-    eye.z = radius * std::sin(primaryCamera_->fCurrentOrbitAngle_);
+    eye.z = primaryCamera_->orbitHomePosition_->z + radius * std::sin(primaryCamera_->fCurrentOrbitAngle_);
 
     // Center of the rotation (object position)
     filament::math::float3 center = *primaryCamera_->targetPosition_;
@@ -397,9 +397,9 @@ void CameraManager::updateCamerasFeatures(float fElapsedTime) {
                    static_cast<float>(primaryCamera_->zoom_maxCap_));
 
     filament::math::float3 eye;
-    eye.x = radius * std::cos(primaryCamera_->fCurrentOrbitAngle_);
+    eye.x = primaryCamera_->flightStartPosition_->x + radius * std::cos(primaryCamera_->fCurrentOrbitAngle_);
     eye.y = primaryCamera_->flightStartPosition_->y;
-    eye.z = radius * std::sin(primaryCamera_->fCurrentOrbitAngle_);
+    eye.z = primaryCamera_->flightStartPosition_->z + radius * std::sin(primaryCamera_->fCurrentOrbitAngle_);
 
     filament::math::float3 center = *primaryCamera_->targetPosition_;
     filament::math::float3 up = {0.0f, 1.0f, 0.0f};
