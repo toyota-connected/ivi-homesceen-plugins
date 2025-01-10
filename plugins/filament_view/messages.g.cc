@@ -268,6 +268,149 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
     }
   }
   {
+    BasicMessageChannel<> channel(
+        binary_messenger,
+        "dev.flutter.pigeon.my_fox_example.FilamentViewApi."
+        "changeCameraOrbitHomePosition" +
+            prepended_suffix,
+        &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler(
+          [api](const EncodableValue& message,
+                const flutter::MessageReply<EncodableValue>& reply) {
+            try {
+              const auto& args = std::get<EncodableList>(message);
+              const auto& encodable_x_arg = args.at(0);
+              if (encodable_x_arg.IsNull()) {
+                reply(WrapError("x_arg unexpectedly null."));
+                return;
+              }
+              const auto& x_arg = std::get<double>(encodable_x_arg);
+              const auto& encodable_y_arg = args.at(1);
+              if (encodable_y_arg.IsNull()) {
+                reply(WrapError("y_arg unexpectedly null."));
+                return;
+              }
+              const auto& y_arg = std::get<double>(encodable_y_arg);
+              const auto& encodable_z_arg = args.at(2);
+              if (encodable_z_arg.IsNull()) {
+                reply(WrapError("z_arg unexpectedly null."));
+                return;
+              }
+              const auto& z_arg = std::get<double>(encodable_z_arg);
+              std::optional<FlutterError> output =
+                  api->ChangeCameraOrbitHomePosition(x_arg, y_arg, z_arg);
+              if (output.has_value()) {
+                reply(WrapError(output.value()));
+                return;
+              }
+              EncodableList wrapped;
+              wrapped.push_back(EncodableValue());
+              reply(EncodableValue(std::move(wrapped)));
+            } catch (const std::exception& exception) {
+              reply(WrapError(exception.what()));
+            }
+          });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
+    BasicMessageChannel<> channel(binary_messenger,
+                                  "dev.flutter.pigeon.my_fox_example."
+                                  "FilamentViewApi.changeCameraTargetPosition" +
+                                      prepended_suffix,
+                                  &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler(
+          [api](const EncodableValue& message,
+                const flutter::MessageReply<EncodableValue>& reply) {
+            try {
+              const auto& args = std::get<EncodableList>(message);
+              const auto& encodable_x_arg = args.at(0);
+              if (encodable_x_arg.IsNull()) {
+                reply(WrapError("x_arg unexpectedly null."));
+                return;
+              }
+              const auto& x_arg = std::get<double>(encodable_x_arg);
+              const auto& encodable_y_arg = args.at(1);
+              if (encodable_y_arg.IsNull()) {
+                reply(WrapError("y_arg unexpectedly null."));
+                return;
+              }
+              const auto& y_arg = std::get<double>(encodable_y_arg);
+              const auto& encodable_z_arg = args.at(2);
+              if (encodable_z_arg.IsNull()) {
+                reply(WrapError("z_arg unexpectedly null."));
+                return;
+              }
+              const auto& z_arg = std::get<double>(encodable_z_arg);
+              std::optional<FlutterError> output =
+                  api->ChangeCameraTargetPosition(x_arg, y_arg, z_arg);
+              if (output.has_value()) {
+                reply(WrapError(output.value()));
+                return;
+              }
+              EncodableList wrapped;
+              wrapped.push_back(EncodableValue());
+              reply(EncodableValue(std::move(wrapped)));
+            } catch (const std::exception& exception) {
+              reply(WrapError(exception.what()));
+            }
+          });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
+    BasicMessageChannel<> channel(
+        binary_messenger,
+        "dev.flutter.pigeon.my_fox_example.FilamentViewApi."
+        "changeCameraFlightStartPosition" +
+            prepended_suffix,
+        &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler(
+          [api](const EncodableValue& message,
+                const flutter::MessageReply<EncodableValue>& reply) {
+            try {
+              const auto& args = std::get<EncodableList>(message);
+              const auto& encodable_x_arg = args.at(0);
+              if (encodable_x_arg.IsNull()) {
+                reply(WrapError("x_arg unexpectedly null."));
+                return;
+              }
+              const auto& x_arg = std::get<double>(encodable_x_arg);
+              const auto& encodable_y_arg = args.at(1);
+              if (encodable_y_arg.IsNull()) {
+                reply(WrapError("y_arg unexpectedly null."));
+                return;
+              }
+              const auto& y_arg = std::get<double>(encodable_y_arg);
+              const auto& encodable_z_arg = args.at(2);
+              if (encodable_z_arg.IsNull()) {
+                reply(WrapError("z_arg unexpectedly null."));
+                return;
+              }
+              const auto& z_arg = std::get<double>(encodable_z_arg);
+              std::optional<FlutterError> output =
+                  api->ChangeCameraFlightStartPosition(x_arg, y_arg, z_arg);
+              if (output.has_value()) {
+                reply(WrapError(output.value()));
+                return;
+              }
+              EncodableList wrapped;
+              wrapped.push_back(EncodableValue());
+              reply(EncodableValue(std::move(wrapped)));
+            } catch (const std::exception& exception) {
+              reply(WrapError(exception.what()));
+            }
+          });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
     BasicMessageChannel channel(
         binary_messenger,
         "dev.flutter.pigeon.my_fox_example.FilamentViewApi."

@@ -113,6 +113,7 @@ class Camera {
       const std::string& fov);
 
   friend class CameraManager;
+  friend class ViewTargetSystem;
 
   void vSetCurrentCameraOrbitAngle(float fValue) {
     fCurrentOrbitAngle_ = fValue;

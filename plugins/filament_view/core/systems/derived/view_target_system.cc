@@ -55,6 +55,88 @@ void ViewTargetSystem::vInitSystem() {
       });
 
   vRegisterMessageHandler(
+      ECSMessageType::ChangeCameraOrbitHomePosition,
+      [this](const ECSMessage& msg) {
+        spdlog::debug("ChangeCameraOrbitHomePosition");
+
+        const auto values = msg.getData<filament::math::float3>(
+            ECSMessageType::ChangeCameraOrbitHomePosition);
+
+        if (m_poCamera != nullptr) {
+          m_poCamera->orbitHomePosition_ =
+              std::make_unique<::filament::math::float3>(values);
+          ;
+
+          const auto camera =
+              m_lstViewTargets[0]->getCameraManager()->poGetPrimaryCamera();
+          camera->orbitHomePosition_ =
+              std::make_unique<::filament::math::float3>(values);
+          ;
+          camera->forceSingleFrameUpdate_ = true;
+          /*if (viewTarget->getCameraManager()->poGetPrimaryCamera() != nullptr)
+              continue;
+
+            std::unique_ptr<Camera> clonedCamera = m_poCamera->clone();
+
+            viewTarget->vSetupCameraManagerWithDeserializedCamera(
+                std::move(clonedCamera));
+
+          vSetupCameraManagerWithDeserializedCamera
+          cameraManager_->updateCamera(camera.get());*/
+        }
+
+        spdlog::debug("ChangeCameraOrbitHomePosition Complete");
+      });
+
+  vRegisterMessageHandler(
+      ECSMessageType::ChangeCameraTargetPosition,
+      [this](const ECSMessage& msg) {
+        spdlog::debug("ChangeCameraTargetPosition");
+
+        const auto values = msg.getData<filament::math::float3>(
+            ECSMessageType::ChangeCameraTargetPosition);
+
+        if (m_poCamera != nullptr) {
+          m_poCamera->targetPosition_ =
+              std::make_unique<::filament::math::float3>(values);
+          ;
+
+          const auto camera =
+              m_lstViewTargets[0]->getCameraManager()->poGetPrimaryCamera();
+          camera->targetPosition_ =
+              std::make_unique<::filament::math::float3>(values);
+          ;
+          camera->forceSingleFrameUpdate_ = true;
+        }
+
+        spdlog::debug("ChangeCameraTargetPosition Complete");
+      });
+
+  vRegisterMessageHandler(
+      ECSMessageType::ChangeCameraFlightStartPosition,
+      [this](const ECSMessage& msg) {
+        spdlog::debug("ChangeCameraFlightStartPosition");
+
+        const auto values = msg.getData<filament::math::float3>(
+            ECSMessageType::ChangeCameraFlightStartPosition);
+
+        if (m_poCamera != nullptr) {
+          m_poCamera->flightStartPosition_ =
+              std::make_unique<::filament::math::float3>(values);
+          ;
+
+          const auto camera =
+              m_lstViewTargets[0]->getCameraManager()->poGetPrimaryCamera();
+          camera->flightStartPosition_ =
+              std::make_unique<::filament::math::float3>(values);
+          ;
+          camera->forceSingleFrameUpdate_ = true;
+        }
+
+        spdlog::debug("ChangeCameraFlightStartPosition Complete");
+      });
+
+  vRegisterMessageHandler(
       ECSMessageType::SetCameraFromDeserializedLoad,
       [this](const ECSMessage& msg) {
         spdlog::debug("SetCameraFromDeserializedLoad");
