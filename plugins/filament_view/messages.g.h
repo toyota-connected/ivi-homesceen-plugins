@@ -123,6 +123,13 @@ class FilamentViewApi {
   // Change the camera mode by name.
   virtual std::optional<FlutterError> ChangeCameraMode(
       const std::string& mode) = 0;
+  virtual std::optional<FlutterError>
+  ChangeCameraOrbitHomePosition(double x, double y, double z) = 0;
+  virtual std::optional<FlutterError> ChangeCameraTargetPosition(double x,
+                                                                 double y,
+                                                                 double z) = 0;
+  virtual std::optional<FlutterError>
+  ChangeCameraFlightStartPosition(double x, double y, double z) = 0;
   // Reset inertia camera to default values.
   virtual std::optional<FlutterError> ResetInertiaCameraToDefaultValues() = 0;
   // Change view quality settings.

@@ -365,6 +365,44 @@ std::optional<FlutterError> FilamentViewPlugin::ChangeCameraMode(
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+std::optional<FlutterError> FilamentViewPlugin::ChangeCameraOrbitHomePosition(
+    double x,
+    double y,
+    double z) {
+  filament::math::float3 position(static_cast<float>(x), static_cast<float>(y),
+                                  static_cast<float>(z));
+
+  ECSMessage data;
+  data.addData(ECSMessageType::ChangeCameraOrbitHomePosition, position);
+  ECSystemManager::GetInstance()->vRouteMessage(data);
+  return std::nullopt;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+std::optional<FlutterError>
+FilamentViewPlugin::ChangeCameraTargetPosition(double x, double y, double z) {
+  filament::math::float3 position(static_cast<float>(x), static_cast<float>(y),
+                                  static_cast<float>(z));
+  ECSMessage data;
+  data.addData(ECSMessageType::ChangeCameraTargetPosition, position);
+  ECSystemManager::GetInstance()->vRouteMessage(data);
+  return std::nullopt;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+std::optional<FlutterError> FilamentViewPlugin::ChangeCameraFlightStartPosition(
+    double x,
+    double y,
+    double z) {
+  filament::math::float3 position(static_cast<float>(x), static_cast<float>(y),
+                                  static_cast<float>(z));
+  ECSMessage data;
+  data.addData(ECSMessageType::ChangeCameraFlightStartPosition, position);
+  ECSystemManager::GetInstance()->vRouteMessage(data);
+  return std::nullopt;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 std::optional<FlutterError>
 FilamentViewPlugin::ResetInertiaCameraToDefaultValues() {
   const auto viewTargetSystem =

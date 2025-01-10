@@ -81,6 +81,14 @@ class FilamentViewPlugin : public flutter::Plugin,
   // Change the camera mode by name.
   std::optional<FlutterError> ChangeCameraMode(
       const std::string& mode) override;
+  std::optional<FlutterError> ChangeCameraOrbitHomePosition(double x,
+                                                            double y,
+                                                            double z) override;
+  std::optional<FlutterError> ChangeCameraTargetPosition(double x,
+                                                         double y,
+                                                         double z) override;
+  std::optional<FlutterError>
+  ChangeCameraFlightStartPosition(double x, double y, double z) override;
   // Reset inertia camera to default values.
   std::optional<FlutterError> ResetInertiaCameraToDefaultValues() override;
   // Change view quality settings.

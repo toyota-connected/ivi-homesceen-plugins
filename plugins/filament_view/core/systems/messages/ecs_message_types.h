@@ -74,6 +74,10 @@ enum class ECSMessageType {
   ChangeScaleByGUID,
   floatVec3,
   floatVec4,
+
+  ChangeCameraOrbitHomePosition,
+  ChangeCameraTargetPosition,
+  ChangeCameraFlightStartPosition,
 };
 
 }
