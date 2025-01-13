@@ -50,25 +50,21 @@ class ModelSystem : public ECSystem {
 
   std::future<Resource<std::string_view>> loadGlbFromAsset(
       std::shared_ptr<Model> oOurModel,
-      const std::string& path,
-      bool isFallback = false);
+      const std::string& path);
 
   std::future<Resource<std::string_view>> loadGlbFromUrl(
       std::shared_ptr<Model> oOurModel,
-      std::string url,
-      bool isFallback = false);
+      std::string url);
 
   static std::future<Resource<std::string_view>> loadGltfFromAsset(
       const std::shared_ptr<Model>& oOurModel,
       const std::string& path,
       const std::string& pre_path,
-      const std::string& post_path,
-      bool isFallback = false);
+      const std::string& post_path);
 
   static std::future<Resource<std::string_view>> loadGltfFromUrl(
       const std::shared_ptr<Model>& oOurModel,
-      const std::string& url,
-      bool isFallback = false);
+      const std::string& url);
 
   void vInitSystem() override;
   void vUpdate(float fElapsedTime) override;
@@ -115,7 +111,6 @@ class ModelSystem : public ECSystem {
       std::shared_ptr<Model>&& oOurModel,
       const std::vector<uint8_t>& buffer,
       const std::string& fileSource,
-      bool isFallback,
       const PromisePtr&
           promise);  // NOLINT(readability-avoid-const-params-in-decls)
 };

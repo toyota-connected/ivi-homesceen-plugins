@@ -325,8 +325,7 @@ void ModelSystem::updateAsyncAssetLoading() {
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>> ModelSystem::loadGlbFromAsset(
     std::shared_ptr<Model> oOurModel,
-    const std::string& path,
-    bool isFallback) {
+    const std::string& path) {
   const auto promise(
       std::make_shared<std::promise<Resource<std::string_view>>>());
   auto promise_future(promise->get_future());
@@ -337,18 +336,18 @@ std::future<Resource<std::string_view>> ModelSystem::loadGlbFromAsset(
     const auto assetPath =
         ECSystemManager::GetInstance()->getConfigValue<std::string>(kAssetPath);
 
-    post(strand_, [&, model = std::move(oOurModel), promise, path, isFallback,
-                   assetPath]() mutable {
-      try {
-        const auto buffer = readBinaryFile(path, assetPath);
-        handleFile(std::move(model), buffer, path, isFallback, promise);
-      } catch (const std::exception& e) {
-        std::cerr << "Lambda Exception " << e.what() << '\n';
-        promise->set_exception(std::make_exception_ptr(e));
-      } catch (...) {
-        std::cerr << "Unknown Exception in lambda" << '\n';
-      }
-    });
+    post(strand_,
+         [&, model = std::move(oOurModel), promise, path, assetPath]() mutable {
+           try {
+             const auto buffer = readBinaryFile(path, assetPath);
+             handleFile(std::move(model), buffer, path, promise);
+           } catch (const std::exception& e) {
+             std::cerr << "Lambda Exception " << e.what() << '\n';
+             promise->set_exception(std::make_exception_ptr(e));
+           } catch (...) {
+             std::cerr << "Unknown Exception in lambda" << '\n';
+           }
+         });
   } catch (const std::exception& e) {
     std::cerr << "Total Exception: " << e.what() << '\n';
     promise->set_exception(std::make_exception_ptr(e));
@@ -359,21 +358,20 @@ std::future<Resource<std::string_view>> ModelSystem::loadGlbFromAsset(
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>> ModelSystem::loadGlbFromUrl(
     std::shared_ptr<Model> oOurModel,
-    std::string url,
-    bool isFallback) {
+    std::string url) {
   const auto promise(
       std::make_shared<std::promise<Resource<std::string_view>>>());
   auto promise_future(promise->get_future());
   post(*ECSystemManager::GetInstance()->GetStrand(),
-       [&, model = std::move(oOurModel), promise, url = std::move(url),
-        isFallback]() mutable {
+       [&, model = std::move(oOurModel), promise,
+        url = std::move(url)]() mutable {
          plugin_common_curl::CurlClient client;
          const auto buffer = client.RetrieveContentAsVector();
          if (client.GetCode() != CURLE_OK) {
            promise->set_value(Resource<std::string_view>::Error(
                "Couldn't load Glb from " + url));
          }
-         handleFile(std::move(model), buffer, url, isFallback, promise);
+         handleFile(std::move(model), buffer, url, promise);
        });
   return promise_future;
 }
@@ -382,7 +380,6 @@ std::future<Resource<std::string_view>> ModelSystem::loadGlbFromUrl(
 void ModelSystem::handleFile(std::shared_ptr<Model>&& oOurModel,
                              const std::vector<uint8_t>& buffer,
                              const std::string& fileSource,
-                             bool /*isFallback*/,
                              const PromisePtr& promise) {
   if (!buffer.empty()) {
     loadModelGlb(std::move(oOurModel), buffer, fileSource);
@@ -399,8 +396,7 @@ std::future<Resource<std::string_view>> ModelSystem::loadGltfFromAsset(
     const std::shared_ptr<Model>& /*oOurModel*/,
     const std::string& /* path */,
     const std::string& /* pre_path */,
-    const std::string& /* post_path */,
-    bool /* isFallback */) {
+    const std::string& /* post_path */) {
   const auto promise(
       std::make_shared<std::promise<Resource<std::string_view>>>());
   auto future(promise->get_future());
@@ -411,8 +407,7 @@ std::future<Resource<std::string_view>> ModelSystem::loadGltfFromAsset(
 ////////////////////////////////////////////////////////////////////////////////////
 std::future<Resource<std::string_view>> ModelSystem::loadGltfFromUrl(
     const std::shared_ptr<Model>& /*oOurModel*/,
-    const std::string& /* url */,
-    bool /* isFallback */) {
+    const std::string& /* url */) {
   const auto promise(
       std::make_shared<std::promise<Resource<std::string_view>>>());
   auto future(promise->get_future());

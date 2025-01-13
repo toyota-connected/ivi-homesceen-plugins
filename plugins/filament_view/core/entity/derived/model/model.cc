@@ -32,12 +32,10 @@ namespace plugin_filament_view {
 ////////////////////////////////////////////////////////////////////////////
 Model::Model(std::string assetPath,
              std::string url,
-             Model* fallback,
              const flutter::EncodableMap& params)
     : RenderableEntityObject(params),
       assetPath_(std::move(assetPath)),
       url_(std::move(url)),
-      fallback_(fallback),
       m_poAsset(nullptr) {
   DeserializeNameAndGlobalGuid(params);
 }
@@ -74,18 +72,16 @@ void Model::vInitComponents(
 ////////////////////////////////////////////////////////////////////////////
 GlbModel::GlbModel(std::string assetPath,
                    std::string url,
-                   Model* fallback,
                    const flutter::EncodableMap& params)
-    : Model(std::move(assetPath), std::move(url), fallback, params) {}
+    : Model(std::move(assetPath), std::move(url), params) {}
 
 ////////////////////////////////////////////////////////////////////////////
 GltfModel::GltfModel(std::string assetPath,
                      std::string url,
                      std::string pathPrefix,
                      std::string pathPostfix,
-                     Model* fallback,
                      const flutter::EncodableMap& params)
-    : Model(std::move(assetPath), std::move(url), fallback, params),
+    : Model(std::move(assetPath), std::move(url), params),
       pathPrefix_(std::move(pathPrefix)),
       pathPostfix_(std::move(pathPostfix)) {}
 
@@ -95,7 +91,6 @@ std::shared_ptr<Model> Model::Deserialize(
     const flutter::EncodableMap& params) {
   SPDLOG_TRACE("++Model::Model");
   std::unique_ptr<Animation> animation;
-  std::unique_ptr<Model> fallback;
   std::optional<std::string> assetPath;
   std::optional<std::string> pathPrefix;
   std::optional<std::string> pathPostfix;
@@ -134,7 +129,7 @@ std::shared_ptr<Model> Model::Deserialize(
   if (is_glb) {
     auto toReturn = std::make_shared<GlbModel>(
         assetPath.has_value() ? std::move(assetPath.value()) : "",
-        url.has_value() ? std::move(url.value()) : "", nullptr, params);
+        url.has_value() ? std::move(url.value()) : "", params);
 
     toReturn->vInitComponents(std::move(oTransform),
                               std::move(oCommonRenderable), params);
@@ -145,8 +140,7 @@ std::shared_ptr<Model> Model::Deserialize(
       assetPath.has_value() ? std::move(assetPath.value()) : "",
       url.has_value() ? std::move(url.value()) : "",
       pathPrefix.has_value() ? std::move(pathPrefix.value()) : "",
-      pathPostfix.has_value() ? std::move(pathPostfix.value()) : "", nullptr,
-      params);
+      pathPostfix.has_value() ? std::move(pathPostfix.value()) : "", params);
 
   toReturn->vInitComponents(std::move(oTransform), std::move(oCommonRenderable),
                             params);

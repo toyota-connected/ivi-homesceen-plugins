@@ -67,15 +67,7 @@ void SceneTextDeserializer::vDeserializeRootLevel(
       auto deserializedModel = Model::Deserialize(
           flutterAssetsPath, std::get<flutter::EncodableMap>(snd));
       if (deserializedModel == nullptr) {
-        // load fallback
-        auto fallbackToDeserialize =
-            Deserialize::DeserializeParameter(kFallback, snd);
-        deserializedModel = Model::Deserialize(
-            flutterAssetsPath,
-            std::get<flutter::EncodableMap>(fallbackToDeserialize));
-      }
-      if (deserializedModel == nullptr) {
-        spdlog::error("Unable to load model and fallback model");
+        spdlog::error("Unable to load model");
         continue;
       }
       models_.emplace_back(std::move(deserializedModel));
@@ -93,15 +85,7 @@ void SceneTextDeserializer::vDeserializeRootLevel(
         auto deserializedModel = Model::Deserialize(
             flutterAssetsPath, std::get<flutter::EncodableMap>(iter));
         if (deserializedModel == nullptr) {
-          // load fallback
-          auto fallbackToDeserialize =
-              Deserialize::DeserializeParameter(kFallback, iter);
-          deserializedModel = Model::Deserialize(
-              flutterAssetsPath,
-              std::get<flutter::EncodableMap>(fallbackToDeserialize));
-        }
-        if (deserializedModel == nullptr) {
-          spdlog::error("Unable to load model and fallback model");
+          spdlog::error("Unable to load model");
           continue;
         }
         models_.emplace_back(std::move(deserializedModel));
@@ -180,38 +164,6 @@ void SceneTextDeserializer::vDeserializeSceneLevel(
     }
 
     auto encodableMap = std::get<flutter::EncodableMap>(snd);
-
-    // All of these need to become entities.
-
-#if 0
-    else if (key == kModels &&
-               std::holds_alternative<flutter::EncodableList>(snd)) {
-
-      auto list = std::get<flutter::EncodableList>(snd);
-      for (const auto& iter : list) {
-        if (iter.IsNull()) {
-          spdlog::warn("CreationParamName unable to cast {}", key.c_str());
-          continue;
-        }
-
-        auto deserializedModel = Model::Deserialize(
-            flutterAssetsPath, std::get<flutter::EncodableMap>(iter));
-        if (deserializedModel == nullptr) {
-          // load fallback
-          auto fallbackToDeserialize =
-              Deserialize::DeserializeParameter(kFallback, iter);
-          deserializedModel = Model::Deserialize(
-              flutterAssetsPath,
-              std::get<flutter::EncodableMap>(fallbackToDeserialize));
-        }
-        if (deserializedModel == nullptr) {
-          spdlog::error("Unable to load model and fallback model");
-          continue;
-        }
-        models_.emplace_back(std::move(deserializedModel));
-      }
-    }
-#endif
 
     SPDLOG_DEBUG("KEY {} ", key);
 
@@ -311,8 +263,7 @@ void SceneTextDeserializer::loadModel(std::shared_ptr<Model>& model) {
     if (dynamic_cast<GlbModel*>(model.get())) {
       const auto glb_model = dynamic_cast<GlbModel*>(model.get());
       if (!glb_model->szGetAssetPath().empty()) {
-        loader->loadGlbFromAsset(std::move(model), glb_model->szGetAssetPath(),
-                                 false);
+        loader->loadGlbFromAsset(std::move(model), glb_model->szGetAssetPath());
       }
 
       if (!glb_model->szGetURLPath().empty()) {

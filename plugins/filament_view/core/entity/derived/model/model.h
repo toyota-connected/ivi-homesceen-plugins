@@ -30,7 +30,6 @@ class Model : public RenderableEntityObject {
  public:
   Model(std::string assetPath,
         std::string url,
-        Model* fallback,
         const flutter::EncodableMap& params);
 
   ~Model() override = default;
@@ -38,8 +37,6 @@ class Model : public RenderableEntityObject {
   static std::shared_ptr<Model> Deserialize(
       const std::string& flutterAssetsPath,
       const flutter::EncodableMap& params);
-
-  [[nodiscard]] Model* GetFallback() const { return fallback_; }
 
   // Disallow copy and assign.
   Model(const Model&) = delete;
@@ -70,7 +67,6 @@ class Model : public RenderableEntityObject {
  protected:
   std::string assetPath_;
   std::string url_;
-  Model* fallback_;
 
   filament::gltfio::FilamentAsset* m_poAsset;
 
@@ -100,7 +96,6 @@ class GlbModel final : public Model {
  public:
   GlbModel(std::string assetPath,
            std::string url,
-           Model* fallback,
            const flutter::EncodableMap& params);
 
   ~GlbModel() override = default;
@@ -112,7 +107,6 @@ class GltfModel final : public Model {
             std::string url,
             std::string pathPrefix,
             std::string pathPostfix,
-            Model* fallback,
             const flutter::EncodableMap& params);
 
   ~GltfModel() override = default;
