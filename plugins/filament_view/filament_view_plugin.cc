@@ -366,11 +366,11 @@ std::optional<FlutterError> FilamentViewPlugin::ChangeCameraMode(
 
 //////////////////////////////////////////////////////////////////////////////////////////
 std::optional<FlutterError> FilamentViewPlugin::ChangeCameraOrbitHomePosition(
-    double x,
-    double y,
-    double z) {
-  filament::math::float3 position(static_cast<float>(x), static_cast<float>(y),
-                                  static_cast<float>(z));
+    const double x,
+    const double y,
+    const double z) {
+  const filament::math::float3 position(
+      static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
 
   ECSMessage data;
   data.addData(ECSMessageType::ChangeCameraOrbitHomePosition, position);
@@ -379,10 +379,12 @@ std::optional<FlutterError> FilamentViewPlugin::ChangeCameraOrbitHomePosition(
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-std::optional<FlutterError>
-FilamentViewPlugin::ChangeCameraTargetPosition(double x, double y, double z) {
-  filament::math::float3 position(static_cast<float>(x), static_cast<float>(y),
-                                  static_cast<float>(z));
+std::optional<FlutterError> FilamentViewPlugin::ChangeCameraTargetPosition(
+    const double x,
+    const double y,
+    const double z) {
+  const filament::math::float3 position(
+      static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
   ECSMessage data;
   data.addData(ECSMessageType::ChangeCameraTargetPosition, position);
   ECSystemManager::GetInstance()->vRouteMessage(data);
@@ -391,11 +393,11 @@ FilamentViewPlugin::ChangeCameraTargetPosition(double x, double y, double z) {
 
 //////////////////////////////////////////////////////////////////////////////////////////
 std::optional<FlutterError> FilamentViewPlugin::ChangeCameraFlightStartPosition(
-    double x,
-    double y,
-    double z) {
-  filament::math::float3 position(static_cast<float>(x), static_cast<float>(y),
-                                  static_cast<float>(z));
+    const double x,
+    const double y,
+    const double z) {
+  const filament::math::float3 position(
+      static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
   ECSMessage data;
   data.addData(ECSMessageType::ChangeCameraFlightStartPosition, position);
   ECSystemManager::GetInstance()->vRouteMessage(data);
@@ -653,43 +655,47 @@ std::optional<FlutterError> FilamentViewPlugin::ChangeRotationByGUID(
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-std::optional<FlutterError> FilamentViewPlugin::TurnOffVisualForEntity(const std::string& guid) {
-    ECSMessage changeRequest;
-    changeRequest.addData(ECSMessageType::ToggleVisualForEntity, guid);
-    changeRequest.addData(ECSMessageType::BoolValue, false);
-    ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
+std::optional<FlutterError> FilamentViewPlugin::TurnOffVisualForEntity(
+    const std::string& guid) {
+  ECSMessage changeRequest;
+  changeRequest.addData(ECSMessageType::ToggleVisualForEntity, guid);
+  changeRequest.addData(ECSMessageType::BoolValue, false);
+  ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
 
-    return std::nullopt;
+  return std::nullopt;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-std::optional<FlutterError> FilamentViewPlugin::TurnOnVisualForEntity(const std::string& guid){
-    ECSMessage changeRequest;
-    changeRequest.addData(ECSMessageType::ToggleVisualForEntity, guid);
-    changeRequest.addData(ECSMessageType::BoolValue, true);
-    ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
+std::optional<FlutterError> FilamentViewPlugin::TurnOnVisualForEntity(
+    const std::string& guid) {
+  ECSMessage changeRequest;
+  changeRequest.addData(ECSMessageType::ToggleVisualForEntity, guid);
+  changeRequest.addData(ECSMessageType::BoolValue, true);
+  ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
 
-    return std::nullopt;
+  return std::nullopt;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-std::optional<FlutterError> FilamentViewPlugin::TurnOffCollisionChecksForEntity(const std::string& guid){
-    ECSMessage changeRequest;
-    changeRequest.addData(ECSMessageType::ToggleCollisionForEntity, guid);
-    changeRequest.addData(ECSMessageType::BoolValue, false);
-    ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
+std::optional<FlutterError> FilamentViewPlugin::TurnOffCollisionChecksForEntity(
+    const std::string& guid) {
+  ECSMessage changeRequest;
+  changeRequest.addData(ECSMessageType::ToggleCollisionForEntity, guid);
+  changeRequest.addData(ECSMessageType::BoolValue, false);
+  ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
 
-    return std::nullopt;
+  return std::nullopt;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-std::optional<FlutterError> FilamentViewPlugin::TurnOnCollisionChecksForEntity(const std::string& guid) {
-    ECSMessage changeRequest;
-    changeRequest.addData(ECSMessageType::ToggleCollisionForEntity, guid);
-    changeRequest.addData(ECSMessageType::BoolValue, true);
-    ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
+std::optional<FlutterError> FilamentViewPlugin::TurnOnCollisionChecksForEntity(
+    const std::string& guid) {
+  ECSMessage changeRequest;
+  changeRequest.addData(ECSMessageType::ToggleCollisionForEntity, guid);
+  changeRequest.addData(ECSMessageType::BoolValue, true);
+  ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
 
-    return std::nullopt;
+  return std::nullopt;
 }
 
 // TODO this function will need to change to say 'which' view is being changed.

@@ -85,8 +85,7 @@ void CollisionSystem::vAddCollidable(EntityObject* collidable) {
     const auto ourAABB = ourModelObject->getAsset()->getBoundingBox();
 
     newShape = new shapes::Cube();
-    newShape->m_bDoubleSided =
- false;
+    newShape->m_bDoubleSided = false;
     newShape->type_ = ShapeType::Cube;
 
     ourModelObject->vShallowCopyComponentToOther(
@@ -323,27 +322,24 @@ void CollisionSystem::vInitSystem() {
         spdlog::debug("ToggleDebugCollidableViewsInScene Complete");
       });
 
-    vRegisterMessageHandler(
+  vRegisterMessageHandler(
       ECSMessageType::ToggleCollisionForEntity, [this](const ECSMessage& msg) {
-        const auto stringGUID = msg.getData<std::string>(ECSMessageType::ToggleCollisionForEntity);
-        const auto value =
-            msg.getData<bool>(ECSMessageType::BoolValue);
+        const auto stringGUID =
+            msg.getData<std::string>(ECSMessageType::ToggleCollisionForEntity);
+        const auto value = msg.getData<bool>(ECSMessageType::BoolValue);
 
-          for (auto& entity : collidables_) {
-              if(entity->GetGlobalGuid() == stringGUID) {
+        for (const auto& entity : collidables_) {
+          if (entity->GetGlobalGuid() == stringGUID) {
+            const auto collidable = std::dynamic_pointer_cast<Collidable>(
+                entity->GetComponentByStaticTypeID(
+                    Collidable::StaticGetTypeID()));
 
-                  auto collidable = std::dynamic_pointer_cast<Collidable>(
-        entity->GetComponentByStaticTypeID(Collidable::StaticGetTypeID()));
+            collidable->SetEnabled(value);
 
-                  collidable->SetEnabled(value);
-
-                  break;
-              }
+            break;
           }
-
+        }
       });
-
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

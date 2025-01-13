@@ -116,7 +116,8 @@ class Collidable : public Component {
   ShapeType m_eShapeType;
   filament::math::float3 m_f3ExtentsSize;
 
-  // You can turn collision objects on / off during runtime without removing / re-adding from the scene.
+  // You can turn collision objects on / off during runtime without removing /
+  // re-adding from the scene.
   bool m_bIsEnabled = true;
 };
 

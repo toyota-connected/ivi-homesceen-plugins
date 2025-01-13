@@ -268,7 +268,7 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
     }
   }
   {
-    BasicMessageChannel<> channel(
+    BasicMessageChannel channel(
         binary_messenger,
         "dev.flutter.pigeon.my_fox_example.FilamentViewApi."
         "changeCameraOrbitHomePosition" +
@@ -298,14 +298,14 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
                 return;
               }
               const auto& z_arg = std::get<double>(encodable_z_arg);
-              std::optional<FlutterError> output =
+              const std::optional<FlutterError> output =
                   api->ChangeCameraOrbitHomePosition(x_arg, y_arg, z_arg);
               if (output.has_value()) {
                 reply(WrapError(output.value()));
                 return;
               }
               EncodableList wrapped;
-              wrapped.push_back(EncodableValue());
+              wrapped.emplace_back();
               reply(EncodableValue(std::move(wrapped)));
             } catch (const std::exception& exception) {
               reply(WrapError(exception.what()));
@@ -316,11 +316,11 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
     }
   }
   {
-    BasicMessageChannel<> channel(binary_messenger,
-                                  "dev.flutter.pigeon.my_fox_example."
-                                  "FilamentViewApi.changeCameraTargetPosition" +
-                                      prepended_suffix,
-                                  &GetCodec());
+    BasicMessageChannel channel(binary_messenger,
+                                "dev.flutter.pigeon.my_fox_example."
+                                "FilamentViewApi.changeCameraTargetPosition" +
+                                    prepended_suffix,
+                                &GetCodec());
     if (api != nullptr) {
       channel.SetMessageHandler(
           [api](const EncodableValue& message,
@@ -345,14 +345,14 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
                 return;
               }
               const auto& z_arg = std::get<double>(encodable_z_arg);
-              std::optional<FlutterError> output =
+              const std::optional<FlutterError> output =
                   api->ChangeCameraTargetPosition(x_arg, y_arg, z_arg);
               if (output.has_value()) {
                 reply(WrapError(output.value()));
                 return;
               }
               EncodableList wrapped;
-              wrapped.push_back(EncodableValue());
+              wrapped.emplace_back();
               reply(EncodableValue(std::move(wrapped)));
             } catch (const std::exception& exception) {
               reply(WrapError(exception.what()));
@@ -363,7 +363,7 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
     }
   }
   {
-    BasicMessageChannel<> channel(
+    BasicMessageChannel channel(
         binary_messenger,
         "dev.flutter.pigeon.my_fox_example.FilamentViewApi."
         "changeCameraFlightStartPosition" +
@@ -393,14 +393,14 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
                 return;
               }
               const auto& z_arg = std::get<double>(encodable_z_arg);
-              std::optional<FlutterError> output =
+              const std::optional<FlutterError> output =
                   api->ChangeCameraFlightStartPosition(x_arg, y_arg, z_arg);
               if (output.has_value()) {
                 reply(WrapError(output.value()));
                 return;
               }
               EncodableList wrapped;
-              wrapped.push_back(EncodableValue());
+              wrapped.emplace_back();
               reply(EncodableValue(std::move(wrapped)));
             } catch (const std::exception& exception) {
               reply(WrapError(exception.what()));
@@ -1150,113 +1150,143 @@ void FilamentViewApi::SetUp(flutter::BinaryMessenger* binary_messenger,
     }
   }
   {
-    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.my_fox_example.FilamentViewApi.turnOffVisualForEntity" + prepended_suffix, &GetCodec());
+    BasicMessageChannel channel(binary_messenger,
+                                "dev.flutter.pigeon.my_fox_example."
+                                "FilamentViewApi.turnOffVisualForEntity" +
+                                    prepended_suffix,
+                                &GetCodec());
     if (api != nullptr) {
-      channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
-        try {
-          const auto& args = std::get<EncodableList>(message);
-          const auto& encodable_guid_arg = args.at(0);
-          if (encodable_guid_arg.IsNull()) {
-            reply(WrapError("guid_arg unexpectedly null."));
-            return;
-          }
-          const auto& guid_arg = std::get<std::string>(encodable_guid_arg);
-          std::optional<FlutterError> output = api->TurnOffVisualForEntity(guid_arg);
-          if (output.has_value()) {
-            reply(WrapError(output.value()));
-            return;
-          }
-          EncodableList wrapped;
-          wrapped.push_back(EncodableValue());
-          reply(EncodableValue(std::move(wrapped)));
-        } catch (const std::exception& exception) {
-          reply(WrapError(exception.what()));
-        }
-      });
+      channel.SetMessageHandler(
+          [api](const EncodableValue& message,
+                const flutter::MessageReply<EncodableValue>& reply) {
+            try {
+              const auto& args = std::get<EncodableList>(message);
+              const auto& encodable_guid_arg = args.at(0);
+              if (encodable_guid_arg.IsNull()) {
+                reply(WrapError("guid_arg unexpectedly null."));
+                return;
+              }
+              const auto& guid_arg = std::get<std::string>(encodable_guid_arg);
+              const std::optional<FlutterError> output =
+                  api->TurnOffVisualForEntity(guid_arg);
+              if (output.has_value()) {
+                reply(WrapError(output.value()));
+                return;
+              }
+              EncodableList wrapped;
+              wrapped.emplace_back();
+              reply(EncodableValue(std::move(wrapped)));
+            } catch (const std::exception& exception) {
+              reply(WrapError(exception.what()));
+            }
+          });
     } else {
       channel.SetMessageHandler(nullptr);
     }
   }
   {
-    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.my_fox_example.FilamentViewApi.turnOnVisualForEntity" + prepended_suffix, &GetCodec());
+    BasicMessageChannel channel(binary_messenger,
+                                "dev.flutter.pigeon.my_fox_example."
+                                "FilamentViewApi.turnOnVisualForEntity" +
+                                    prepended_suffix,
+                                &GetCodec());
     if (api != nullptr) {
-      channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
-        try {
-          const auto& args = std::get<EncodableList>(message);
-          const auto& encodable_guid_arg = args.at(0);
-          if (encodable_guid_arg.IsNull()) {
-            reply(WrapError("guid_arg unexpectedly null."));
-            return;
-          }
-          const auto& guid_arg = std::get<std::string>(encodable_guid_arg);
-          std::optional<FlutterError> output = api->TurnOnVisualForEntity(guid_arg);
-          if (output.has_value()) {
-            reply(WrapError(output.value()));
-            return;
-          }
-          EncodableList wrapped;
-          wrapped.push_back(EncodableValue());
-          reply(EncodableValue(std::move(wrapped)));
-        } catch (const std::exception& exception) {
-          reply(WrapError(exception.what()));
-        }
-      });
+      channel.SetMessageHandler(
+          [api](const EncodableValue& message,
+                const flutter::MessageReply<EncodableValue>& reply) {
+            try {
+              const auto& args = std::get<EncodableList>(message);
+              const auto& encodable_guid_arg = args.at(0);
+              if (encodable_guid_arg.IsNull()) {
+                reply(WrapError("guid_arg unexpectedly null."));
+                return;
+              }
+              const auto& guid_arg = std::get<std::string>(encodable_guid_arg);
+              const std::optional<FlutterError> output =
+                  api->TurnOnVisualForEntity(guid_arg);
+              if (output.has_value()) {
+                reply(WrapError(output.value()));
+                return;
+              }
+              EncodableList wrapped;
+              wrapped.emplace_back();
+              reply(EncodableValue(std::move(wrapped)));
+            } catch (const std::exception& exception) {
+              reply(WrapError(exception.what()));
+            }
+          });
     } else {
       channel.SetMessageHandler(nullptr);
     }
   }
   {
-    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.my_fox_example.FilamentViewApi.turnOffCollisionChecksForEntity" + prepended_suffix, &GetCodec());
+    BasicMessageChannel channel(
+        binary_messenger,
+        "dev.flutter.pigeon.my_fox_example.FilamentViewApi."
+        "turnOffCollisionChecksForEntity" +
+            prepended_suffix,
+        &GetCodec());
     if (api != nullptr) {
-      channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
-        try {
-          const auto& args = std::get<EncodableList>(message);
-          const auto& encodable_guid_arg = args.at(0);
-          if (encodable_guid_arg.IsNull()) {
-            reply(WrapError("guid_arg unexpectedly null."));
-            return;
-          }
-          const auto& guid_arg = std::get<std::string>(encodable_guid_arg);
-          std::optional<FlutterError> output = api->TurnOffCollisionChecksForEntity(guid_arg);
-          if (output.has_value()) {
-            reply(WrapError(output.value()));
-            return;
-          }
-          EncodableList wrapped;
-          wrapped.push_back(EncodableValue());
-          reply(EncodableValue(std::move(wrapped)));
-        } catch (const std::exception& exception) {
-          reply(WrapError(exception.what()));
-        }
-      });
+      channel.SetMessageHandler(
+          [api](const EncodableValue& message,
+                const flutter::MessageReply<EncodableValue>& reply) {
+            try {
+              const auto& args = std::get<EncodableList>(message);
+              const auto& encodable_guid_arg = args.at(0);
+              if (encodable_guid_arg.IsNull()) {
+                reply(WrapError("guid_arg unexpectedly null."));
+                return;
+              }
+              const auto& guid_arg = std::get<std::string>(encodable_guid_arg);
+              const std::optional<FlutterError> output =
+                  api->TurnOffCollisionChecksForEntity(guid_arg);
+              if (output.has_value()) {
+                reply(WrapError(output.value()));
+                return;
+              }
+              EncodableList wrapped;
+              wrapped.emplace_back();
+              reply(EncodableValue(std::move(wrapped)));
+            } catch (const std::exception& exception) {
+              reply(WrapError(exception.what()));
+            }
+          });
     } else {
       channel.SetMessageHandler(nullptr);
     }
   }
   {
-    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.my_fox_example.FilamentViewApi.turnOnCollisionChecksForEntity" + prepended_suffix, &GetCodec());
+    BasicMessageChannel channel(
+        binary_messenger,
+        "dev.flutter.pigeon.my_fox_example.FilamentViewApi."
+        "turnOnCollisionChecksForEntity" +
+            prepended_suffix,
+        &GetCodec());
     if (api != nullptr) {
-      channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
-        try {
-          const auto& args = std::get<EncodableList>(message);
-          const auto& encodable_guid_arg = args.at(0);
-          if (encodable_guid_arg.IsNull()) {
-            reply(WrapError("guid_arg unexpectedly null."));
-            return;
-          }
-          const auto& guid_arg = std::get<std::string>(encodable_guid_arg);
-          std::optional<FlutterError> output = api->TurnOnCollisionChecksForEntity(guid_arg);
-          if (output.has_value()) {
-            reply(WrapError(output.value()));
-            return;
-          }
-          EncodableList wrapped;
-          wrapped.push_back(EncodableValue());
-          reply(EncodableValue(std::move(wrapped)));
-        } catch (const std::exception& exception) {
-          reply(WrapError(exception.what()));
-        }
-      });
+      channel.SetMessageHandler(
+          [api](const EncodableValue& message,
+                const flutter::MessageReply<EncodableValue>& reply) {
+            try {
+              const auto& args = std::get<EncodableList>(message);
+              const auto& encodable_guid_arg = args.at(0);
+              if (encodable_guid_arg.IsNull()) {
+                reply(WrapError("guid_arg unexpectedly null."));
+                return;
+              }
+              const auto& guid_arg = std::get<std::string>(encodable_guid_arg);
+              const std::optional<FlutterError> output =
+                  api->TurnOnCollisionChecksForEntity(guid_arg);
+              if (output.has_value()) {
+                reply(WrapError(output.value()));
+                return;
+              }
+              EncodableList wrapped;
+              wrapped.emplace_back();
+              reply(EncodableValue(std::move(wrapped)));
+            } catch (const std::exception& exception) {
+              reply(WrapError(exception.what()));
+            }
+          });
     } else {
       channel.SetMessageHandler(nullptr);
     }

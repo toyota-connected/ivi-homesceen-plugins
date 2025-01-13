@@ -64,25 +64,13 @@ void ViewTargetSystem::vInitSystem() {
 
         if (m_poCamera != nullptr) {
           m_poCamera->orbitHomePosition_ =
-              std::make_unique<::filament::math::float3>(values);
-          ;
+              std::make_unique<filament::math::float3>(values);
 
           const auto camera =
               m_lstViewTargets[0]->getCameraManager()->poGetPrimaryCamera();
           camera->orbitHomePosition_ =
-              std::make_unique<::filament::math::float3>(values);
-          ;
+              std::make_unique<filament::math::float3>(values);
           camera->forceSingleFrameUpdate_ = true;
-          /*if (viewTarget->getCameraManager()->poGetPrimaryCamera() != nullptr)
-              continue;
-
-            std::unique_ptr<Camera> clonedCamera = m_poCamera->clone();
-
-            viewTarget->vSetupCameraManagerWithDeserializedCamera(
-                std::move(clonedCamera));
-
-          vSetupCameraManagerWithDeserializedCamera
-          cameraManager_->updateCamera(camera.get());*/
         }
 
         spdlog::debug("ChangeCameraOrbitHomePosition Complete");
@@ -98,14 +86,12 @@ void ViewTargetSystem::vInitSystem() {
 
         if (m_poCamera != nullptr) {
           m_poCamera->targetPosition_ =
-              std::make_unique<::filament::math::float3>(values);
-          ;
+              std::make_unique<filament::math::float3>(values);
 
           const auto camera =
               m_lstViewTargets[0]->getCameraManager()->poGetPrimaryCamera();
           camera->targetPosition_ =
-              std::make_unique<::filament::math::float3>(values);
-          ;
+              std::make_unique<filament::math::float3>(values);
           camera->forceSingleFrameUpdate_ = true;
         }
 
@@ -122,14 +108,12 @@ void ViewTargetSystem::vInitSystem() {
 
         if (m_poCamera != nullptr) {
           m_poCamera->flightStartPosition_ =
-              std::make_unique<::filament::math::float3>(values);
-          ;
+              std::make_unique<filament::math::float3>(values);
 
           const auto camera =
               m_lstViewTargets[0]->getCameraManager()->poGetPrimaryCamera();
           camera->flightStartPosition_ =
-              std::make_unique<::filament::math::float3>(values);
-          ;
+              std::make_unique<filament::math::float3>(values);
           camera->forceSingleFrameUpdate_ = true;
         }
 
