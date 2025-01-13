@@ -58,6 +58,8 @@ class Collidable : public Component {
     return m_f3CenterPosition;
   }
 
+  [[nodiscard]] bool GetIsEnabled() const { return m_bIsEnabled; }
+
   // Setters
   void SetIsStatic(bool value) { m_bIsStatic = value; }
   void SetCollisionLayer(int64_t value) { m_nCollisionLayer = value; }
@@ -72,6 +74,8 @@ class Collidable : public Component {
   void SetCenterPoint(const filament::math::float3& value) {
     m_f3CenterPosition = value;
   }
+
+  void SetEnabled(bool value) { m_bIsEnabled = value; }
 
   void DebugPrint(const std::string& tabPrefix) const override;
 
@@ -111,6 +115,9 @@ class Collidable : public Component {
   // vars
   ShapeType m_eShapeType;
   filament::math::float3 m_f3ExtentsSize;
+
+  // You can turn collision objects on / off during runtime without removing / re-adding from the scene.
+  bool m_bIsEnabled = true;
 };
 
 }  // namespace plugin_filament_view

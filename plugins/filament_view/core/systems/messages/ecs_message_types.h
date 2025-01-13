@@ -78,6 +78,10 @@ enum class ECSMessageType {
   ChangeCameraOrbitHomePosition,
   ChangeCameraTargetPosition,
   ChangeCameraFlightStartPosition,
+
+    ToggleVisualForEntity,
+    ToggleCollisionForEntity,
+    BoolValue,
 };
 
 }

@@ -29,7 +29,8 @@ Collidable::Collidable(const flutter::EncodableMap& params)
     : Component(std::string(__FUNCTION__)),
       m_f3CenterPosition({0}),
       m_eShapeType(ShapeType::Cube),
-      m_f3ExtentsSize({1}) {
+      m_f3ExtentsSize({1}),
+      m_bIsEnabled(true){
   // Check if the key exists and if the value is an EncodableMap
   if (const auto itCollidableSpecific =
           params.find(flutter::EncodableValue(kCollidable));
@@ -125,6 +126,11 @@ void Collidable::DebugPrint(const std::string& tabPrefix) const {
 ////////////////////////////////////////////////////////////////////////////
 bool Collidable::bDoesIntersect(const Ray& ray,
                                 filament::math::float3& hitPosition) const {
+
+  if(!GetIsEnabled()) {
+    return false;
+  }
+
   // Extract relevant data
   const filament::math::float3& center = m_f3CenterPosition;
   const filament::math::float3& extents = m_f3ExtentsSize;

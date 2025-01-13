@@ -652,6 +652,46 @@ std::optional<FlutterError> FilamentViewPlugin::ChangeRotationByGUID(
   return std::nullopt;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+std::optional<FlutterError> FilamentViewPlugin::TurnOffVisualForEntity(const std::string& guid) {
+    ECSMessage changeRequest;
+    changeRequest.addData(ECSMessageType::ToggleVisualForEntity, guid);
+    changeRequest.addData(ECSMessageType::BoolValue, false);
+    ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
+
+    return std::nullopt;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+std::optional<FlutterError> FilamentViewPlugin::TurnOnVisualForEntity(const std::string& guid){
+    ECSMessage changeRequest;
+    changeRequest.addData(ECSMessageType::ToggleVisualForEntity, guid);
+    changeRequest.addData(ECSMessageType::BoolValue, true);
+    ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
+
+    return std::nullopt;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+std::optional<FlutterError> FilamentViewPlugin::TurnOffCollisionChecksForEntity(const std::string& guid){
+    ECSMessage changeRequest;
+    changeRequest.addData(ECSMessageType::ToggleCollisionForEntity, guid);
+    changeRequest.addData(ECSMessageType::BoolValue, false);
+    ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
+
+    return std::nullopt;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+std::optional<FlutterError> FilamentViewPlugin::TurnOnCollisionChecksForEntity(const std::string& guid) {
+    ECSMessage changeRequest;
+    changeRequest.addData(ECSMessageType::ToggleCollisionForEntity, guid);
+    changeRequest.addData(ECSMessageType::BoolValue, true);
+    ECSystemManager::GetInstance()->vRouteMessage(changeRequest);
+
+    return std::nullopt;
+}
+
 // TODO this function will need to change to say 'which' view is being changed.
 void FilamentViewPlugin::on_resize(const double width,
                                    const double height,
