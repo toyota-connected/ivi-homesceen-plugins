@@ -551,6 +551,37 @@ void ModelSystem::vInitSystem() {
 
         SPDLOG_TRACE("ChangeScaleByGUID Complete");
       });
+
+  vRegisterMessageHandler(
+      ECSMessageType::ToggleVisualForEntity, [this](const ECSMessage& msg) {
+        spdlog::debug("ToggleVisualForEntity");
+
+        const auto stringGUID =
+            msg.getData<std::string>(ECSMessageType::ToggleVisualForEntity);
+        const auto value = msg.getData<bool>(ECSMessageType::BoolValue);
+
+        if (const auto ourEntity = m_mapszoAssets.find(stringGUID);
+            ourEntity != m_mapszoAssets.end()) {
+          const auto modelAsset = ourEntity->second->getAsset();
+
+          const auto fSystem =
+              ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
+                  FilamentSystem::StaticGetTypeID(),
+                  "vRegisterMessageHandler::ToggleVisualForEntity");
+
+          if (value) {
+            fSystem->getFilamentScene()->addEntities(
+                modelAsset->getRenderableEntities(),
+                modelAsset->getRenderableEntityCount());
+          } else {
+            fSystem->getFilamentScene()->removeEntities(
+                modelAsset->getRenderableEntities(),
+                modelAsset->getRenderableEntityCount());
+          }
+        }
+
+        spdlog::debug("ToggleVisualForEntity Complete");
+      });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

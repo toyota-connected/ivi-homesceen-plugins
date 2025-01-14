@@ -321,6 +321,25 @@ void CollisionSystem::vInitSystem() {
 
         spdlog::debug("ToggleDebugCollidableViewsInScene Complete");
       });
+
+  vRegisterMessageHandler(
+      ECSMessageType::ToggleCollisionForEntity, [this](const ECSMessage& msg) {
+        const auto stringGUID =
+            msg.getData<std::string>(ECSMessageType::ToggleCollisionForEntity);
+        const auto value = msg.getData<bool>(ECSMessageType::BoolValue);
+
+        for (const auto& entity : collidables_) {
+          if (entity->GetGlobalGuid() == stringGUID) {
+            const auto collidable = std::dynamic_pointer_cast<Collidable>(
+                entity->GetComponentByStaticTypeID(
+                    Collidable::StaticGetTypeID()));
+
+            collidable->SetEnabled(value);
+
+            break;
+          }
+        }
+      });
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

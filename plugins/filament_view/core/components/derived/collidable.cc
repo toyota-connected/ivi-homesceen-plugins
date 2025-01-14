@@ -125,6 +125,10 @@ void Collidable::DebugPrint(const std::string& tabPrefix) const {
 ////////////////////////////////////////////////////////////////////////////
 bool Collidable::bDoesIntersect(const Ray& ray,
                                 filament::math::float3& hitPosition) const {
+  if (!GetIsEnabled()) {
+    return false;
+  }
+
   // Extract relevant data
   const filament::math::float3& center = m_f3CenterPosition;
   const filament::math::float3& extents = m_f3ExtentsSize;

@@ -52,6 +52,21 @@ void ShapeSystem::vToggleAllShapesInScene(const bool bValue) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
+void ShapeSystem::vToggleSingleShapeInScene(const std::string& szGUID,
+                                            const bool bValue) const {
+  const auto iter = m_mapszoShapes.find(szGUID);
+  if (iter == m_mapszoShapes.end()) {
+    return;
+  }
+
+  if (bValue) {
+    iter->second->vAddEntityToScene();
+  } else {
+    iter->second->vRemoveEntityFromScene();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////
 void ShapeSystem::vRemoveAllShapesInScene() {
   vToggleAllShapesInScene(false);
 
@@ -183,6 +198,19 @@ void ShapeSystem::vInitSystem() {
         vToggleAllShapesInScene(value);
 
         spdlog::debug("ToggleShapesInScene Complete");
+      });
+
+  vRegisterMessageHandler(
+      ECSMessageType::ToggleVisualForEntity, [this](const ECSMessage& msg) {
+        spdlog::debug("ToggleVisualForEntity");
+
+        const auto stringGUID =
+            msg.getData<std::string>(ECSMessageType::ToggleVisualForEntity);
+        const auto value = msg.getData<bool>(ECSMessageType::BoolValue);
+
+        vToggleSingleShapeInScene(stringGUID, value);
+
+        spdlog::debug("ToggleVisualForEntity Complete");
       });
 
   // ChangeTranslationByGUID

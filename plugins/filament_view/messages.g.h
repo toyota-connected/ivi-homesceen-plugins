@@ -191,6 +191,14 @@ class FilamentViewApi {
       double y,
       double z,
       double w) = 0;
+  virtual std::optional<FlutterError> TurnOffVisualForEntity(
+      const std::string& guid) = 0;
+  virtual std::optional<FlutterError> TurnOnVisualForEntity(
+      const std::string& guid) = 0;
+  virtual std::optional<FlutterError> TurnOffCollisionChecksForEntity(
+      const std::string& guid) = 0;
+  virtual std::optional<FlutterError> TurnOnCollisionChecksForEntity(
+      const std::string& guid) = 0;
 
   // The codec used by FilamentViewApi.
   static const flutter::StandardMessageCodec& GetCodec();

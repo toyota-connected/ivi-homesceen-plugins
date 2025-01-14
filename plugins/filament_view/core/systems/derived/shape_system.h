@@ -42,6 +42,7 @@ class ShapeSystem : public ECSystem {
 
   // will add/remove already made entities to/from the scene
   void vToggleAllShapesInScene(bool bValue) const;
+  void vToggleSingleShapeInScene(const std::string& szGUID, bool bValue) const;
 
   void vRemoveAllShapesInScene();
 
