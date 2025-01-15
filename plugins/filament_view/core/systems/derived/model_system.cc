@@ -321,11 +321,11 @@ void ModelSystem::populateSceneWithAsyncLoadedAssets(const Model* model) {
       rcm.setScreenSpaceContactShadows(ri, false);
     }
 
-      // we won't load the primary asset to render.
-      if(!model->bIsPrimaryAssetToInstanceFrom()) {
-          filamentSystem->getFilamentScene()->addEntities(readyRenderables_,
-                                                          maxToPop);
-      }
+    // we won't load the primary asset to render.
+    if (!model->bIsPrimaryAssetToInstanceFrom()) {
+      filamentSystem->getFilamentScene()->addEntities(readyRenderables_,
+                                                      maxToPop);
+    }
 
     count = asset->popRenderables(nullptr, 0);
   }
@@ -427,7 +427,7 @@ std::future<Resource<std::string_view>> ModelSystem::loadGlbFromAsset(
     if (bWantsInstancedData) {
       std::string szAssetPath = oOurModel->szGetAssetPath();
       if (isCurrentlyLoadingInstanceableData || hasInstancedDataLoaded) {
-          const auto iter =
+        const auto iter =
             m_mapszoAssetsAwaitingDataLoad.find(oOurModel->szGetAssetPath());
         if (iter != m_mapszoAssetsAwaitingDataLoad.end()) {
           iter->second.emplace_back(std::move(oOurModel));

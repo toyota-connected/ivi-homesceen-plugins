@@ -42,9 +42,9 @@ Model::Model(std::string assetPath,
                                           &m_bShouldKeepAssetDataInMemory,
                                           params, false);
 
-  Deserialize::DecodeParameterWithDefault(kRenderable_IsPrimaryAssetToInstanceFrom,
-                                          &m_bIsPrimaryAssetToInstanceFrom,
-                                          params, false);
+  Deserialize::DecodeParameterWithDefault(
+      kRenderable_IsPrimaryAssetToInstanceFrom,
+      &m_bIsPrimaryAssetToInstanceFrom, params, false);
 
   DeserializeNameAndGlobalGuid(params);
 }
