@@ -46,8 +46,16 @@ class Model : public RenderableEntityObject {
     m_poAsset = poAsset;
   }
 
+  void setAssetInstance(filament::gltfio::FilamentInstance* poAssetInstance) {
+    m_poAssetInstance = poAssetInstance;
+  }
+
   [[nodiscard]] filament::gltfio::FilamentAsset* getAsset() const {
     return m_poAsset;
+  }
+
+  [[nodiscard]] filament::gltfio::FilamentInstance* getAssetInstance() const {
+    return m_poAssetInstance;
   }
 
   [[nodiscard]] std::shared_ptr<BaseTransform> GetBaseTransform() const {
@@ -60,6 +68,10 @@ class Model : public RenderableEntityObject {
   [[nodiscard]] std::string szGetAssetPath() const { return assetPath_; }
   [[nodiscard]] std::string szGetURLPath() const { return url_; }
 
+  [[nodiscard]] bool bShouldKeepAssetDataInMemory() const {
+    return m_bShouldKeepAssetDataInMemory;
+  }
+
   void vInitComponents(std::shared_ptr<BaseTransform> poTransform,
                        std::shared_ptr<CommonRenderable> poCommonRenderable,
                        const flutter::EncodableMap& params);
@@ -69,6 +81,10 @@ class Model : public RenderableEntityObject {
   std::string url_;
 
   filament::gltfio::FilamentAsset* m_poAsset;
+  filament::gltfio::FilamentInstance* m_poAssetInstance;
+
+  // used for instancing objects.
+  bool m_bShouldKeepAssetDataInMemory = false;
 
   void DebugPrint() const override;
 

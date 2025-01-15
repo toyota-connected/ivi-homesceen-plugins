@@ -37,6 +37,10 @@ Model::Model(std::string assetPath,
       assetPath_(std::move(assetPath)),
       url_(std::move(url)),
       m_poAsset(nullptr) {
+  Deserialize::DecodeParameterWithDefault(kRenderable_KeepAssetInMemory,
+                                          &m_bShouldKeepAssetDataInMemory,
+                                          params, false);
+
   DeserializeNameAndGlobalGuid(params);
 }
 
