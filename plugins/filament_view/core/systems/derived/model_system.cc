@@ -114,15 +114,15 @@ void ModelSystem::loadModelGlb(std::shared_ptr<Model> oOurModel,
     resourceLoader_->loadResources(instancedModelData->second);
 
     assetInstance = assetLoader_->createInstance(instancedModelData->second);
-    const utils::Entity* instanceEntities = assetInstance->getEntities();
-    size_t instanceEntityCount = assetInstance->getEntityCount();
+    const Entity* instanceEntities = assetInstance->getEntities();
+    const size_t instanceEntityCount = assetInstance->getEntityCount();
 
     for (size_t i = 0; i < instanceEntityCount; i++) {
-      utils::Entity entity = instanceEntities[i];
+      const Entity entity = instanceEntities[i];
 
       // Check if this entity has a Renderable component
       if (rcm.hasComponent(entity)) {
-        auto ri = rcm.getInstance(entity);
+        const auto ri = rcm.getInstance(entity);
 
         rcm.setCastShadows(
             ri, oOurModel->GetCommonRenderable()->IsCastShadowsEnabled());
@@ -363,7 +363,7 @@ void ModelSystem::updateAsyncAssetLoading() {
         foundAwaitingIter != m_mapszoAssetsAwaitingDataLoad.end()) {
       spdlog::info("Loading additional instanced assets: {}",
                    snd->szGetAssetPath());
-      for (auto& itemToLoad : foundAwaitingIter->second) {
+      for (const auto& itemToLoad : foundAwaitingIter->second) {
         spdlog::info("Loading subset: {}", snd->szGetAssetPath());
         std::vector<uint8_t> emptyVec;
         loadModelGlb(itemToLoad, emptyVec, itemToLoad->szGetAssetPath());
@@ -410,11 +410,11 @@ std::future<Resource<std::string_view>> ModelSystem::loadGlbFromAsset(
     const auto assetPath =
         ECSystemManager::GetInstance()->getConfigValue<std::string>(kAssetPath);
 
-    bool bWantsInstancedData = oOurModel->bShouldKeepAssetDataInMemory();
-    bool hasInstancedDataLoaded =
+    const bool bWantsInstancedData = oOurModel->bShouldKeepAssetDataInMemory();
+    const bool hasInstancedDataLoaded =
         m_mapInstanceableAssets_.find(oOurModel->szGetAssetPath()) !=
         m_mapInstanceableAssets_.end();
-    bool isCurrentlyLoadingInstanceableData =
+    const bool isCurrentlyLoadingInstanceableData =
         m_mapszbCurrentlyLoadingInstanceableAssets.find(
             oOurModel->szGetAssetPath()) !=
         m_mapszbCurrentlyLoadingInstanceableAssets.end();
@@ -422,7 +422,7 @@ std::future<Resource<std::string_view>> ModelSystem::loadGlbFromAsset(
     if (bWantsInstancedData) {
       std::string szAssetPath = oOurModel->szGetAssetPath();
       if (isCurrentlyLoadingInstanceableData || hasInstancedDataLoaded) {
-        auto iter =
+          const auto iter =
             m_mapszoAssetsAwaitingDataLoad.find(oOurModel->szGetAssetPath());
         if (iter != m_mapszoAssetsAwaitingDataLoad.end()) {
           iter->second.emplace_back(std::move(oOurModel));

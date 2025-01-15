@@ -36,7 +36,8 @@ Model::Model(std::string assetPath,
     : RenderableEntityObject(params),
       assetPath_(std::move(assetPath)),
       url_(std::move(url)),
-      m_poAsset(nullptr) {
+      m_poAsset(nullptr),
+      m_poAssetInstance(nullptr) {
   Deserialize::DecodeParameterWithDefault(kRenderable_KeepAssetInMemory,
                                           &m_bShouldKeepAssetDataInMemory,
                                           params, false);
