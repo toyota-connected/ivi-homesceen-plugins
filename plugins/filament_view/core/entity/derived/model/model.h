@@ -50,6 +50,8 @@ class Model : public RenderableEntityObject {
     m_poAssetInstance = poAssetInstance;
   }
 
+  void SetPrimaryAssetToInstanceFrom(bool bValue) { m_bIsPrimaryAssetToInstanceFrom = bValue;}
+
   [[nodiscard]] filament::gltfio::FilamentAsset* getAsset() const {
     return m_poAsset;
   }
@@ -72,6 +74,19 @@ class Model : public RenderableEntityObject {
     return m_bShouldKeepAssetDataInMemory;
   }
 
+  [[nodiscard]] bool bIsPrimaryAssetToInstanceFrom() const {
+    return m_bIsPrimaryAssetToInstanceFrom;
+  }
+  [[nodiscard]] filament::Aabb poGetBoundingBox() {
+    if(m_poAsset != nullptr) {
+      return m_poAsset->getBoundingBox();
+    } else if(m_poAssetInstance != nullptr) {
+      return m_poAssetInstance->getBoundingBox();
+    }
+
+    return {};
+  }
+
   void vInitComponents(std::shared_ptr<BaseTransform> poTransform,
                        std::shared_ptr<CommonRenderable> poCommonRenderable,
                        const flutter::EncodableMap& params);
@@ -85,6 +100,7 @@ class Model : public RenderableEntityObject {
 
   // used for instancing objects.
   bool m_bShouldKeepAssetDataInMemory = false;
+    bool m_bIsPrimaryAssetToInstanceFrom = false;
 
   void DebugPrint() const override;
 

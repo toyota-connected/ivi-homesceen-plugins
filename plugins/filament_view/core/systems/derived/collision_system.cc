@@ -82,7 +82,7 @@ void CollisionSystem::vAddCollidable(EntityObject* collidable) {
   shapes::BaseShape* newShape = nullptr;
   if (dynamic_cast<Model*>(collidable)) {
     const auto ourModelObject = dynamic_cast<Model*>(collidable);
-    const auto ourAABB = ourModelObject->getAsset()->getBoundingBox();
+    const auto ourAABB = ourModelObject->poGetBoundingBox();
 
     newShape = new shapes::Cube();
     newShape->m_bDoubleSided = false;

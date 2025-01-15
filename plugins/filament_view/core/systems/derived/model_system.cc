@@ -111,9 +111,8 @@ void ModelSystem::loadModelGlb(std::shared_ptr<Model> oOurModel,
     spdlog::debug("Creating Instanced model for {}",
                   oOurModel->szGetAssetPath());
 
-    resourceLoader_->loadResources(instancedModelData->second);
-
     assetInstance = assetLoader_->createInstance(instancedModelData->second);
+
     const Entity* instanceEntities = assetInstance->getEntities();
     const size_t instanceEntityCount = assetInstance->getEntityCount();
 
@@ -138,6 +137,7 @@ void ModelSystem::loadModelGlb(std::shared_ptr<Model> oOurModel,
     oOurModel->setAssetInstance(assetInstance);
   }
 
+  // instance-able / primary object.
   if (assetInstance == nullptr) {
     spdlog::debug("Calling create Asset: {}", oOurModel->szGetAssetPath());
     asset = assetLoader_->createAsset(buffer.data(),
@@ -320,8 +320,13 @@ void ModelSystem::populateSceneWithAsyncLoadedAssets(const Model* model) {
       // component.
       rcm.setScreenSpaceContactShadows(ri, false);
     }
-    filamentSystem->getFilamentScene()->addEntities(readyRenderables_,
-                                                    maxToPop);
+
+      // we won't load the primary asset to render.
+      if(!model->bIsPrimaryAssetToInstanceFrom()) {
+          filamentSystem->getFilamentScene()->addEntities(readyRenderables_,
+                                                          maxToPop);
+      }
+
     count = asset->popRenderables(nullptr, 0);
   }
 

@@ -236,5 +236,7 @@ static constexpr char kAssetPath[] = "assetPath";
 
 static constexpr char kRenderable_KeepAssetInMemory[] =
     "should_keep_asset_in_memory";
+static constexpr char kRenderable_IsPrimaryAssetToInstanceFrom[] =
+    "is_primary_to_instance_from";
 
 }  // namespace plugin_filament_view
