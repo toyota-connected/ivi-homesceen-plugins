@@ -24,7 +24,6 @@
 #include <curl_client/curl_client.h>
 #include <filament/Scene.h>
 #include <filament/filament/RenderableManager.h>
-#include <filament/filament/TransformManager.h>
 #include <filament/gltfio/ResourceLoader.h>
 #include <filament/gltfio/TextureProvider.h>
 #include <filament/gltfio/materials/uberarchive.h>
@@ -107,10 +106,6 @@ void ModelSystem::loadModelGlb(std::shared_ptr<Model> oOurModel,
       m_mapInstanceableAssets_.find(oOurModel->szGetAssetPath());
   if (instancedModelData != m_mapInstanceableAssets_.end()) {
     // we have the model already, use it.
-
-    spdlog::debug("Creating Instanced model for {}",
-                  oOurModel->szGetAssetPath());
-
     assetInstance = assetLoader_->createInstance(instancedModelData->second);
 
     const Entity* instanceEntities = assetInstance->getEntities();
@@ -139,7 +134,6 @@ void ModelSystem::loadModelGlb(std::shared_ptr<Model> oOurModel,
 
   // instance-able / primary object.
   if (assetInstance == nullptr) {
-    spdlog::debug("Calling create Asset: {}", oOurModel->szGetAssetPath());
     asset = assetLoader_->createAsset(buffer.data(),
                                       static_cast<uint32_t>(buffer.size()));
     if (!asset) {
@@ -376,6 +370,11 @@ void ModelSystem::updateAsyncAssetLoading() {
       spdlog::info("Done Loading additional instanced assets: {}",
                    snd->szGetAssetPath());
       m_mapszoAssetsAwaitingDataLoad.erase(snd->szGetAssetPath());
+    }
+
+    // You don't get collision as a primary asset.
+    if (snd->bIsPrimaryAssetToInstanceFrom()) {
+      continue;
     }
 
     auto collisionSystem =
