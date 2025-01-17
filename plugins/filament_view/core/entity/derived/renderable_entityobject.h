@@ -34,7 +34,7 @@ class RenderableEntityObject : public EntityObject {
  protected:
   explicit RenderableEntityObject(const flutter::EncodableMap& params);
   RenderableEntityObject();
-  virtual void DebugPrint();
+  virtual void DebugPrint() const = 0;
 
   // These are expected to have Material instances in base class after we go
   // from Uber shader to <?more interchangeable?> on models. For now these are

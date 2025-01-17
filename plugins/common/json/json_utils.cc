@@ -37,7 +37,7 @@ rapidjson::Document GetJsonDocumentFromFile(std::string& path,
         d.Parse("{}");
         spdlog::error("Failed to open file for reading: {}", path);
       }
-      return std::move(d);
+      return d;
     }
     rapidjson::IStreamWrapper isw{ifs};
     d.ParseStream(isw);
@@ -47,7 +47,7 @@ rapidjson::Document GetJsonDocumentFromFile(std::string& path,
       spdlog::error("File missing: {}", path);
     }
   }
-  return std::move(d);
+  return d;
 }
 
 bool WriteJsonDocumentToFile(std::string& path,

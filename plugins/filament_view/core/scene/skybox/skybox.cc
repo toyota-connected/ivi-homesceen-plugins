@@ -61,13 +61,13 @@ std::unique_ptr<Skybox> Skybox::Deserialize(
     switch (skyboxType.value()) {
       case 1:
         spdlog::debug("[Skybox] Type: KxtSkybox");
-        return std::move(std::make_unique<KxtSkybox>(assetPath, url));
+        return std::make_unique<KxtSkybox>(assetPath, url);
       case 2:
         spdlog::debug("[Skybox] Type: HdrSkybox");
-        return std::move(std::make_unique<HdrSkybox>(assetPath, url, showSun));
+        return std::make_unique<HdrSkybox>(assetPath, url, showSun);
       case 3:
         spdlog::debug("[Skybox] Type: ColorSkybox");
-        return std::move(std::make_unique<ColorSkybox>(assetPath, url, color));
+        return std::make_unique<ColorSkybox>(assetPath, url, color);
       default:
         spdlog::error("[IndirectLight] Unknown Type: {}", skyboxType.value());
         return nullptr;

@@ -65,17 +65,17 @@ std::unique_ptr<IndirectLight> IndirectLight::Deserialize(
     switch (type.value()) {
       case 1:
         spdlog::debug("[IndirectLight] Type: KtxIndirectLight");
-        return std::move(std::make_unique<KtxIndirectLight>(
-            std::move(assetPath), std::move(url), intensity));
+        return std::make_unique<KtxIndirectLight>(std::move(assetPath),
+                                                  std::move(url), intensity);
 
       case 2:
         spdlog::debug("[IndirectLight] Type: HdrIndirectLight");
-        return std::move(std::make_unique<HdrIndirectLight>(
-            std::move(assetPath), std::move(url), intensity));
+        return std::make_unique<HdrIndirectLight>(std::move(assetPath),
+                                                  std::move(url), intensity);
 
       case 3:
         spdlog::debug("[IndirectLight] Type: DefaultIndirectLight");
-        return std::move(std::make_unique<DefaultIndirectLight>());
+        return std::make_unique<DefaultIndirectLight>();
 
       default:
         spdlog::error("[IndirectLight] Type: Unknown DefaultIndirectLight");

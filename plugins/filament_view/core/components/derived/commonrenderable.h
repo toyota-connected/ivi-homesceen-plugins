@@ -26,8 +26,8 @@ class CommonRenderable : public Component {
   CommonRenderable()
       : Component(std::string(__FUNCTION__)),
         m_bCullingOfObjectEnabled(true),
-        m_bCastShadows(false),
-        m_bReceiveShadows(false) {}
+        m_bReceiveShadows(false),
+        m_bCastShadows(false) {}
   explicit CommonRenderable(const flutter::EncodableMap& params);
 
   // Getters

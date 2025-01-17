@@ -199,7 +199,7 @@ void ViewTarget::setupView(uint32_t width, uint32_t height) {
   // fview_->setAntiAliasing(filament::View::AntiAliasing::NONE);
 
   // ambient occlusion is the cheapest effect that adds a lot of quality
-  fview_->setAmbientOcclusionOptions({.enabled = true});
+  fview_->setAmbientOcclusionOptions({.enabled = true, .ssct = {}});
   // fview_->setAmbientOcclusion(filament::View::AmbientOcclusion::NONE);
 
   // bloom is pretty expensive but adds a fair amount of realism
