@@ -28,7 +28,4 @@ RenderableEntityObject::RenderableEntityObject(
 RenderableEntityObject::RenderableEntityObject()
     : EntityObject("`RenderableEntityObject::TBD") {}
 
-/////////////////////////////////////////////////////////////////////////////////////////
-void RenderableEntityObject::DebugPrint() {}
-
 }  // namespace plugin_filament_view

@@ -37,11 +37,11 @@ class Keyring {
 
  public:
   explicit Keyring(const char* label = "default") : label_(label) {
-    schema_ = {label_.c_str(),
-               SECRET_SCHEMA_NONE,
-               {
-                   {"account", SECRET_SCHEMA_ATTRIBUTE_STRING},
-               }};
+    schema_ = {};
+    schema_.name = label_.c_str();
+    schema_.flags = SECRET_SCHEMA_NONE;
+    schema_.attributes->name = "account";
+    schema_.attributes->type = SECRET_SCHEMA_ATTRIBUTE_STRING;
   }
 
   bool addItem(const char* key, const char* value) {

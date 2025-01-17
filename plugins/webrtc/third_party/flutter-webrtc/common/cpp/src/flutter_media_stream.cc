@@ -268,7 +268,7 @@ void FlutterMediaStream::GetUserVideo(
   int32_t height = toInt(heightValue, DEFAULT_HEIGHT);
   int32_t fps = toInt(fpsValue, DEFAULT_FPS);
 
-  for (auto i = 0; i < nb_video_devices; i++) {
+  for (uint32_t i = 0; i < nb_video_devices; i++) {
     base_->video_device_->GetDeviceName(static_cast<uint32_t>(i), strNameUTF8,
                                         256, strGuidUTF8, 256);
     if (!sourceId.empty() && sourceId == strGuidUTF8) {
@@ -358,9 +358,9 @@ void FlutterMediaStream::GetSources(std::unique_ptr<MethodResultProxy> result) {
     sources.emplace_back(audio);
   }
 
-  auto nb_video_devices = base_->video_device_->NumberOfDevices();
-  for (auto i = 0; i < nb_video_devices; i++) {
-    base_->video_device_->GetDeviceName(static_cast<uint32_t>(i), strNameUTF8,
+  const auto nb_video_devices = base_->video_device_->NumberOfDevices();
+  for (uint32_t i = 0; i < nb_video_devices; i++) {
+    base_->video_device_->GetDeviceName(i, strNameUTF8,
                                         128, strGuidUTF8, 128);
     EncodableMap video;
     video[EncodableValue("label")] = EncodableValue(std::string(strNameUTF8));

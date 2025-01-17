@@ -112,7 +112,7 @@ std::string CameraPlugin::get_camera_lens_facing(
   } else {
     lensFacing = "external";
   }
-  return std::move(lensFacing);
+  return lensFacing;
 }
 
 void CameraPlugin::availableCameras(
@@ -200,7 +200,7 @@ void CameraPlugin::initialize(
   }
 
   // Initialize Camera
-  if (cameraId - 1 < g_cameras.size()) {
+  if (static_cast<size_t>(cameraId - 1) < g_cameras.size()) {
     const auto& camera = g_cameras[static_cast<unsigned long>(cameraId - 1)];
     if (!camera) {
       spdlog::error("Invalid cameraId");

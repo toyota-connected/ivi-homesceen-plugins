@@ -62,21 +62,20 @@ void RunOnceCheckAndInitializeECSystems() {
   // Post the initialization code to the strand
   post(strand, [=, &initPromise]() mutable {
     // Add systems to the ECSystemManager
-    ecsManager->vAddSystem(std::move(std::make_unique<FilamentSystem>()));
-    ecsManager->vAddSystem(std::move(std::make_unique<DebugLinesSystem>()));
-    ecsManager->vAddSystem(std::move(std::make_unique<CollisionSystem>()));
-    ecsManager->vAddSystem(std::move(std::make_unique<ModelSystem>()));
-    ecsManager->vAddSystem(std::move(std::make_unique<MaterialSystem>()));
-    ecsManager->vAddSystem(std::move(std::make_unique<ShapeSystem>()));
-    ecsManager->vAddSystem(std::move(std::make_unique<IndirectLightSystem>()));
-    ecsManager->vAddSystem(std::move(std::make_unique<SkyboxSystem>()));
-    ecsManager->vAddSystem(std::move(std::make_unique<LightSystem>()));
-    ecsManager->vAddSystem(std::move(std::make_unique<ViewTargetSystem>()));
-    ecsManager->vAddSystem(std::move(std::make_unique<AnimationSystem>()));
+    ecsManager->vAddSystem(std::make_unique<FilamentSystem>());
+    ecsManager->vAddSystem(std::make_unique<DebugLinesSystem>());
+    ecsManager->vAddSystem(std::make_unique<CollisionSystem>());
+    ecsManager->vAddSystem(std::make_unique<ModelSystem>());
+    ecsManager->vAddSystem(std::make_unique<MaterialSystem>());
+    ecsManager->vAddSystem(std::make_unique<ShapeSystem>());
+    ecsManager->vAddSystem(std::make_unique<IndirectLightSystem>());
+    ecsManager->vAddSystem(std::make_unique<SkyboxSystem>());
+    ecsManager->vAddSystem(std::make_unique<LightSystem>());
+    ecsManager->vAddSystem(std::make_unique<ViewTargetSystem>());
+    ecsManager->vAddSystem(std::make_unique<AnimationSystem>());
     // Internal debate whether we auto subscribe to systems on entity creation
     // or not.
-    ecsManager->vAddSystem(
-        std::move(std::make_unique<EntityObjectLocatorSystem>()));
+    ecsManager->vAddSystem(std::make_unique<EntityObjectLocatorSystem>());
 
     ecsManager->vInitSystems();
 
@@ -761,6 +760,9 @@ const platform_view_listener FilamentViewPlugin::platform_view_listener_ = {
     .set_direction = on_set_direction,
     .set_offset = on_set_offset,
     .on_touch = on_touch,
-    .dispose = on_dispose};
+    .dispose = on_dispose,
+    .accept_gesture = nullptr,
+    .reject_gesture = nullptr,
+};
 
 }  // namespace plugin_filament_view

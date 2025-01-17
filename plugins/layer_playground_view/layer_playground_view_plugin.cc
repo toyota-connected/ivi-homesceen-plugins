@@ -181,7 +181,10 @@ const platform_view_listener
         .set_direction = on_set_direction,
         .set_offset = on_set_offset,
         .on_touch = on_touch,
-        .dispose = on_dispose};
+        .dispose = on_dispose,
+        .accept_gesture = nullptr,
+        .reject_gesture = nullptr,
+};
 
 void LayerPlaygroundViewPlugin::on_frame(void* data,
                                          wl_callback* callback,
