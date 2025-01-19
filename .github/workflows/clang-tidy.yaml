@@ -9,6 +9,10 @@ on:
 
 jobs:
   tidy:
+    permissions:
+      contents: read
+      pull-requests: write
+
     runs-on: ubuntu-22.04
 
     steps:

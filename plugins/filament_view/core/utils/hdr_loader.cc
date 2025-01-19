@@ -59,7 +59,8 @@ Texture* HDRLoader::createTextureFromImage(Engine* engine, LinearImage* image) {
 
   Texture::PixelBufferDescriptor pbd(
       (image->getPixelRef()),
-      image->getWidth() * image->getHeight() * 3 * sizeof(float),
+      static_cast<size_t>(image->getWidth()) * image->getHeight() * 3 *
+          sizeof(float),
       Texture::PixelBufferDescriptor::PixelDataFormat::RGB,
       Texture::PixelBufferDescriptor::PixelDataType::FLOAT, freeCallback,
       image);

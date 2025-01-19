@@ -1,7 +1,4 @@
 name: "clang-format"
-permissions:
-  contents: read
-  pull-requests: write
 
 on:
   pull_request:
@@ -9,6 +6,10 @@ on:
 
 jobs:
   format:
+    permissions:
+      contents: read
+      pull-requests: write
+
     runs-on: ubuntu-22.04
 
     steps:
