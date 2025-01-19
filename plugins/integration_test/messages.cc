@@ -38,10 +38,6 @@ using flutter::EncodableValue;
 using flutter::MethodCall;
 using flutter::MethodResult;
 
-// Method Constants
-static constexpr char kArgResults[] = "results";
-static constexpr char kResultSuccess[] = "success";
-
 /// The codec used by IntegrationTestApi.
 const flutter::StandardMethodCodec& IntegrationTestApi::GetCodec() {
   return flutter::StandardMethodCodec::GetInstance();

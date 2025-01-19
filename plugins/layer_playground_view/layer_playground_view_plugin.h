@@ -98,6 +98,7 @@ class LayerPlaygroundViewPlugin : public flutter::Plugin, PlatformView {
   EGLSurface egl_surface_{};
 
   void InitializeEGL();
+  bool GetConfig(const EGLint* attrib_list, std::vector<EGLConfig>& configs);
   void InitializeScene();
   void DrawFrame(uint32_t time) const;
 

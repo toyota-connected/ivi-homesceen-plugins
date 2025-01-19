@@ -244,43 +244,60 @@ void LayerPlaygroundViewPlugin::InitializeEGL() {
   EGLint major, minor;
   EGLBoolean ret = eglInitialize(egl_display_, &major, &minor);
   assert(ret == EGL_TRUE);
+  SPDLOG_DEBUG("EGL {}.{}", major, minor);
 
   ret = eglBindAPI(EGL_OPENGL_ES_API);
   assert(ret == EGL_TRUE);
 
-  EGLint count;
-  eglGetConfigs(egl_display_, nullptr, 0, &count);
-  assert(count);
-  SPDLOG_TRACE("EGL has {} configs", count);
-
-  auto* configs = static_cast<EGLConfig*>(
-      calloc(static_cast<size_t>(count), sizeof(EGLConfig)));
-  assert(configs);
-
-  EGLint n;
-  ret = eglChooseConfig(egl_display_, kEglConfigAttribs.data(), configs, count,
-                        &n);
-  assert(ret && n >= 1);
-
-  EGLint size;
-  for (EGLint i = 0; i < n; i++) {
-    eglGetConfigAttrib(egl_display_, configs[i], EGL_BUFFER_SIZE, &size);
-    SPDLOG_TRACE("Buffer size for config {} is {}", i, size);
-    if (buffer_size_ <= size) {
-      memcpy(&egl_config_, &configs[i], sizeof(EGLConfig));
-      break;
+  if (std::vector<EGLConfig> configs;
+      !GetConfig(kEglConfigAttribs.data(), configs)) {
+    spdlog::warn(
+        "[LayerPlaygroundViewPlugin] Could not use default EGLConfig trying "
+        "with fallback.");
+    // try with the fallback one
+    if (!GetConfig(kEglConfigAttribsFallBack.data(), configs)) {
+      spdlog::critical(
+          "[LayerPlaygroundViewPlugin] did not find config with buffer size {}",
+          buffer_size_);
+      abort();
     }
-  }
-  free(configs);
-  if (egl_config_ == nullptr) {
-    SPDLOG_CRITICAL("did not find config with buffer size {}", buffer_size_);
-    assert(false);
   }
 
   egl_context_ = eglCreateContext(egl_display_, egl_config_, EGL_NO_CONTEXT,
                                   kEglContextAttribs.data());
   assert(egl_context_);
   SPDLOG_TRACE("Context={}", egl_context_);
+}
+
+bool LayerPlaygroundViewPlugin::GetConfig(const EGLint* attrib_list,
+                                          std::vector<EGLConfig>& configs) {
+  EGLint n = 0;
+  auto ret = eglChooseConfig(egl_display_, attrib_list, nullptr, 0, &n);
+  if (!ret || n < 1) {
+    spdlog::error("Failed to choose EGL config");
+    return false;
+  }
+
+  configs.resize(static_cast<size_t>(n));
+  ret = eglChooseConfig(egl_display_, attrib_list, configs.data(),
+                        static_cast<EGLint>(configs.size()), &n);
+  if (!ret || n < 1) {
+    spdlog::error("Failed to choose EGL config");
+    return false;
+  }
+
+  EGLint size;
+  for (EGLint i = 0; i < n; i++) {
+    eglGetConfigAttrib(egl_display_, configs[static_cast<size_t>(i)],
+                       EGL_BUFFER_SIZE, &size);
+    SPDLOG_DEBUG("Buffer size for config {} is {}", i, size);
+    if (buffer_size_ <= size) {
+      std::copy(&configs[static_cast<size_t>(i)],
+                &configs[static_cast<size_t>(i)] + 1, &egl_config_);
+      return true;
+    }
+  }
+  return false;
 }
 
 void LayerPlaygroundViewPlugin::InitializeScene() {
