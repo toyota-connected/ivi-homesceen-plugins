@@ -17,8 +17,6 @@
 #ifndef FLUTTER_PLUGIN_FLATPAK_PLUGIN_H
 #define FLUTTER_PLUGIN_FLATPAK_PLUGIN_H
 
-#undef FLATPAK_EXTERN
-#define FLATPAK_EXTERN extern "C"
 #include <flatpak/flatpak.h>
 
 #include <filesystem>
@@ -30,7 +28,6 @@
 #include "messages.g.h"
 
 namespace flatpak_plugin {
-
 class FlatpakPlugin final : public flutter::Plugin, public FlatpakApi {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrar* registrar);
@@ -93,10 +90,12 @@ class FlatpakPlugin final : public flutter::Plugin, public FlatpakApi {
         // Dynamically detected network remote
         return "LAN";
     }
+    return "Unknown";
   }
 
   // Disallow copy and assign.
   FlatpakPlugin(const FlatpakPlugin&) = delete;
+
   FlatpakPlugin& operator=(const FlatpakPlugin&) = delete;
 
  private:

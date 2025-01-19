@@ -73,8 +73,9 @@ filament::Texture* TextureLoader::createTextureFromImage(
       data, static_cast<size_t>(w * h * 4),
       filament::Texture::PixelBufferDescriptor::PixelDataFormat::RGBA,
       filament::Texture::PixelBufferDescriptor::PixelDataType::UBYTE,
-      reinterpret_cast<filament::Texture::PixelBufferDescriptor::Callback>(
-          &stbi_image_free));
+      [](void* buffer, size_t /* size */, void* /* user */) {
+        stbi_image_free(buffer);
+      });
 
   texture->setImage(*engine, 0, std::move(pbd));
   texture->generateMipmaps(*engine);
