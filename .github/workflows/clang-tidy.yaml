@@ -1,4 +1,7 @@
-name: clang-tidy
+name: "clang-tidy"
+permissions:
+  contents: read
+  pull-requests: write
 
 on:
   pull_request:

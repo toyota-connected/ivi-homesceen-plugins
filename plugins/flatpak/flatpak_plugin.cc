@@ -363,7 +363,7 @@ ErrorOr<flutter::EncodableList> FlatpakPlugin::GetApplicationsInstalled() {
   }
   g_ptr_array_unref(system_installations);
 
-  return std::move(application_list);
+  return application_list;
 }
 
 ErrorOr<flutter::EncodableList> FlatpakPlugin::GetApplicationsRemote(

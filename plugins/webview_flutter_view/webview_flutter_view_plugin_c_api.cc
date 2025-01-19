@@ -28,7 +28,7 @@ void WebviewFlutterPluginCApiRegisterWithRegistrar(
 }
 
 void WebviewFlutterPluginCApiPlatformViewCreate(
-    FlutterDesktopPluginRegistrar* registrar,
+    FlutterDesktopPluginRegistrar* /* registrar */,
     const int32_t id,
     std::string viewType,
     const int32_t direction,
