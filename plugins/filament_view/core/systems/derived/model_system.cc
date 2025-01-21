@@ -24,7 +24,6 @@
 #include <curl_client/curl_client.h>
 #include <filament/Scene.h>
 #include <filament/filament/RenderableManager.h>
-#include <filament/filament/TransformManager.h>
 #include <filament/gltfio/ResourceLoader.h>
 #include <filament/gltfio/TextureProvider.h>
 #include <filament/gltfio/materials/uberarchive.h>
@@ -91,51 +90,87 @@ void ModelSystem::loadModelGlb(std::shared_ptr<Model> oOurModel,
     }
   }
 
-  auto* asset = assetLoader_->createAsset(buffer.data(),
-                                          static_cast<uint32_t>(buffer.size()));
-  if (!asset) {
-    spdlog::error("Failed to loadModelGlb->createasset from buffered data.");
-    return;
-  }
-
   const auto filamentSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
           FilamentSystem::StaticGetTypeID(), "loadModelGlb");
   const auto engine = filamentSystem->getFilamentEngine();
-
-  resourceLoader_->asyncBeginLoad(asset);
-
-  // TODO
-  // This will move to be on the model itself.
-  // modelViewer->setAnimator(asset->getInstance()->getAnimator());
-
-  // NOTE if this is a prefab/instance you will NOT Want to do this.
-  asset->releaseSourceData();
-
   auto& rcm = engine->getRenderableManager();
 
-  utils::Slice const listOfRenderables{asset->getRenderableEntities(),
-                                       asset->getRenderableEntityCount()};
+  // Note if you're creating a lot of instances, this is better to use at the
+  // start FilamentAsset* createInstancedAsset(const uint8_t* bytes, uint32_t
+  // numBytes, FilamentInstance **instances, size_t numInstances)
+  filament::gltfio::FilamentAsset* asset = nullptr;
+  filament::gltfio::FilamentInstance* assetInstance = nullptr;
 
-  for (const auto entity : listOfRenderables) {
-    const auto ri = rcm.getInstance(entity);
-    rcm.setCastShadows(
-        ri, oOurModel->GetCommonRenderable()->IsCastShadowsEnabled());
-    rcm.setReceiveShadows(
-        ri, oOurModel->GetCommonRenderable()->IsReceiveShadowsEnabled());
-    // Investigate this more before making it a property on common renderable
-    // component.
-    rcm.setScreenSpaceContactShadows(ri, false);
+  const auto instancedModelData =
+      m_mapInstanceableAssets_.find(oOurModel->szGetAssetPath());
+  if (instancedModelData != m_mapInstanceableAssets_.end()) {
+    // we have the model already, use it.
+    assetInstance = assetLoader_->createInstance(instancedModelData->second);
+
+    const Entity* instanceEntities = assetInstance->getEntities();
+    const size_t instanceEntityCount = assetInstance->getEntityCount();
+
+    for (size_t i = 0; i < instanceEntityCount; i++) {
+      const Entity entity = instanceEntities[i];
+
+      // Check if this entity has a Renderable component
+      if (rcm.hasComponent(entity)) {
+        const auto ri = rcm.getInstance(entity);
+
+        rcm.setCastShadows(
+            ri, oOurModel->GetCommonRenderable()->IsCastShadowsEnabled());
+        rcm.setReceiveShadows(
+            ri, oOurModel->GetCommonRenderable()->IsReceiveShadowsEnabled());
+        rcm.setScreenSpaceContactShadows(ri, false);
+      }
+
+      filamentSystem->getFilamentScene()->addEntity(entity);
+    }
+
+    filamentSystem->getFilamentScene()->addEntity(assetInstance->getRoot());
+    oOurModel->setAssetInstance(assetInstance);
   }
 
-  oOurModel->setAsset(asset);
+  // instance-able / primary object.
+  if (assetInstance == nullptr) {
+    asset = assetLoader_->createAsset(buffer.data(),
+                                      static_cast<uint32_t>(buffer.size()));
+    if (!asset) {
+      spdlog::error("Failed to loadModelGlb->createasset from buffered data.");
+      return;
+    }
 
-  EntityTransforms::vApplyTransform(oOurModel->getAsset(),
-                                    *oOurModel->GetBaseTransform());
+    resourceLoader_->asyncBeginLoad(asset);
+
+    if (oOurModel->bShouldKeepAssetDataInMemory()) {
+      m_mapInstanceableAssets_.insert(
+          std::pair(oOurModel->szGetAssetPath(), asset));
+    } else {
+      asset->releaseSourceData();
+    }
+
+    utils::Slice const listOfRenderables{asset->getRenderableEntities(),
+                                         asset->getRenderableEntityCount()};
+
+    for (const auto entity : listOfRenderables) {
+      const auto ri = rcm.getInstance(entity);
+      rcm.setCastShadows(
+          ri, oOurModel->GetCommonRenderable()->IsCastShadowsEnabled());
+      rcm.setReceiveShadows(
+          ri, oOurModel->GetCommonRenderable()->IsReceiveShadowsEnabled());
+      // Investigate this more before making it a property on common renderable
+      // component.
+      rcm.setScreenSpaceContactShadows(ri, false);
+    }
+
+    oOurModel->setAsset(asset);
+  }
+
+  EntityTransforms::vApplyTransform(oOurModel, *oOurModel->GetBaseTransform());
 
   std::shared_ptr<Model> sharedPtr = std::move(oOurModel);
-
-  vSetupAssetThroughoutECS(sharedPtr, asset);
+  vSetupAssetThroughoutECS(sharedPtr, asset, assetInstance);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -193,22 +228,29 @@ void ModelSystem::loadModelGltf(
 
   oOurModel->setAsset(asset);
 
-  EntityTransforms::vApplyTransform(oOurModel->getAsset(),
-                                    *oOurModel->GetBaseTransform());
+  EntityTransforms::vApplyTransform(oOurModel, *oOurModel->GetBaseTransform());
 
   std::shared_ptr<Model> sharedPtr = std::move(oOurModel);
 
-  vSetupAssetThroughoutECS(sharedPtr, asset);
+  vSetupAssetThroughoutECS(sharedPtr, asset, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 void ModelSystem::vSetupAssetThroughoutECS(
     std::shared_ptr<Model>& sharedPtr,
-    filament::gltfio::FilamentAsset* filamentAsset) {
+    filament::gltfio::FilamentAsset* filamentAsset,
+    filament::gltfio::FilamentInstance* filamentAssetInstance) {
   m_mapszoAssets.insert(std::pair(sharedPtr->GetGlobalGuid(), sharedPtr));
 
-  if (const auto animatorInstance = filamentAsset->getInstance()->getAnimator();
-      animatorInstance != nullptr &&
+  filament::gltfio::Animator* animatorInstance = nullptr;
+
+  if (filamentAssetInstance != nullptr) {
+    animatorInstance = filamentAssetInstance->getAnimator();
+  } else if (filamentAsset != nullptr) {
+    animatorInstance = filamentAsset->getInstance()->getAnimator();
+  }
+
+  if (animatorInstance != nullptr &&
       sharedPtr->HasComponentByStaticTypeID(Animation::StaticGetTypeID())) {
     const auto animatorComponent =
         sharedPtr->GetComponentByStaticTypeID(Animation::StaticGetTypeID());
@@ -241,6 +283,10 @@ void ModelSystem::populateSceneWithAsyncLoadedAssets(const Model* model) {
 
   auto* asset = model->getAsset();
 
+  if (!asset) {
+    return;
+  }
+
   size_t count = asset->popRenderables(nullptr, 0);
   while (count) {
     constexpr size_t maxToPopAtOnce = 128;
@@ -268,8 +314,13 @@ void ModelSystem::populateSceneWithAsyncLoadedAssets(const Model* model) {
       // component.
       rcm.setScreenSpaceContactShadows(ri, false);
     }
-    filamentSystem->getFilamentScene()->addEntities(readyRenderables_,
-                                                    maxToPop);
+
+    // we won't load the primary asset to render.
+    if (!model->bIsPrimaryAssetToInstanceFrom()) {
+      filamentSystem->getFilamentScene()->addEntities(readyRenderables_,
+                                                      maxToPop);
+    }
+
     count = asset->popRenderables(nullptr, 0);
   }
 
@@ -297,6 +348,32 @@ void ModelSystem::updateAsyncAssetLoading() {
     populateSceneWithAsyncLoadedAssets(snd.get());
 
     if (percentComplete != 1.0f) {
+      continue;
+    }
+
+    // we're no longer loading, we're loaded.
+    m_mapszbCurrentlyLoadingInstanceableAssets.erase(fst);
+
+    // once we're done loading our assets; we should be able to load instanced
+    // models.
+    if (auto foundAwaitingIter =
+            m_mapszoAssetsAwaitingDataLoad.find(snd->szGetAssetPath());
+        snd->bShouldKeepAssetDataInMemory() &&
+        foundAwaitingIter != m_mapszoAssetsAwaitingDataLoad.end()) {
+      spdlog::info("Loading additional instanced assets: {}",
+                   snd->szGetAssetPath());
+      for (const auto& itemToLoad : foundAwaitingIter->second) {
+        spdlog::info("Loading subset: {}", snd->szGetAssetPath());
+        std::vector<uint8_t> emptyVec;
+        loadModelGlb(itemToLoad, emptyVec, itemToLoad->szGetAssetPath());
+      }
+      spdlog::info("Done Loading additional instanced assets: {}",
+                   snd->szGetAssetPath());
+      m_mapszoAssetsAwaitingDataLoad.erase(snd->szGetAssetPath());
+    }
+
+    // You don't get collision as a primary asset.
+    if (snd->bIsPrimaryAssetToInstanceFrom()) {
       continue;
     }
 
@@ -333,8 +410,46 @@ std::future<Resource<std::string_view>> ModelSystem::loadGlbFromAsset(
   try {
     const asio::io_context::strand& strand_(
         *ECSystemManager::GetInstance()->GetStrand());
+
     const auto assetPath =
         ECSystemManager::GetInstance()->getConfigValue<std::string>(kAssetPath);
+
+    const bool bWantsInstancedData = oOurModel->bShouldKeepAssetDataInMemory();
+    const bool hasInstancedDataLoaded =
+        m_mapInstanceableAssets_.find(oOurModel->szGetAssetPath()) !=
+        m_mapInstanceableAssets_.end();
+    const bool isCurrentlyLoadingInstanceableData =
+        m_mapszbCurrentlyLoadingInstanceableAssets.find(
+            oOurModel->szGetAssetPath()) !=
+        m_mapszbCurrentlyLoadingInstanceableAssets.end();
+
+    if (bWantsInstancedData) {
+      std::string szAssetPath = oOurModel->szGetAssetPath();
+      if (isCurrentlyLoadingInstanceableData || hasInstancedDataLoaded) {
+        const auto iter =
+            m_mapszoAssetsAwaitingDataLoad.find(oOurModel->szGetAssetPath());
+        if (iter != m_mapszoAssetsAwaitingDataLoad.end()) {
+          iter->second.emplace_back(std::move(oOurModel));
+        } else {
+          std::list<std::shared_ptr<Model>> modelListToLoad;
+          modelListToLoad.emplace_back(std::move(oOurModel));
+          m_mapszoAssetsAwaitingDataLoad.insert(
+              std::pair(szAssetPath, modelListToLoad));
+        }
+
+        promise->set_value(Resource<std::string_view>::Success(
+            "Waiting Data load from other asset load adding to list to update "
+            "during update tick."));
+
+        return promise_future;
+      }
+
+      // if we're not loading instance data, this will fall out and load it, set
+      // that we're loading it. next model will see its loading. and add itself
+      // to the wait.
+      m_mapszbCurrentlyLoadingInstanceableAssets.insert(
+          std::pair(szAssetPath, true));
+    }
 
     post(strand_,
          [&, model = std::move(oOurModel), promise, path, assetPath]() mutable {
@@ -342,10 +457,10 @@ std::future<Resource<std::string_view>> ModelSystem::loadGlbFromAsset(
              const auto buffer = readBinaryFile(path, assetPath);
              handleFile(std::move(model), buffer, path, promise);
            } catch (const std::exception& e) {
-             std::cerr << "Lambda Exception " << e.what() << '\n';
+             spdlog::warn("Lambda Exception {}", e.what());
              promise->set_exception(std::make_exception_ptr(e));
            } catch (...) {
-             std::cerr << "Unknown Exception in lambda" << '\n';
+             spdlog::warn("Unknown Exception in lambda");
            }
          });
   } catch (const std::exception& e) {
@@ -381,6 +496,7 @@ void ModelSystem::handleFile(std::shared_ptr<Model>&& oOurModel,
                              const std::vector<uint8_t>& buffer,
                              const std::string& fileSource,
                              const PromisePtr& promise) {
+  spdlog::debug("handleFile");
   if (!buffer.empty()) {
     loadModelGlb(std::move(oOurModel), buffer, fileSource);
     promise->set_value(Resource<std::string_view>::Success(
@@ -474,8 +590,7 @@ void ModelSystem::vInitSystem() {
           // change stuff.
           theObject->SetCenterPosition(position);
 
-          EntityTransforms::vApplyTransform(ourEntity->second->getAsset(),
-                                            *theObject);
+          EntityTransforms::vApplyTransform(ourEntity->second, *theObject);
 
           // and change the collision
           vRemoveAndReaddModelToCollisionSystem(ourEntity->first,
@@ -508,8 +623,7 @@ void ModelSystem::vInitSystem() {
           // change stuff.
           theObject->SetRotation(rotation);
 
-          EntityTransforms::vApplyTransform(ourEntity->second->getAsset(),
-                                            *theObject);
+          EntityTransforms::vApplyTransform(ourEntity->second, *theObject);
 
           // and change the collision
           vRemoveAndReaddModelToCollisionSystem(ourEntity->first,
@@ -541,8 +655,7 @@ void ModelSystem::vInitSystem() {
           // change stuff.
           theObject->SetScale(values);
 
-          EntityTransforms::vApplyTransform(ourEntity->second->getAsset(),
-                                            *theObject);
+          EntityTransforms::vApplyTransform(ourEntity->second, *theObject);
 
           // and change the collision
           vRemoveAndReaddModelToCollisionSystem(ourEntity->first,
@@ -562,21 +675,32 @@ void ModelSystem::vInitSystem() {
 
         if (const auto ourEntity = m_mapszoAssets.find(stringGUID);
             ourEntity != m_mapszoAssets.end()) {
-          const auto modelAsset = ourEntity->second->getAsset();
-
           const auto fSystem =
               ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
                   FilamentSystem::StaticGetTypeID(),
                   "vRegisterMessageHandler::ToggleVisualForEntity");
 
-          if (value) {
-            fSystem->getFilamentScene()->addEntities(
-                modelAsset->getRenderableEntities(),
-                modelAsset->getRenderableEntityCount());
-          } else {
-            fSystem->getFilamentScene()->removeEntities(
-                modelAsset->getRenderableEntities(),
-                modelAsset->getRenderableEntityCount());
+          if (const auto modelAsset = ourEntity->second->getAsset()) {
+            if (value) {
+              fSystem->getFilamentScene()->addEntities(
+                  modelAsset->getRenderableEntities(),
+                  modelAsset->getRenderableEntityCount());
+            } else {
+              fSystem->getFilamentScene()->removeEntities(
+                  modelAsset->getRenderableEntities(),
+                  modelAsset->getRenderableEntityCount());
+            }
+          } else if (const auto modelAssetInstance =
+                         ourEntity->second->getAssetInstance()) {
+            if (value) {
+              fSystem->getFilamentScene()->addEntities(
+                  modelAssetInstance->getEntities(),
+                  modelAssetInstance->getEntityCount());
+            } else {
+              fSystem->getFilamentScene()->removeEntities(
+                  modelAssetInstance->getEntities(),
+                  modelAssetInstance->getEntityCount());
+            }
           }
         }
 

@@ -36,7 +36,16 @@ Model::Model(std::string assetPath,
     : RenderableEntityObject(params),
       assetPath_(std::move(assetPath)),
       url_(std::move(url)),
-      m_poAsset(nullptr) {
+      m_poAsset(nullptr),
+      m_poAssetInstance(nullptr) {
+  Deserialize::DecodeParameterWithDefault(kRenderable_KeepAssetInMemory,
+                                          &m_bShouldKeepAssetDataInMemory,
+                                          params, false);
+
+  Deserialize::DecodeParameterWithDefault(
+      kRenderable_IsPrimaryAssetToInstanceFrom,
+      &m_bIsPrimaryAssetToInstanceFrom, params, false);
+
   DeserializeNameAndGlobalGuid(params);
 }
 
@@ -217,17 +226,40 @@ void Model::vChangeMaterialDefinitions(const flutter::EncodableMap& params,
   auto& renderManager =
       filamentSystem->getFilamentEngine()->getRenderableManager();
 
-  utils::Slice const listOfRenderables{getAsset()->getRenderableEntities(),
-                                       getAsset()->getRenderableEntityCount()};
+  if (getAsset()) {
+    utils::Slice const listOfRenderables{
+        getAsset()->getRenderableEntities(),
+        getAsset()->getRenderableEntityCount()};
 
-  // Note this will apply to EVERYTHING currently. You might want a custom <only
-  // effect these pieces> type functionality.
-  for (const auto entity : listOfRenderables) {
-    const auto ri = renderManager.getInstance(entity);
+    // Note this will apply to EVERYTHING currently. You might want a custom
+    // <only effect these pieces> type functionality.
+    for (const auto entity : listOfRenderables) {
+      const auto ri = renderManager.getInstance(entity);
 
-    // I dont know about primitive index being non zero if our tree has multiple
-    // nodes getting from the asset.
-    renderManager.setMaterialInstanceAt(ri, 0, *m_poMaterialInstance.getData());
+      // I dont know about primitive index being non zero if our tree has
+      // multiple nodes getting from the asset.
+      renderManager.setMaterialInstanceAt(ri, 0,
+                                          *m_poMaterialInstance.getData());
+    }
+  } else if (getAssetInstance()) {
+    const utils::Entity* instanceEntities = getAssetInstance()->getEntities();
+    const size_t instanceEntityCount = getAssetInstance()->getEntityCount();
+
+    for (size_t i = 0; i < instanceEntityCount; i++) {
+      // Check if this entity has a Renderable component
+      if (const utils::Entity entity = instanceEntities[i];
+          renderManager.hasComponent(entity)) {
+        const auto ri = renderManager.getInstance(entity);
+
+        // A Renderable can have multiple primitives (submeshes)
+        const size_t submeshCount = renderManager.getPrimitiveCount(ri);
+        for (size_t sm = 0; sm < submeshCount; sm++) {
+          // Give the submesh our new material instance
+          renderManager.setMaterialInstanceAt(ri, sm,
+                                              *m_poMaterialInstance.getData());
+        }
+      }
+    }
   }
 }
 

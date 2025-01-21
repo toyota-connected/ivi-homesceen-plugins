@@ -23,6 +23,7 @@
 #include <gltfio/ResourceLoader.h>
 #include <asio/io_context_strand.hpp>
 #include <future>
+#include <list>
 
 namespace plugin_filament_view {
 
@@ -86,7 +87,17 @@ class ModelSystem : public ECSystem {
   std::map<EntityGUID, std::shared_ptr<Model>> m_mapszoAssets;  // NOLINT
 
   // This will be needed for a list of prefab instances to load from
-  // std::map<Model*> <name>models_;
+  std::map<std::string, filament::gltfio::FilamentAsset*>
+      m_mapInstanceableAssets_;
+
+  // So we start the program, and say we want 20 foxes. We only load '1',
+  // queue the other ones in here, and instance off the main one when its
+  // completed.
+  std::map<std::string, std::list<std::shared_ptr<Model>>>
+      m_mapszoAssetsAwaitingDataLoad;
+
+  // When loading, it will be in here so we know not to load more than 1
+  std::map<std::string, bool> m_mapszbCurrentlyLoadingInstanceableAssets;
 
   // This is a reusable list of renderables for popping off
   // async load.
@@ -97,8 +108,10 @@ class ModelSystem : public ECSystem {
   // not actively used, to be moved
   std::vector<float> morphWeights_;
 
-  void vSetupAssetThroughoutECS(std::shared_ptr<Model>& sharedPtr,
-                                filament::gltfio::FilamentAsset* filamentAsset);
+  void vSetupAssetThroughoutECS(
+      std::shared_ptr<Model>& sharedPtr,
+      filament::gltfio::FilamentAsset* filamentAsset,
+      filament::gltfio::FilamentInstance* filamentAssetInstance);
 
   void populateSceneWithAsyncLoadedAssets(const Model* model);
 

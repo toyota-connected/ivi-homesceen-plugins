@@ -15,6 +15,7 @@
  */
 #include "entitytransforms.h"
 
+#include <core/entity/derived/model/model.h>
 #include <core/systems/derived/filament_system.h>
 #include <core/systems/ecsystems_manager.h>
 #include <filament/TransformManager.h>
@@ -401,11 +402,19 @@ void EntityTransforms::vApplyLookAt(const std::shared_ptr<Entity>& poEntity,
 
 ////////////////////////////////////////////////////////////////////////////
 void EntityTransforms::vApplyTransform(
-    const filament::gltfio::FilamentAsset* poAsset,
+    const std::shared_ptr<Model>& oModelAsset,
     const BaseTransform& transform,
     filament::Engine* engine) {
   auto& transformManager = engine->getTransformManager();
-  const auto ei = transformManager.getInstance(poAsset->getRoot());
+
+  Entity entityToWorkWith;
+  if (oModelAsset->getAsset() != nullptr) {
+    entityToWorkWith = oModelAsset->getAsset()->getRoot();
+  } else if (oModelAsset->getAssetInstance() != nullptr) {
+    entityToWorkWith = oModelAsset->getAssetInstance()->getRoot();
+  }
+
+  const auto ei = transformManager.getInstance(entityToWorkWith);
 
   // Create the rotation, scaling, and translation matrices
   const auto rotationMatrix = QuaternionToMat4f(transform.GetRotation());
@@ -424,17 +433,14 @@ void EntityTransforms::vApplyTransform(
 
 ////////////////////////////////////////////////////////////////////////////
 void EntityTransforms::vApplyTransform(
-    const filament::gltfio::FilamentAsset* poAsset,
+    const std::shared_ptr<Model>& oModelAsset,
     const BaseTransform& transform) {
-  if (!poAsset)
-    return;
-
   const auto filamentSystem =
       ECSystemManager::GetInstance()->poGetSystemAs<FilamentSystem>(
           FilamentSystem::StaticGetTypeID(), "EntityTransforms");
   const auto engine = filamentSystem->getFilamentEngine();
 
-  vApplyTransform(poAsset, transform, engine);
+  vApplyTransform(oModelAsset, transform, engine);
 }
 
 }  // namespace plugin_filament_view

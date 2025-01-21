@@ -26,6 +26,7 @@
 #include <gltfio/FilamentAsset.h>
 
 namespace plugin_filament_view {
+class Model;
 
 using ::utils::Entity;
 
@@ -102,9 +103,9 @@ class EntityTransforms {
                            const filament::math::float3& target,
                            const filament::math::float3& up,
                            ::filament::Engine* engine);
-  static void vApplyTransform(const filament::gltfio::FilamentAsset* poAsset,
+  static void vApplyTransform(const std::shared_ptr<Model>& oModelAsset,
                               const BaseTransform& transform);
-  static void vApplyTransform(const filament::gltfio::FilamentAsset* poAsset,
+  static void vApplyTransform(const std::shared_ptr<Model>& oModelAsset,
                               const BaseTransform& transform,
                               ::filament::Engine* engine);
 };
