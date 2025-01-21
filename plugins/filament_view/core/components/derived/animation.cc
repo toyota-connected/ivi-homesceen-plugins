@@ -131,7 +131,7 @@ void Animation::vEnqueueAnimation(const int32_t index) {
     return;
   }
 
-  if (index >= m_mapAnimationNamesToIndex.size()) {
+  if (static_cast<size_t>(index) >= m_mapAnimationNamesToIndex.size()) {
     spdlog::warn(
         "Attempting to vEnqueueAnimation that is greater than total count of "
         "animations.");
@@ -160,7 +160,8 @@ void Animation::vSetAnimator(filament::gltfio::Animator& animator) {
 
 ////////////////////////////////////////////////////////////////////////////
 void Animation::vPlayAnimation(int32_t index) {
-  if (index < 0 || index >= m_mapAnimationNamesToIndex.size()) {
+  if (index < 0 ||
+      static_cast<size_t>(index) >= m_mapAnimationNamesToIndex.size()) {
     spdlog::warn("Invalid animation index: {}", index);
     return;
   }

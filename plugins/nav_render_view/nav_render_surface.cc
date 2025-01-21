@@ -295,6 +295,9 @@ const platform_view_listener NavRenderSurface::platform_view_listener_ = {
     .set_direction = on_set_direction,
     .set_offset = on_set_offset,
     .on_touch = on_touch,
-    .dispose = on_dispose};
+    .dispose = on_dispose,
+    .accept_gesture = nullptr,
+    .reject_gesture = nullptr,
+};
 
 }  // namespace nav_render_view_plugin

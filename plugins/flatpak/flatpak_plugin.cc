@@ -18,7 +18,6 @@
 
 #include <filesystem>
 #include <sstream>
-#include <stdexcept>
 #include <vector>
 
 #include <zlib.h>
@@ -190,7 +189,7 @@ Installation FlatpakPlugin::get_installation(
   flutter::EncodableList remote_list;
 
   const auto remotes = get_remotes(installation);
-  for (auto j = 0; j < remotes->len; j++) {
+  for (size_t j = 0; j < remotes->len; j++) {
     const auto remote =
         static_cast<FlatpakRemote*>(g_ptr_array_index(remotes, j));
 
@@ -271,10 +270,10 @@ ErrorOr<Installation> FlatpakPlugin::GetUserInstallation() {
 ErrorOr<flutter::EncodableList> FlatpakPlugin::GetSystemInstallations() {
   flutter::EncodableList installs_list;
   const auto system_installations = get_system_installations();
-  for (auto i = 0; i < system_installations->len; i++) {
+  for (size_t i = 0; i < system_installations->len; i++) {
     const auto installation = static_cast<FlatpakInstallation*>(
         g_ptr_array_index(system_installations, i));
-    installs_list.push_back(
+    installs_list.emplace_back(
         flutter::CustomEncodableValue(get_installation(installation)));
   }
   g_ptr_array_unref(system_installations);
@@ -357,14 +356,14 @@ ErrorOr<flutter::EncodableList> FlatpakPlugin::GetApplicationsInstalled() {
   get_application_list(installation, application_list);
 
   const auto system_installations = get_system_installations();
-  for (auto i = 0; i < system_installations->len; i++) {
+  for (size_t i = 0; i < system_installations->len; i++) {
     installation = static_cast<FlatpakInstallation*>(
         g_ptr_array_index(system_installations, i));
     get_application_list(installation, application_list);
   }
   g_ptr_array_unref(system_installations);
 
-  return std::move(application_list);
+  return application_list;
 }
 
 ErrorOr<flutter::EncodableList> FlatpakPlugin::GetApplicationsRemote(
@@ -473,7 +472,7 @@ std::string FlatpakPlugin::get_metadata_as_string(
   const auto data = static_cast<const char*>(g_bytes_get_data(g_bytes, &size));
   std::string result(data, size);
   g_bytes_unref(g_bytes);
-  return std::move(result);
+  return result;
 }
 
 std::string FlatpakPlugin::get_appdata_as_string(
@@ -497,7 +496,7 @@ std::string FlatpakPlugin::get_appdata_as_string(
   decompress_gzip(compressedData, decompressedData);
   std::string decompressedString(decompressedData.begin(),
                                  decompressedData.end());
-  return std::move(decompressedString);
+  return decompressedString;
 }
 
 flutter::EncodableMap FlatpakPlugin::get_content_rating_map(

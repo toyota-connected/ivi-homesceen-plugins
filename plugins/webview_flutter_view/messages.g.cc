@@ -305,7 +305,7 @@ void InstanceManagerHostApi::SetUp(flutter::BinaryMessenger* binary_messenger,
         &GetCodec());
     if (api != nullptr) {
       channel->SetMessageHandler(
-          [api](const EncodableValue& message,
+          [api](const EncodableValue& /* message */,
                 const flutter::MessageReply<EncodableValue>& reply) {
             try {
               std::optional<FlutterError> output = api->Clear();
@@ -422,7 +422,9 @@ void JavaObjectFlutterApi::Dispose(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 /// The codec used by CookieManagerHostApi.
@@ -1780,7 +1782,9 @@ void WebViewFlutterApi::Create(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebViewFlutterApi::OnScrollChanged(
@@ -1806,7 +1810,9 @@ void WebViewFlutterApi::OnScrollChanged(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 /// The codec used by WebSettingsHostApi.
@@ -2552,7 +2558,9 @@ void JavaScriptChannelFlutterApi::PostMessage(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 /// The codec used by WebViewClientHostApi.
@@ -2739,7 +2747,9 @@ void WebViewClientFlutterApi::OnPageStarted(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebViewClientFlutterApi::OnPageFinished(
@@ -2761,7 +2771,9 @@ void WebViewClientFlutterApi::OnPageFinished(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebViewClientFlutterApi::OnReceivedHttpError(
@@ -2785,7 +2797,9 @@ void WebViewClientFlutterApi::OnReceivedHttpError(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebViewClientFlutterApi::OnReceivedRequestError(
@@ -2809,7 +2823,9 @@ void WebViewClientFlutterApi::OnReceivedRequestError(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebViewClientFlutterApi::OnReceivedError(
@@ -2835,7 +2851,9 @@ void WebViewClientFlutterApi::OnReceivedError(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebViewClientFlutterApi::RequestLoading(
@@ -2857,7 +2875,9 @@ void WebViewClientFlutterApi::RequestLoading(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebViewClientFlutterApi::UrlLoading(
@@ -2879,7 +2899,9 @@ void WebViewClientFlutterApi::UrlLoading(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebViewClientFlutterApi::DoUpdateVisitedHistory(
@@ -2903,7 +2925,9 @@ void WebViewClientFlutterApi::DoUpdateVisitedHistory(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebViewClientFlutterApi::OnReceivedHttpAuthRequest(
@@ -2929,7 +2953,9 @@ void WebViewClientFlutterApi::OnReceivedHttpAuthRequest(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 /// The codec used by DownloadListenerHostApi.
@@ -3028,7 +3054,9 @@ void DownloadListenerFlutterApi::OnDownloadStart(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 /// The codec used by WebChromeClientHostApi.
@@ -3463,7 +3491,9 @@ void WebChromeClientFlutterApi::OnProgressChanged(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebChromeClientFlutterApi::OnShowFileChooser(
@@ -3512,7 +3542,9 @@ void WebChromeClientFlutterApi::OnPermissionRequest(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebChromeClientFlutterApi::OnShowCustomView(
@@ -3534,7 +3566,9 @@ void WebChromeClientFlutterApi::OnShowCustomView(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebChromeClientFlutterApi::OnHideCustomView(
@@ -3552,7 +3586,9 @@ void WebChromeClientFlutterApi::OnHideCustomView(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebChromeClientFlutterApi::OnGeolocationPermissionsShowPrompt(
@@ -3574,7 +3610,9 @@ void WebChromeClientFlutterApi::OnGeolocationPermissionsShowPrompt(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebChromeClientFlutterApi::OnGeolocationPermissionsHidePrompt(
@@ -3592,7 +3630,9 @@ void WebChromeClientFlutterApi::OnGeolocationPermissionsHidePrompt(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebChromeClientFlutterApi::OnConsoleMessage(
@@ -3612,7 +3652,9 @@ void WebChromeClientFlutterApi::OnConsoleMessage(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebChromeClientFlutterApi::OnJsAlert(
@@ -3634,7 +3676,9 @@ void WebChromeClientFlutterApi::OnJsAlert(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 void WebChromeClientFlutterApi::OnJsConfirm(
@@ -3824,7 +3868,9 @@ void FileChooserParamsFlutterApi::Create(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 /// The codec used by PermissionRequestHostApi.
@@ -3958,7 +4004,9 @@ void PermissionRequestFlutterApi::Create(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 /// The codec used by CustomViewCallbackHostApi.
@@ -4049,7 +4097,9 @@ void CustomViewCallbackFlutterApi::Create(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 // Generated class from Pigeon that represents Flutter messages that can be
@@ -4076,7 +4126,9 @@ void ViewFlutterApi::Create(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 /// The codec used by GeolocationPermissionsCallbackHostApi.
@@ -4189,7 +4241,9 @@ void GeoPermissionsCallbackFlutterApi::Create(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 /// The codec used by HttpAuthHandlerHostApi.
@@ -4364,7 +4418,9 @@ void HttpAuthHandlerFlutterApi::Create(
   channel->Send(
       encoded_api_arguments,
       [on_success = std::move(on_success), on_error = std::move(on_error)](
-          const uint8_t* reply, size_t reply_size) { on_success(); });
+          const uint8_t* /* reply */, size_t /* reply_size */) {
+        on_success();
+      });
 }
 
 }  // namespace plugin_webview_flutter

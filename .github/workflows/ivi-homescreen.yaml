@@ -1,5 +1,4 @@
----
-name: ivi-homescreen-plugins
+name: "ivi-homescreen-plugins"
 
 on:
   pull_request:
@@ -13,12 +12,16 @@ on:
 
 jobs:
   homescreen:
+    permissions:
+      contents: read
+      pull-requests: write
+
     runs-on: ubuntu-22.04
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          path: plugins
           submodules: 'true'
           persist-credentials: false
 

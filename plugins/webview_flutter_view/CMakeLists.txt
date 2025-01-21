@@ -42,8 +42,11 @@ add_subdirectory(${CEF_ROOT})
 
 target_include_directories(plugin_webview_flutter_view PRIVATE
         include
-        ${CEF_ROOT}
-        ${CEF_ROOT}/include
+)
+
+target_compile_options(plugin_webview_flutter_view PRIVATE
+        -isystem${CEF_ROOT}
+        -isystem${CEF_ROOT}/include
 )
 
 target_link_directories(plugin_webview_flutter_view PUBLIC

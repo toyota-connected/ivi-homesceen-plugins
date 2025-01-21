@@ -24,10 +24,11 @@ const FlutterDesktopPixelBuffer* FlutterVideoRenderer::CopyPixelBuffer(
     size_t /* height */) const {
   mutex_.lock();
   if (pixel_buffer_.get() && frame_.get()) {
-    if (pixel_buffer_->width != frame_->width() ||
-        pixel_buffer_->height != frame_->height()) {
-      size_t buffer_size =
-          (size_t(frame_->width()) * size_t(frame_->height())) * (32 >> 3);
+    if (pixel_buffer_->width != static_cast<size_t>(frame_->width()) ||
+        pixel_buffer_->height != static_cast<size_t>(frame_->height())) {
+      const size_t buffer_size = (static_cast<size_t>(frame_->width()) *
+                                  static_cast<size_t>(frame_->height())) *
+                                 (32 >> 3);
       rgb_buffer_.reset(new uint8_t[buffer_size]);
       pixel_buffer_->width = static_cast<size_t>(frame_->width());
       pixel_buffer_->height = static_cast<size_t>(frame_->height());
@@ -61,12 +62,12 @@ void FlutterVideoRenderer::OnFrame(scoped_refptr<RTCVideoFrame> frame) {
     params[EncodableValue("event")] = "didTextureChangeRotation";
     params[EncodableValue("id")] = EncodableValue(texture_id_);
     params[EncodableValue("rotation")] =
-        EncodableValue((int32_t)frame->rotation());
+        EncodableValue(static_cast<int32_t>(frame->rotation()));
     event_channel_->Success(EncodableValue(params), true);
     rotation_ = frame->rotation();
   }
-  if (last_frame_size_.width != frame->width() ||
-      last_frame_size_.height != frame->height()) {
+  if (last_frame_size_.width != static_cast<size_t>(frame->width()) ||
+      last_frame_size_.height != static_cast<size_t>(frame->height())) {
     EncodableMap params;
     params[EncodableValue("event")] = "didTextureChangeVideoSize";
     params[EncodableValue("id")] = EncodableValue(texture_id_);
@@ -74,7 +75,7 @@ void FlutterVideoRenderer::OnFrame(scoped_refptr<RTCVideoFrame> frame) {
     params[EncodableValue("height")] = EncodableValue((int32_t)frame->height());
     event_channel_->Success(EncodableValue(params), true);
 
-    last_frame_size_ = {(size_t)frame->width(), (size_t)frame->height()};
+    last_frame_size_ = {static_cast<size_t>(frame->width()), static_cast<size_t>(frame->height())};
   }
   mutex_.lock();
   frame_ = frame;
@@ -102,7 +103,7 @@ bool FlutterVideoRenderer::CheckMediaStream(const std::string& mediaId) const {
   return mediaId == media_stream_id;
 }
 
-bool FlutterVideoRenderer::CheckVideoTrack(const std::string& mediaId) {
+bool FlutterVideoRenderer::CheckVideoTrack(const std::string& mediaId) const {
   if (mediaId.empty() || !track_) {
     return false;
   }

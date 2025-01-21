@@ -121,8 +121,8 @@ class MaterialParameter {
               std::get<std::unique_ptr<TextureDefinitions>>(textureValue);
           if (texturePtr) {
             // Assuming TextureDefinitions has a clone method
-            return std::make_unique<MaterialParameter>(
-                name_, type_, std::move(texturePtr->clone()));
+            return std::make_unique<MaterialParameter>(name_, type_,
+                                                       texturePtr->clone());
           }
         }
         break;

@@ -36,7 +36,7 @@ class FlutterVideoRenderer
 
   bool CheckMediaStream(const std::string& mediaId) const;
 
-  bool CheckVideoTrack(const std::string& mediaId);
+  bool CheckVideoTrack(const std::string& mediaId) const;
 
   std::string media_stream_id;
 

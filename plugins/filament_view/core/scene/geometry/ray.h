@@ -27,7 +27,7 @@ namespace plugin_filament_view {
 class Ray {
  public:
   Ray(Position& pos, Direction& dir, float length)
-      : position_(pos), direction_(dir), length_(length) {}
+      : direction_(dir), position_(pos), length_(length) {}
   explicit Ray(const flutter::EncodableMap& params);
 
   [[nodiscard]] ::filament::math::float3 f3GetPosition() const {
