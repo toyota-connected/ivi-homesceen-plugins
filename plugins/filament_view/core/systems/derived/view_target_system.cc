@@ -124,9 +124,10 @@ void ViewTargetSystem::vInitSystem() {
       ECSMessageType::SetCameraFromDeserializedLoad,
       [this](const ECSMessage& msg) {
         spdlog::debug("SetCameraFromDeserializedLoad");
-        m_poCamera =
-            msg.getData<Camera*>(ECSMessageType::SetCameraFromDeserializedLoad)
-                ->clone();
+        const auto deserializedCamera =
+            msg.getData<Camera*>(ECSMessageType::SetCameraFromDeserializedLoad);
+        m_poCamera = deserializedCamera->clone();
+        delete deserializedCamera;
         spdlog::debug("SetCameraFromDeserializedLoad Complete");
 
         vSetCameraFromSerializedData();

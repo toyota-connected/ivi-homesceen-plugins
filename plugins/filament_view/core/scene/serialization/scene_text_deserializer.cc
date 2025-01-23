@@ -172,7 +172,7 @@ void SceneTextDeserializer::vDeserializeSceneLevel(
     } else if (key == kIndirectLight) {
       indirect_light_ = IndirectLight::Deserialize(encodableMap);
     } else if (key == kCamera) {
-      camera_ = std::make_unique<Camera>(encodableMap);
+      camera_ = new Camera(encodableMap);
     } else if (key == "ground") {
       spdlog::warn(
           "Specifying a ground is no longer supporting, a ground is now a "
@@ -193,10 +193,14 @@ void SceneTextDeserializer::vRunPostSetupLoad() {
   setUpIndirectLight();
   setUpShapes();
 
+  // note Camera* is deleted on the other side, freeing up the memory.
   ECSMessage viewTargetCameraSet;
   viewTargetCameraSet.addData(ECSMessageType::SetCameraFromDeserializedLoad,
-                              camera_.get());
+                              camera_);
   ECSystemManager::GetInstance()->vRouteMessage(viewTargetCameraSet);
+
+  indirect_light_.reset();
+  skybox_.reset();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
