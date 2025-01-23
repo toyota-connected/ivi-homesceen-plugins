@@ -59,7 +59,7 @@ class SceneTextDeserializer {
   std::unique_ptr<Skybox> skybox_;
   std::unique_ptr<IndirectLight> indirect_light_;
   std::map<EntityGUID, std::shared_ptr<Light>> lights_;
-  std::unique_ptr<Camera> camera_;
+  Camera* camera_{};
 };
 
 }  // namespace plugin_filament_view
