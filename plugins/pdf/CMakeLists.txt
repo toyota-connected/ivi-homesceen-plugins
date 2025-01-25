@@ -37,13 +37,9 @@ target_include_directories(plugin_pdf PRIVATE
         ${PDFIUM_INCLUDE_DIR}
 )
 
-target_link_directories(plugin_pdf PUBLIC
-        ${PDFIUM_LINK_LIBRARIES_DIR}
-)
-
 target_link_libraries(plugin_pdf PUBLIC
         flutter
         platform_homescreen
         plugin_common
-        pdfium
+        ${PDFIUM_LINK_LIBRARIES_DIR}/libpdfium.so
 )
