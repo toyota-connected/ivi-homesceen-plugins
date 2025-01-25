@@ -200,6 +200,7 @@ void PluginsAoiPlatformViewCreate(
   } else
 #endif
   {
+    (void)flutter_asset_directory;
     (void)addListener;
     (void)removeListener;
     (void)platform_view_context;
