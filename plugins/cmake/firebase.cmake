@@ -24,8 +24,7 @@ if (NOT DEFINED FIREBASE_SDK_LIBDIR)
 endif ()
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(UUID REQUIRED IMPORTED_TARGET uuid)
-pkg_check_modules(SECRET REQUIRED IMPORTED_TARGET libsecret-1)
+pkg_check_modules(DEPS REQUIRED IMPORTED_TARGET uuid libsecret-1 libsystemd)
 
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 include(FindThreads)
@@ -68,54 +67,89 @@ target_link_libraries(firebase_sdk INTERFACE
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/leveldb-build/libleveldb.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/nanopb-build/libprotobuf-nanopb.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/libgrpc++.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/libupb.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/libgrpc.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/libupb_textformat_lib.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/libupb_message_lib.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/libupb_mem_lib.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/libupb_base_lib.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/libupb_json_lib.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/libutf8_range_lib.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/re2/libre2.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_cordz_functions.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_cordz_info.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_strings.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_strings_internal.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_cordz_handle.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_cord_internal.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_str_format_internal.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_cord.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/base/libabsl_malloc_internal.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/base/libabsl_log_severity.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/base/libabsl_strerror.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/base/libabsl_raw_logging_internal.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/base/libabsl_throw_delegate.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/base/libabsl_base.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/base/libabsl_spinlock_wait.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/container/libabsl_raw_hash_set.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/container/libabsl_hashtablez_sampler.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/synchronization/libabsl_synchronization.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/synchronization/libabsl_graphcycles_internal.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/synchronization/libabsl_kernel_timeout_internal.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/status/libabsl_statusor.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/status/libabsl_status.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_log_sink.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_log_internal_globals.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_log_internal_log_sink_set.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_log_entry.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_die_if_null.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_log_initialize.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_log_internal_conditions.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_log_globals.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_log_internal_check_op.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_log_internal_format.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_log_internal_message.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_vlog_config_internal.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_log_internal_proto.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_log_internal_nullguard.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/log/libabsl_log_internal_fnmatch.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/hash/libabsl_hash.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/hash/libabsl_low_level_hash.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/hash/libabsl_city.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/flags/libabsl_flags_private_handle_accessor.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/flags/libabsl_flags_commandlineflag.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/flags/libabsl_flags_internal.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/flags/libabsl_flags_reflection.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/flags/libabsl_flags_config.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/flags/libabsl_flags_commandlineflag_internal.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/flags/libabsl_flags_marshalling.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/flags/libabsl_flags_program_name.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/crc/libabsl_crc32c.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/crc/libabsl_crc_cpu_detect.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/crc/libabsl_crc_internal.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/crc/libabsl_crc_cord_state.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/profiling/libabsl_exponential_biased.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_internal_randen_hwaes_impl.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_internal_randen_slow.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_internal_randen_hwaes.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_internal_seed_material.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_seed_gen_exception.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_internal_randen.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_seed_sequences.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_internal_platform.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_internal_pool_urbg.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_distributions.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_str_format_internal.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_strings.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_cord.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_string_view.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_cordz_info.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_cordz_functions.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_cord_internal.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_strings_internal.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/strings/libabsl_cordz_handle.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/debugging/libabsl_symbolize.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/debugging/libabsl_debugging_internal.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/debugging/libabsl_examine_stack.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/debugging/libabsl_stacktrace.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/debugging/libabsl_demangle_internal.a
+        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/debugging/libabsl_leak_check.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/time/libabsl_time.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/time/libabsl_civil_time.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/time/libabsl_time_zone.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/profiling/libabsl_exponential_biased.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/types/libabsl_bad_optional_access.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/types/libabsl_bad_variant_access.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_internal_randen_hwaes.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_internal_randen.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_internal_randen_slow.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_distributions.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_internal_seed_material.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_internal_platform.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_internal_randen_hwaes_impl.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_internal_pool_urbg.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_seed_sequences.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/random/libabsl_random_seed_gen_exception.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/synchronization/libabsl_graphcycles_internal.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/synchronization/libabsl_synchronization.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/container/libabsl_raw_hash_set.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/container/libabsl_hashtablez_sampler.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/debugging/libabsl_symbolize.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/debugging/libabsl_stacktrace.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/debugging/libabsl_debugging_internal.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/debugging/libabsl_demangle_internal.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/base/libabsl_malloc_internal.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/base/libabsl_throw_delegate.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/base/libabsl_base.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/base/libabsl_raw_logging_internal.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/base/libabsl_strerror.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/base/libabsl_log_severity.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/base/libabsl_spinlock_wait.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/numeric/libabsl_int128.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/status/libabsl_statusor.a
-        ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/abseil-cpp/absl/status/libabsl_status.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/protobuf/libprotoc.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/protobuf/libprotobuf.a
         ${FIREBASE_SDK_LIBDIR}/external/src/firestore-build/external/src/grpc-build/third_party/cares/cares/lib/libcares.a
@@ -129,7 +163,5 @@ target_link_libraries(firebase_sdk INTERFACE
         ${FIREBASE_SDK_LIBDIR}/external/src/boringssl/libssl.a
         ${FIREBASE_SDK_LIBDIR}/external/src/boringssl/libcrypto.a
         ${FIREBASE_SDK_LIBDIR}/external/src/zlib-build/libz.a
-        PkgConfig::UUID
-        PkgConfig::SECRET
-        Threads::Threads
+        PkgConfig::DEPS
 )

@@ -31,8 +31,8 @@ target_include_directories(plugin_firebase_storage PRIVATE
 target_link_directories(plugin_firebase_storage PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 target_link_libraries(plugin_firebase_storage PUBLIC
-        plugin_firebase_core
         firebase_sdk
+        plugin_firebase_core
         flutter
         platform_homescreen
 )

@@ -1,12 +1,11 @@
 // Copyright 2023, the Chromium project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-// Copyright 2023, Toyota Connected North America
 
 #include "firestore_codec.h"
 
-#include <cmath>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -28,7 +27,7 @@ using firebase::firestore::GeoPoint;
 using flutter::CustomEncodableValue;
 using flutter::EncodableValue;
 
-cloud_firestore_linux::FirestoreCodec::FirestoreCodec() = default;
+cloud_firestore_linux::FirestoreCodec::FirestoreCodec() {}
 
 union DoubleToBytes {
   double value;
@@ -39,7 +38,8 @@ void cloud_firestore_linux::FirestoreCodec::WriteValue(
     const flutter::EncodableValue& value,
     flutter::ByteStreamWriter* stream) const {
   if (std::holds_alternative<CustomEncodableValue>(value)) {
-    const auto& custom_value = std::get<CustomEncodableValue>(value);
+    const CustomEncodableValue& custom_value =
+        std::get<CustomEncodableValue>(value);
     if (custom_value.type() == typeid(Timestamp)) {
       const Timestamp& timestamp = std::any_cast<Timestamp>(custom_value);
       stream->WriteByte(DATA_TYPE_TIMESTAMP);
@@ -49,10 +49,10 @@ void cloud_firestore_linux::FirestoreCodec::WriteValue(
       const GeoPoint& geopoint = std::any_cast<GeoPoint>(custom_value);
       stream->WriteByte(DATA_TYPE_GEO_POINT);
       stream->WriteAlignment(8);
-      DoubleToBytes converterLatitude = {0.0};
+      DoubleToBytes converterLatitude;
       converterLatitude.value = geopoint.latitude();
       stream->WriteBytes(converterLatitude.bytes, 8);
-      DoubleToBytes converterLongitude = {0.0};
+      DoubleToBytes converterLongitude;
       converterLongitude.value = geopoint.longitude();
       stream->WriteBytes(converterLongitude.bytes, 8);
     } else if (custom_value.type() == typeid(DocumentReference)) {
@@ -62,12 +62,9 @@ void cloud_firestore_linux::FirestoreCodec::WriteValue(
       const Firestore* firestore = reference.firestore();
       std::string appName = firestore->app()->name();
       std::string databaseUrl = "(default)";
-      flutter::StandardCodecSerializer::WriteValue(
-          flutter::EncodableValue(appName), stream);
-      flutter::StandardCodecSerializer::WriteValue(
-          flutter::EncodableValue(reference.path()), stream);
-      flutter::StandardCodecSerializer::WriteValue(
-          flutter::EncodableValue(databaseUrl), stream);
+      flutter::StandardCodecSerializer::WriteValue(appName, stream);
+      flutter::StandardCodecSerializer::WriteValue(reference.path(), stream);
+      flutter::StandardCodecSerializer::WriteValue(databaseUrl, stream);
     } else if (custom_value.type() ==
                typeid(double)) {  // Assuming Double is standard C++ double
       const double& myDouble = std::any_cast<double>(custom_value);
@@ -86,9 +83,9 @@ void cloud_firestore_linux::FirestoreCodec::WriteValue(
   }
 }
 
-flutter::EncodableValue cloud_firestore_linux::FirestoreCodec::ReadValueOfType(
-    uint8_t type,
-    flutter::ByteStreamReader* stream) const {
+flutter::EncodableValue
+cloud_firestore_linux::FirestoreCodec::ReadValueOfType(
+    uint8_t type, flutter::ByteStreamReader* stream) const {
   switch (type) {
     case DATA_TYPE_DATE_TIME: {
       int64_t value;
@@ -113,7 +110,7 @@ flutter::EncodableValue cloud_firestore_linux::FirestoreCodec::ReadValueOfType(
       auto customValue =
           std::get<CustomEncodableValue>(FirestoreCodec::ReadValue(stream));
 
-      auto* firestoreRef = std::any_cast<Firestore*>(customValue);
+      Firestore* firestoreRef = std::any_cast<Firestore*>(customValue);
 
       std::string path =
           std::get<std::string>(FirestoreCodec::ReadValue(stream));
@@ -218,7 +215,7 @@ flutter::EncodableValue cloud_firestore_linux::FirestoreCodec::ReadValueOfType(
       if (CloudFirestorePlugin::firestoreInstances_.find(appName) !=
           CloudFirestorePlugin::firestoreInstances_.end()) {
         return CustomEncodableValue(
-            CloudFirestorePlugin::firestoreInstances_[appName]);
+            CloudFirestorePlugin::firestoreInstances_[appName].get());
       }
 
       firebase::App* app = firebase::App::GetInstance(appName.c_str());
@@ -226,7 +223,8 @@ flutter::EncodableValue cloud_firestore_linux::FirestoreCodec::ReadValueOfType(
       Firestore* firestore = Firestore::GetInstance(app);
       firestore->set_settings(settings);
 
-      CloudFirestorePlugin::firestoreInstances_[appName] = firestore;
+      CloudFirestorePlugin::firestoreInstances_[appName] =
+          std::unique_ptr<firebase::firestore::Firestore>(firestore);
 
       return CustomEncodableValue(firestore);
     }

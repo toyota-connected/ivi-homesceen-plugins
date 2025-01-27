@@ -24,16 +24,13 @@ class FlutterError {
   explicit FlutterError(const std::string& code) : code_(code) {}
   explicit FlutterError(const std::string& code, const std::string& message)
       : code_(code), message_(message) {}
-  explicit FlutterError(const std::string& code,
-                        const std::string& message,
+  explicit FlutterError(const std::string& code, const std::string& message,
                         const flutter::EncodableValue& details)
       : code_(code), message_(message), details_(details) {}
 
-  [[nodiscard]] const std::string& code() const { return code_; }
-  [[nodiscard]] const std::string& message() const { return message_; }
-  [[nodiscard]] const flutter::EncodableValue& details() const {
-    return details_;
-  }
+  const std::string& code() const { return code_; }
+  const std::string& message() const { return message_; }
+  const flutter::EncodableValue& details() const { return details_; }
 
  private:
   std::string code_;
@@ -44,18 +41,14 @@ class FlutterError {
 template <class T>
 class ErrorOr {
  public:
-  explicit ErrorOr(const T& rhs) : v_(rhs) {}
-  explicit ErrorOr(const T&& rhs) : v_(std::move(rhs)) {}
-  explicit ErrorOr(const FlutterError& rhs) : v_(rhs) {}
-  explicit ErrorOr(const FlutterError&& rhs) : v_(std::move(rhs)) {}
+  ErrorOr(const T& rhs) : v_(rhs) {}
+  ErrorOr(const T&& rhs) : v_(std::move(rhs)) {}
+  ErrorOr(const FlutterError& rhs) : v_(rhs) {}
+  ErrorOr(const FlutterError&& rhs) : v_(std::move(rhs)) {}
 
-  [[nodiscard]] bool has_error() const {
-    return std::holds_alternative<FlutterError>(v_);
-  }
+  bool has_error() const { return std::holds_alternative<FlutterError>(v_); }
   const T& value() const { return std::get<T>(v_); };
-  [[nodiscard]] const FlutterError& error() const {
-    return std::get<FlutterError>(v_);
-  };
+  const FlutterError& error() const { return std::get<FlutterError>(v_); };
 
  private:
   friend class FirebaseStorageHostApi;
@@ -84,27 +77,28 @@ enum class PigeonStorageTaskState {
 class PigeonStorageFirebaseApp {
  public:
   // Constructs an object setting all non-nullable fields.
-  explicit PigeonStorageFirebaseApp(std::string app_name, std::string bucket);
+  explicit PigeonStorageFirebaseApp(const std::string& app_name,
+                                    const std::string& bucket);
 
   // Constructs an object setting all fields.
-  explicit PigeonStorageFirebaseApp(std::string app_name,
+  explicit PigeonStorageFirebaseApp(const std::string& app_name,
                                     const std::string* tenant_id,
-                                    std::string bucket);
+                                    const std::string& bucket);
 
-  [[nodiscard]] const std::string& app_name() const;
+  const std::string& app_name() const;
   void set_app_name(std::string_view value_arg);
 
-  [[nodiscard]] const std::string* tenant_id() const;
+  const std::string* tenant_id() const;
   void set_tenant_id(const std::string_view* value_arg);
   void set_tenant_id(std::string_view value_arg);
 
-  [[nodiscard]] const std::string& bucket() const;
+  const std::string& bucket() const;
   void set_bucket(std::string_view value_arg);
 
  private:
   static PigeonStorageFirebaseApp FromEncodableList(
       const flutter::EncodableList& list);
-  [[nodiscard]] flutter::EncodableList ToEncodableList() const;
+  flutter::EncodableList ToEncodableList() const;
   friend class FirebaseStorageHostApi;
   friend class FirebaseStorageHostApiCodecSerializer;
   std::string app_name_;
@@ -120,19 +114,19 @@ class PigeonStorageReference {
                                   const std::string& full_path,
                                   const std::string& name);
 
-  [[nodiscard]] const std::string& bucket() const;
+  const std::string& bucket() const;
   void set_bucket(std::string_view value_arg);
 
-  [[nodiscard]] const std::string& full_path() const;
+  const std::string& full_path() const;
   void set_full_path(std::string_view value_arg);
 
-  [[nodiscard]] const std::string& name() const;
+  const std::string& name() const;
   void set_name(std::string_view value_arg);
 
  private:
   static PigeonStorageReference FromEncodableList(
       const flutter::EncodableList& list);
-  [[nodiscard]] flutter::EncodableList ToEncodableList() const;
+  flutter::EncodableList ToEncodableList() const;
   friend class FirebaseStorageHostApi;
   friend class FirebaseStorageHostApiCodecSerializer;
   std::string bucket_;
@@ -149,14 +143,14 @@ class PigeonFullMetaData {
   // Constructs an object setting all fields.
   explicit PigeonFullMetaData(const flutter::EncodableMap* metadata);
 
-  [[nodiscard]] const flutter::EncodableMap* metadata() const;
+  const flutter::EncodableMap* metadata() const;
   void set_metadata(const flutter::EncodableMap* value_arg);
   void set_metadata(const flutter::EncodableMap& value_arg);
 
  private:
   static PigeonFullMetaData FromEncodableList(
       const flutter::EncodableList& list);
-  [[nodiscard]] flutter::EncodableList ToEncodableList() const;
+  flutter::EncodableList ToEncodableList() const;
   friend class FirebaseStorageHostApi;
   friend class FirebaseStorageHostApiCodecSerializer;
   std::optional<flutter::EncodableMap> metadata_;
@@ -175,20 +169,20 @@ class PigeonListOptions {
   // If set, limits the total number of `prefixes` and `items` to return.
   //
   // The default and maximum maxResults is 1000.
-  [[nodiscard]] int64_t max_results() const;
+  int64_t max_results() const;
   void set_max_results(int64_t value_arg);
 
   // The nextPageToken from a previous call to list().
   //
   // If provided, listing is resumed from the previous position.
-  [[nodiscard]] const std::string* page_token() const;
+  const std::string* page_token() const;
   void set_page_token(const std::string_view* value_arg);
   void set_page_token(std::string_view value_arg);
 
  private:
   static PigeonListOptions FromEncodableList(
       const flutter::EncodableList& list);
-  [[nodiscard]] flutter::EncodableList ToEncodableList() const;
+  flutter::EncodableList ToEncodableList() const;
   friend class FirebaseStorageHostApi;
   friend class FirebaseStorageHostApiCodecSerializer;
   int64_t max_results_;
@@ -213,7 +207,7 @@ class PigeonSettableMetadata {
   //
   // See
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control.
-  [[nodiscard]] const std::string* cache_control() const;
+  const std::string* cache_control() const;
   void set_cache_control(const std::string_view* value_arg);
   void set_cache_control(std::string_view value_arg);
 
@@ -221,7 +215,7 @@ class PigeonSettableMetadata {
   //
   // See
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition.
-  [[nodiscard]] const std::string* content_disposition() const;
+  const std::string* content_disposition() const;
   void set_content_disposition(const std::string_view* value_arg);
   void set_content_disposition(std::string_view value_arg);
 
@@ -229,7 +223,7 @@ class PigeonSettableMetadata {
   //
   // See
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding.
-  [[nodiscard]] const std::string* content_encoding() const;
+  const std::string* content_encoding() const;
   void set_content_encoding(const std::string_view* value_arg);
   void set_content_encoding(std::string_view value_arg);
 
@@ -237,26 +231,26 @@ class PigeonSettableMetadata {
   //
   // See
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Language.
-  [[nodiscard]] const std::string* content_language() const;
+  const std::string* content_language() const;
   void set_content_language(const std::string_view* value_arg);
   void set_content_language(std::string_view value_arg);
 
   // Served as the 'Content-Type' header on object download.
   //
   // See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type.
-  [[nodiscard]] const std::string* content_type() const;
+  const std::string* content_type() const;
   void set_content_type(const std::string_view* value_arg);
   void set_content_type(std::string_view value_arg);
 
   // Additional user-defined custom metadata.
-  [[nodiscard]] const flutter::EncodableMap* custom_metadata() const;
+  const flutter::EncodableMap* custom_metadata() const;
   void set_custom_metadata(const flutter::EncodableMap* value_arg);
   void set_custom_metadata(const flutter::EncodableMap& value_arg);
 
  private:
   static PigeonSettableMetadata FromEncodableList(
       const flutter::EncodableList& list);
-  [[nodiscard]] flutter::EncodableList ToEncodableList() const;
+  flutter::EncodableList ToEncodableList() const;
   friend class FirebaseStorageHostApi;
   friend class FirebaseStorageHostApiCodecSerializer;
   std::optional<std::string> cache_control_;
@@ -279,19 +273,19 @@ class PigeonListResult {
                             const std::string* page_token,
                             const flutter::EncodableList& prefixs);
 
-  [[nodiscard]] const flutter::EncodableList& items() const;
+  const flutter::EncodableList& items() const;
   void set_items(const flutter::EncodableList& value_arg);
 
-  [[nodiscard]] const std::string* page_token() const;
+  const std::string* page_token() const;
   void set_page_token(const std::string_view* value_arg);
   void set_page_token(std::string_view value_arg);
 
-  [[nodiscard]] const flutter::EncodableList& prefixs() const;
+  const flutter::EncodableList& prefixs() const;
   void set_prefixs(const flutter::EncodableList& value_arg);
 
  private:
   static PigeonListResult FromEncodableList(const flutter::EncodableList& list);
-  [[nodiscard]] flutter::EncodableList ToEncodableList() const;
+  flutter::EncodableList ToEncodableList() const;
   friend class FirebaseStorageHostApi;
   friend class FirebaseStorageHostApiCodecSerializer;
   flutter::EncodableList items_;
@@ -313,8 +307,7 @@ class FirebaseStorageHostApiCodecSerializer
 
  protected:
   flutter::EncodableValue ReadValueOfType(
-      uint8_t type,
-      flutter::ByteStreamReader* stream) const override;
+      uint8_t type, flutter::ByteStreamReader* stream) const override;
 };
 
 // Generated interface from Pigeon that represents a handler of messages from
@@ -323,27 +316,22 @@ class FirebaseStorageHostApi {
  public:
   FirebaseStorageHostApi(const FirebaseStorageHostApi&) = delete;
   FirebaseStorageHostApi& operator=(const FirebaseStorageHostApi&) = delete;
-  virtual ~FirebaseStorageHostApi() = default;
+  virtual ~FirebaseStorageHostApi() {}
   virtual void GetReferencebyPath(
-      const PigeonStorageFirebaseApp& app,
-      const std::string& path,
+      const PigeonStorageFirebaseApp& app, const std::string& path,
       const std::string* bucket,
       std::function<void(ErrorOr<PigeonStorageReference> reply)> result) = 0;
   virtual void SetMaxOperationRetryTime(
-      const PigeonStorageFirebaseApp& app,
-      int64_t time,
+      const PigeonStorageFirebaseApp& app, int64_t time,
       std::function<void(std::optional<FlutterError> reply)> result) = 0;
   virtual void SetMaxUploadRetryTime(
-      const PigeonStorageFirebaseApp& app,
-      int64_t time,
+      const PigeonStorageFirebaseApp& app, int64_t time,
       std::function<void(std::optional<FlutterError> reply)> result) = 0;
   virtual void SetMaxDownloadRetryTime(
-      const PigeonStorageFirebaseApp& app,
-      int64_t time,
+      const PigeonStorageFirebaseApp& app, int64_t time,
       std::function<void(std::optional<FlutterError> reply)> result) = 0;
   virtual void UseStorageEmulator(
-      const PigeonStorageFirebaseApp& app,
-      const std::string& host,
+      const PigeonStorageFirebaseApp& app, const std::string& host,
       int64_t port,
       std::function<void(std::optional<FlutterError> reply)> result) = 0;
   virtual void ReferenceDelete(
@@ -360,8 +348,7 @@ class FirebaseStorageHostApi {
       std::function<void(ErrorOr<PigeonFullMetaData> reply)> result) = 0;
   virtual void ReferenceList(
       const PigeonStorageFirebaseApp& app,
-      const PigeonStorageReference& reference,
-      const PigeonListOptions& options,
+      const PigeonStorageReference& reference, const PigeonListOptions& options,
       std::function<void(ErrorOr<PigeonListResult> reply)> result) = 0;
   virtual void ReferenceListAll(
       const PigeonStorageFirebaseApp& app,
@@ -369,37 +356,29 @@ class FirebaseStorageHostApi {
       std::function<void(ErrorOr<PigeonListResult> reply)> result) = 0;
   virtual void ReferenceGetData(
       const PigeonStorageFirebaseApp& app,
-      const PigeonStorageReference& reference,
-      int64_t max_size,
+      const PigeonStorageReference& reference, int64_t max_size,
       std::function<void(ErrorOr<std::optional<std::vector<uint8_t>>> reply)>
           result) = 0;
   virtual void ReferencePutData(
       const PigeonStorageFirebaseApp& app,
-      const PigeonStorageReference& reference,
-      const std::vector<uint8_t>& data,
-      const PigeonSettableMetadata& settable_meta_data,
-      uint64_t handle,
+      const PigeonStorageReference& reference, const std::vector<uint8_t>& data,
+      const PigeonSettableMetadata& settable_meta_data, int64_t handle,
       std::function<void(ErrorOr<std::string> reply)> result) = 0;
   virtual void ReferencePutString(
       const PigeonStorageFirebaseApp& app,
-      const PigeonStorageReference& reference,
-      const std::string& data,
-      int64_t format,
-      const PigeonSettableMetadata& settable_meta_data,
-      uint64_t handle,
+      const PigeonStorageReference& reference, const std::string& data,
+      int64_t format, const PigeonSettableMetadata& settable_meta_data,
+      int64_t handle,
       std::function<void(ErrorOr<std::string> reply)> result) = 0;
   virtual void ReferencePutFile(
       const PigeonStorageFirebaseApp& app,
-      const PigeonStorageReference& reference,
-      const std::string& file_path,
-      const PigeonSettableMetadata& settable_meta_data,
-      uint64_t handle,
+      const PigeonStorageReference& reference, const std::string& file_path,
+      const PigeonSettableMetadata* settable_meta_data, int64_t handle,
       std::function<void(ErrorOr<std::string> reply)> result) = 0;
   virtual void ReferenceDownloadFile(
       const PigeonStorageFirebaseApp& app,
-      const PigeonStorageReference& reference,
-      const std::string& file_path,
-      uint64_t handle,
+      const PigeonStorageReference& reference, const std::string& file_path,
+      int64_t handle,
       std::function<void(ErrorOr<std::string> reply)> result) = 0;
   virtual void ReferenceUpdateMetadata(
       const PigeonStorageFirebaseApp& app,
@@ -407,16 +386,13 @@ class FirebaseStorageHostApi {
       const PigeonSettableMetadata& metadata,
       std::function<void(ErrorOr<PigeonFullMetaData> reply)> result) = 0;
   virtual void TaskPause(
-      const PigeonStorageFirebaseApp& app,
-      uint64_t handle,
+      const PigeonStorageFirebaseApp& app, int64_t handle,
       std::function<void(ErrorOr<flutter::EncodableMap> reply)> result) = 0;
   virtual void TaskResume(
-      const PigeonStorageFirebaseApp& app,
-      uint64_t handle,
+      const PigeonStorageFirebaseApp& app, int64_t handle,
       std::function<void(ErrorOr<flutter::EncodableMap> reply)> result) = 0;
   virtual void TaskCancel(
-      const PigeonStorageFirebaseApp& app,
-      uint64_t handle,
+      const PigeonStorageFirebaseApp& app, int64_t handle,
       std::function<void(ErrorOr<flutter::EncodableMap> reply)> result) = 0;
 
   // The codec used by FirebaseStorageHostApi.

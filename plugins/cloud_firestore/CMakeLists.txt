@@ -26,8 +26,8 @@ target_compile_definitions(plugin_cloud_firestore PRIVATE INTERNAL_EXPERIMENTAL 
 target_include_directories(plugin_cloud_firestore PUBLIC include)
 
 target_link_libraries(plugin_cloud_firestore PUBLIC
-        plugin_firebase_core
         firebase_sdk
+        plugin_firebase_core
         flutter
         platform_homescreen
 )

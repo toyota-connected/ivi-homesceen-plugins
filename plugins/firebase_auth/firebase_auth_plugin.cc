@@ -1,26 +1,35 @@
 // Copyright 2023, the Chromium project authors.  Please see the AUTHORS file
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-// Copyright 2023, Toyota Connected North America
 
 #include "firebase_auth_plugin.h"
+
+#include <chrono>
+#include <thread>
 
 #include "firebase/app.h"
 #include "firebase/auth.h"
 #include "firebase/future.h"
 #include "firebase/log.h"
+#include "firebase/util.h"
 #include "firebase/variant.h"
 #include "firebase_auth/plugin_version.h"
+#include "firebase_core/firebase_core_plugin_c_api.h"
 #include "messages.g.h"
 
+// For getPlatformVersion; remove unless needed for your plugin implementation.
+#include <VersionHelpers.h>
 #include <flutter/event_channel.h>
+#include <flutter/method_channel.h>
 #include <flutter/plugin_registrar.h>
 #include <flutter/standard_method_codec.h>
 
 #include <future>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -46,8 +55,7 @@ void FirebaseAuthPlugin::RegisterWithRegistrar(
   binaryMessenger = registrar->messenger();
 
   // Register for platform logging
-  App::RegisterLibrary(kLibraryName.c_str(),
-                       firebase_auth_linux::getPluginVersion().c_str(),
+  App::RegisterLibrary(kLibraryName.c_str(), getPluginVersion().c_str(),
                        nullptr);
 }
 
@@ -108,16 +116,11 @@ firebase_auth_linux::FirebaseAuthPlugin::ConvertToEncodableValue(
     case firebase::Variant::kTypeMutableString:
       return EncodableValue(variant.mutable_string());
     case firebase::Variant::kTypeMap:
-      return EncodableValue(
-          FirebaseAuthPlugin::ConvertToEncodableMap(variant.map()));
+      return FirebaseAuthPlugin::ConvertToEncodableMap(variant.map());
     case firebase::Variant::kTypeStaticBlob:
-      assert(false);
-      return EncodableValue(nullptr);
-      // return EncodableValue(variant.blob_data());
+      return EncodableValue(variant.blob_data());
     case firebase::Variant::kTypeMutableBlob:
-      assert(false);
-      return EncodableValue(nullptr);
-      // return EncodableValue(variant.mutable_blob_data());
+      return EncodableValue(variant.mutable_blob_data());
     default:
       return EncodableValue();
   }
@@ -314,14 +317,17 @@ class FlutterIdTokenListener : public firebase::auth::IdTokenListener {
     firebase::auth::User user = auth->current_user();
     PigeonUserDetails userDetails = FirebaseAuthPlugin::ParseUserDetails(user);
 
+    using flutter::EncodableList;
     using flutter::EncodableMap;
     using flutter::EncodableValue;
 
     if (event_sink_) {
       if (user.is_valid()) {
+        EncodableList userDetailsList = EncodableList();
+        userDetailsList.push_back(userDetails.user_info().ToEncodableList());
+        userDetailsList.push_back(userDetails.provider_data());
         event_sink_->Success(EncodableValue(
-            EncodableMap{{EncodableValue("user"),
-                          EncodableValue(userDetails.ToEncodableList())}}));
+            EncodableMap{{EncodableValue("user"), userDetailsList}}));
       } else {
         event_sink_->Success(EncodableValue(EncodableMap{
             {EncodableValue("user"), EncodableValue(std::monostate{})}}));
@@ -395,14 +401,18 @@ class FlutterAuthStateListener : public firebase::auth::AuthStateListener {
     firebase::auth::User user = auth->current_user();
     PigeonUserDetails userDetails = FirebaseAuthPlugin::ParseUserDetails(user);
 
+    using flutter::EncodableList;
     using flutter::EncodableMap;
     using flutter::EncodableValue;
 
     if (event_sink_) {
       if (user.is_valid()) {
+        EncodableList userDetailsList = EncodableList();
+        userDetailsList.push_back(userDetails.user_info().ToEncodableList());
+        userDetailsList.push_back(userDetails.provider_data());
+
         event_sink_->Success(EncodableValue(
-            EncodableMap{{EncodableValue("user"),
-                          EncodableValue(userDetails.ToEncodableList())}}));
+            EncodableMap{{EncodableValue("user"), userDetailsList}}));
       } else {
         event_sink_->Success(EncodableValue(EncodableMap{
             {EncodableValue("user"), EncodableValue(std::monostate{})}}));
@@ -469,9 +479,7 @@ void FirebaseAuthPlugin::RegisterAuthStateListener(
 }
 
 void FirebaseAuthPlugin::UseEmulator(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& host,
-    int64_t port,
+    const AuthPigeonFirebaseApp& app, const std::string& host, int64_t port,
     std::function<void(std::optional<FlutterError> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
   firebaseAuth->UseEmulator(host, static_cast<uint32_t>(port));
@@ -479,37 +487,32 @@ void FirebaseAuthPlugin::UseEmulator(
 }
 
 void FirebaseAuthPlugin::ApplyActionCode(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& code,
+    const AuthPigeonFirebaseApp& app, const std::string& code,
     std::function<void(std::optional<FlutterError> reply)> result) {
   result(FlutterError("unimplemented",
                       "ApplyActionCode is not available on this platform yet.",
-                      EncodableValue(nullptr)));
+                      nullptr));
 }
 
 void FirebaseAuthPlugin::CheckActionCode(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& code,
+    const AuthPigeonFirebaseApp& app, const std::string& code,
     std::function<void(ErrorOr<PigeonActionCodeInfo> reply)> result) {
   result(FlutterError("unimplemented",
                       "CheckActionCode is not available on this platform yet.",
-                      EncodableValue(nullptr)));
+                      nullptr));
 }
 
 void FirebaseAuthPlugin::ConfirmPasswordReset(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& code,
+    const AuthPigeonFirebaseApp& app, const std::string& code,
     const std::string& new_password,
     std::function<void(std::optional<FlutterError> reply)> result) {
   result(FlutterError(
       "unimplemented",
-      "ConfirmPasswordReset is not available on this platform yet.",
-      EncodableValue(nullptr)));
+      "ConfirmPasswordReset is not available on this platform yet.", nullptr));
 }
 
 void FirebaseAuthPlugin::CreateUserWithEmailAndPassword(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& email,
+    const AuthPigeonFirebaseApp& app, const std::string& email,
     const std::string& password,
     std::function<void(ErrorOr<PigeonUserCredential> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
@@ -588,17 +591,14 @@ std::string const kArgumentActionCodeSettings = "actionCodeSettings";
 typedef std::unordered_map<std::string, std::string> Dictionary;
 
 firebase::auth::Credential getCredentialFromArguments(
-    flutter::EncodableMap arguments,
-    const AuthPigeonFirebaseApp& app) {
+    flutter::EncodableMap arguments, const AuthPigeonFirebaseApp& app) {
   std::string signInMethod =
-      std::get<std::string>(arguments[EncodableValue(kArgumentSignInMethod)]);
+      std::get<std::string>(arguments[kArgumentSignInMethod]);
 
   // Password Auth
   if (signInMethod == kSignInMethodPassword) {
-    std::string email =
-        std::get<std::string>(arguments[EncodableValue(kArgumentEmail)]);
-    std::string secret =
-        std::get<std::string>(arguments[EncodableValue(kArgumentSecret)]);
+    std::string email = std::get<std::string>(arguments[kArgumentEmail]);
+    std::string secret = std::get<std::string>(arguments[kArgumentSecret]);
     return firebase::auth::EmailAuthProvider::GetCredential(email.c_str(),
                                                             secret.c_str());
   }
@@ -612,46 +612,65 @@ firebase::auth::Credential getCredentialFromArguments(
     return firebase::auth::Credential();
   }
 
-  std::string idToken =
-      std::get<std::string>(arguments[EncodableValue(kArgumentIdToken)]);
-  std::string accessToken =
-      std::get<std::string>(arguments[EncodableValue(kArgumentAccessToken)]);
+  // Lambda function to extract an optional string from the arguments map. This
+  // allows us to pass nullptr if no value exists
+  auto getStringOpt =
+      [&](const std::string& key) -> std::optional<std::string> {
+    auto it = arguments.find(key);
+    if (it != arguments.end() &&
+        std::holds_alternative<std::string>(it->second)) {
+      return std::get<std::string>(it->second);
+    }
+    return std::nullopt;
+  };
+
+  std::optional<std::string> idToken = getStringOpt(kArgumentIdToken);
+  std::optional<std::string> accessToken = getStringOpt(kArgumentAccessToken);
 
   // Facebook Auth
   if (signInMethod == kSignInMethodFacebook) {
     return firebase::auth::FacebookAuthProvider::GetCredential(
-        accessToken.c_str());
+        accessToken.value().c_str());
   }
 
   // Google Auth
   if (signInMethod == kSignInMethodGoogle) {
+    // Both accessToken and idToken arguments can be null. You can use one or
+    // the other
     return firebase::auth::GoogleAuthProvider::GetCredential(
-        idToken.c_str(), accessToken.c_str());
+        idToken ? idToken.value().c_str() : nullptr,
+        accessToken ? accessToken.value().c_str() : nullptr);
   }
 
   // Twitter Auth
   if (signInMethod == kSignInMethodTwitter) {
-    std::string secret =
-        std::get<std::string>(arguments[EncodableValue(kArgumentSecret)]);
-    return firebase::auth::TwitterAuthProvider::GetCredential(idToken.c_str(),
-                                                              secret.c_str());
+    std::string secret = std::get<std::string>(arguments[kArgumentSecret]);
+    return firebase::auth::TwitterAuthProvider::GetCredential(
+        idToken.value().c_str(), secret.c_str());
   }
 
   // GitHub Auth
   if (signInMethod == kSignInMethodGithub) {
     return firebase::auth::GitHubAuthProvider::GetCredential(
-        accessToken.c_str());
+        accessToken.value().c_str());
   }
 
   // OAuth
   if (signInMethod == kSignInMethodOAuth) {
     std::string providerId =
-        std::get<std::string>(arguments[EncodableValue(kArgumentProviderId)]);
-    // As of my knowledge cutoff in September 2021, Firebase C++ SDK doesn't
-    // support creating OAuthProvider credentials directly
-    std::cout << "Creating OAuthProvider credentials directly is not supported "
-                 "in Firebase C++ SDK as of September 2021.\n";
-    return firebase::auth::Credential();
+        std::get<std::string>(arguments[kArgumentProviderId]);
+    std::optional<std::string> rawNonce = getStringOpt(kArgumentRawNonce);
+    // If rawNonce provided use corresponding credential builder
+    // e.g. AppleID auth through the webView
+    if (rawNonce) {
+      return firebase::auth::OAuthProvider::GetCredential(
+          providerId.c_str(), idToken.value().c_str(), rawNonce.value().c_str(),
+          accessToken ? accessToken.value().c_str() : nullptr);
+    } else {
+      return firebase::auth::OAuthProvider::GetCredential(
+          providerId.c_str(), idToken.value().c_str(),
+          accessToken.value().c_str());
+    }
   }
 
   // If no known auth method matched
@@ -662,8 +681,7 @@ firebase::auth::Credential getCredentialFromArguments(
 }
 
 void FirebaseAuthPlugin::SignInWithCredential(
-    const AuthPigeonFirebaseApp& app,
-    const flutter::EncodableMap& input,
+    const AuthPigeonFirebaseApp& app, const flutter::EncodableMap& input,
     std::function<void(ErrorOr<PigeonUserCredential> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
 
@@ -688,8 +706,7 @@ void FirebaseAuthPlugin::SignInWithCredential(
 }
 
 void FirebaseAuthPlugin::SignInWithCustomToken(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& token,
+    const AuthPigeonFirebaseApp& app, const std::string& token,
     std::function<void(ErrorOr<PigeonUserCredential> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
 
@@ -711,8 +728,7 @@ void FirebaseAuthPlugin::SignInWithCustomToken(
 }
 
 void FirebaseAuthPlugin::SignInWithEmailAndPassword(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& email,
+    const AuthPigeonFirebaseApp& app, const std::string& email,
     const std::string& password,
     std::function<void(ErrorOr<PigeonUserCredential> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
@@ -735,14 +751,12 @@ void FirebaseAuthPlugin::SignInWithEmailAndPassword(
 }
 
 void FirebaseAuthPlugin::SignInWithEmailLink(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& email,
+    const AuthPigeonFirebaseApp& app, const std::string& email,
     const std::string& email_link,
     std::function<void(ErrorOr<PigeonUserCredential> reply)> result) {
-  result(
-      FlutterError("unimplemented",
-                   "SignInWithEmailLink is not available on this platform yet.",
-                   EncodableValue(nullptr)));
+  result(FlutterError(
+      "unimplemented",
+      "SignInWithEmailLink is not available on this platform yet.", nullptr));
 }
 
 std::vector<std::string> TransformEncodableList(
@@ -792,9 +806,9 @@ void FirebaseAuthPlugin::SignInWithProvider(
     std::function<void(ErrorOr<PigeonUserCredential> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
 
-  auto provider = getProviderFromArguments(sign_in_provider);
   firebase::Future<firebase::auth::AuthResult> signInFuture =
-      firebaseAuth->SignInWithProvider(&provider);
+      firebaseAuth->SignInWithProvider(
+          &getProviderFromArguments(sign_in_provider));
 
   signInFuture.OnCompletion(
       [result](const firebase::Future<firebase::auth::AuthResult>&
@@ -825,15 +839,14 @@ flutter::EncodableList TransformStringList(
   flutter::EncodableList encodable_list;
 
   for (const auto& value : string_list) {
-    encodable_list.push_back(EncodableValue(value));
+    encodable_list.push_back(value);
   }
 
   return encodable_list;
 }
 
 void FirebaseAuthPlugin::FetchSignInMethodsForEmail(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& email,
+    const AuthPigeonFirebaseApp& app, const std::string& email,
     std::function<void(ErrorOr<flutter::EncodableList> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
 
@@ -854,8 +867,7 @@ void FirebaseAuthPlugin::FetchSignInMethodsForEmail(
 }
 
 void FirebaseAuthPlugin::SendPasswordResetEmail(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& email,
+    const AuthPigeonFirebaseApp& app, const std::string& email,
     const PigeonActionCodeSettings* action_code_settings,
     std::function<void(std::optional<FlutterError> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
@@ -875,19 +887,16 @@ void FirebaseAuthPlugin::SendPasswordResetEmail(
 }
 
 void FirebaseAuthPlugin::SendSignInLinkToEmail(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& email,
+    const AuthPigeonFirebaseApp& app, const std::string& email,
     const PigeonActionCodeSettings& action_code_settings,
     std::function<void(std::optional<FlutterError> reply)> result) {
   result(FlutterError(
       "unimplemented",
-      "SendSignInLinkToEmail is not available on this platform yet.",
-      EncodableValue(nullptr)));
+      "SendSignInLinkToEmail is not available on this platform yet.", nullptr));
 }
 
 void FirebaseAuthPlugin::SetLanguageCode(
-    const AuthPigeonFirebaseApp& app,
-    const std::string* language_code,
+    const AuthPigeonFirebaseApp& app, const std::string* language_code,
     std::function<void(ErrorOr<std::string> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
 
@@ -908,27 +917,25 @@ void FirebaseAuthPlugin::SetSettings(
     std::function<void(std::optional<FlutterError> reply)> result) {
   result(FlutterError("unimplemented",
                       "SetSettings is not available on this platform yet.",
-                      EncodableValue(nullptr)));
+                      nullptr));
 }
 
 void FirebaseAuthPlugin::VerifyPasswordResetCode(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& code,
+    const AuthPigeonFirebaseApp& app, const std::string& code,
     std::function<void(ErrorOr<std::string> reply)> result) {
   result(FlutterError(
       "unimplemented",
       "VerifyPasswordResetCode is not available on this platform yet.",
-      EncodableValue(nullptr)));
+      nullptr));
 }
 
 void FirebaseAuthPlugin::VerifyPhoneNumber(
     const AuthPigeonFirebaseApp& app,
     const PigeonVerifyPhoneNumberRequest& request,
     std::function<void(ErrorOr<std::string> reply)> result) {
-  result(
-      FlutterError("unimplemented",
-                   "VerifyPhoneNumber is not available on this platform yet.",
-                   EncodableValue(nullptr)));
+  result(FlutterError(
+      "unimplemented",
+      "VerifyPhoneNumber is not available on this platform yet.", nullptr));
 }
 
 void FirebaseAuthPlugin::Delete(
@@ -950,8 +957,7 @@ void FirebaseAuthPlugin::Delete(
 }
 
 void FirebaseAuthPlugin::GetIdToken(
-    const AuthPigeonFirebaseApp& app,
-    bool force_refresh,
+    const AuthPigeonFirebaseApp& app, bool force_refresh,
     std::function<void(ErrorOr<PigeonIdTokenResult> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
   firebase::auth::User user = firebaseAuth->current_user();
@@ -973,8 +979,7 @@ void FirebaseAuthPlugin::GetIdToken(
 }
 
 void FirebaseAuthPlugin::LinkWithCredential(
-    const AuthPigeonFirebaseApp& app,
-    const flutter::EncodableMap& input,
+    const AuthPigeonFirebaseApp& app, const flutter::EncodableMap& input,
     std::function<void(ErrorOr<PigeonUserCredential> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
   firebase::auth::User user = firebaseAuth->current_user();
@@ -1003,9 +1008,8 @@ void FirebaseAuthPlugin::LinkWithProvider(
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
   firebase::auth::User user = firebaseAuth->current_user();
 
-  auto provider = getProviderFromArguments(sign_in_provider);
   firebase::Future<firebase::auth::AuthResult> future =
-      user.LinkWithProvider(&provider);
+      user.LinkWithProvider(&getProviderFromArguments(sign_in_provider));
 
   future.OnCompletion(
       [result](const firebase::Future<firebase::auth::AuthResult>&
@@ -1022,8 +1026,7 @@ void FirebaseAuthPlugin::LinkWithProvider(
 }
 
 void FirebaseAuthPlugin::ReauthenticateWithCredential(
-    const AuthPigeonFirebaseApp& app,
-    const flutter::EncodableMap& input,
+    const AuthPigeonFirebaseApp& app, const flutter::EncodableMap& input,
     std::function<void(ErrorOr<PigeonUserCredential> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
   firebase::auth::User user = firebaseAuth->current_user();
@@ -1048,9 +1051,9 @@ void FirebaseAuthPlugin::ReauthenticateWithProvider(
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
   firebase::auth::User user = firebaseAuth->current_user();
 
-  auto provider = getProviderFromArguments(sign_in_provider);
   firebase::Future<firebase::auth::AuthResult> future =
-      user.ReauthenticateWithProvider(&provider);
+      user.ReauthenticateWithProvider(
+          &getProviderFromArguments(sign_in_provider));
 
   future.OnCompletion(
       [result](const firebase::Future<firebase::auth::AuthResult>&
@@ -1106,8 +1109,7 @@ void FirebaseAuthPlugin::SendEmailVerification(
 }
 
 void FirebaseAuthPlugin::Unlink(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& provider_id,
+    const AuthPigeonFirebaseApp& app, const std::string& provider_id,
     std::function<void(ErrorOr<PigeonUserCredential> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
   firebase::auth::User user = firebaseAuth->current_user();
@@ -1130,13 +1132,15 @@ void FirebaseAuthPlugin::Unlink(
 }
 
 void FirebaseAuthPlugin::UpdateEmail(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& new_email,
+    const AuthPigeonFirebaseApp& app, const std::string& new_email,
     std::function<void(ErrorOr<PigeonUserDetails> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
   firebase::auth::User user = firebaseAuth->current_user();
 
+#pragma warning(push)
+#pragma warning(disable : 4996)
   firebase::Future<void> future = user.UpdateEmail(new_email.c_str());
+#pragma warning(pop)
 
   future.OnCompletion([result, firebaseAuth](
                           const firebase::Future<void>& completed_future) {
@@ -1151,8 +1155,7 @@ void FirebaseAuthPlugin::UpdateEmail(
 }
 
 void FirebaseAuthPlugin::UpdatePassword(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& new_password,
+    const AuthPigeonFirebaseApp& app, const std::string& new_password,
     std::function<void(ErrorOr<PigeonUserDetails> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
   firebase::auth::User user = firebaseAuth->current_user();
@@ -1172,19 +1175,17 @@ void FirebaseAuthPlugin::UpdatePassword(
 }
 
 firebase::auth::PhoneAuthCredential getPhoneCredentialFromArguments(
-    flutter::EncodableMap arguments,
-    const AuthPigeonFirebaseApp& app) {
+    flutter::EncodableMap arguments, const AuthPigeonFirebaseApp& app) {
   std::string signInMethod =
-      std::get<std::string>(arguments[EncodableValue(kArgumentSignInMethod)]);
+      std::get<std::string>(arguments[kArgumentSignInMethod]);
 
   if (signInMethod == kSignInMethodPhone) {
-    std::string verificationId = std::get<std::string>(
-        arguments[EncodableValue(kArgumentVerificationId)]);
-    std::string smsCode =
-        std::get<std::string>(arguments[EncodableValue(kArgumentSmsCode)]);
+    std::string verificationId =
+        std::get<std::string>(arguments[kArgumentVerificationId]);
+    std::string smsCode = std::get<std::string>(arguments[kArgumentSmsCode]);
 
     // TODO: we cannot construct a PhoneAuthCredential from the verificationId
-    return {};
+    return firebase::auth::PhoneAuthCredential::PhoneAuthCredential();
   }
   // If no known auth method matched
   printf(
@@ -1195,8 +1196,7 @@ firebase::auth::PhoneAuthCredential getPhoneCredentialFromArguments(
 }
 
 void FirebaseAuthPlugin::UpdatePhoneNumber(
-    const AuthPigeonFirebaseApp& app,
-    const flutter::EncodableMap& input,
+    const AuthPigeonFirebaseApp& app, const flutter::EncodableMap& input,
     std::function<void(ErrorOr<PigeonUserDetails> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
   firebase::auth::User user = firebaseAuth->current_user();
@@ -1218,8 +1218,7 @@ void FirebaseAuthPlugin::UpdatePhoneNumber(
 }
 
 void FirebaseAuthPlugin::UpdateProfile(
-    const AuthPigeonFirebaseApp& app,
-    const PigeonUserProfile& profile,
+    const AuthPigeonFirebaseApp& app, const PigeonUserProfile& profile,
     std::function<void(ErrorOr<PigeonUserDetails> reply)> result) {
   firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
   firebase::auth::User user = firebaseAuth->current_user();
@@ -1248,24 +1247,38 @@ void FirebaseAuthPlugin::UpdateProfile(
 }
 
 void FirebaseAuthPlugin::VerifyBeforeUpdateEmail(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& new_email,
-    const PigeonActionCodeSettings* /* action_code_settings */,
+    const AuthPigeonFirebaseApp& app, const std::string& new_email,
+    const PigeonActionCodeSettings* action_code_settings,
     std::function<void(std::optional<FlutterError> reply)> result) {
-  result(FlutterError(
-      "unimplemented",
-      "VerifyBeforeUpdateEmail is not available on this platform yet.",
-      EncodableValue(nullptr)));
+  firebase::auth::Auth* firebaseAuth = GetAuthFromPigeon(app);
+  firebase::auth::User user = firebaseAuth->current_user();
+
+  if (action_code_settings != nullptr) {
+    printf(
+        "Firebase C++ SDK does not support using `ActionCodeSettings` for "
+        "`verifyBeforeUpdateEmail()` API currently");
+  }
+
+  firebase::Future<void> future =
+      user.SendEmailVerificationBeforeUpdatingEmail(new_email.c_str());
+
+  future.OnCompletion(
+      [result, firebaseAuth](const firebase::Future<void>& completed_future) {
+        if (completed_future.error() == 0) {
+          result(std::nullopt);
+        } else {
+          result(FirebaseAuthPlugin::ParseError(completed_future));
+        }
+      });
 }
 
 void FirebaseAuthPlugin::RevokeTokenWithAuthorizationCode(
-    const AuthPigeonFirebaseApp& app,
-    const std::string& authorization_code,
+    const AuthPigeonFirebaseApp& app, const std::string& authorization_code,
     std::function<void(std::optional<FlutterError> reply)> result) {
   result(FlutterError(
       "unimplemented",
       "RevokeTokenWithAuthorizationCode is not available on this platform yet.",
-      EncodableValue(nullptr)));
+      nullptr));
 }
 
 }  // namespace firebase_auth_linux

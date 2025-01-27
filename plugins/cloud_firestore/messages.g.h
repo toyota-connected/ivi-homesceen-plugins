@@ -26,8 +26,7 @@ class FlutterError {
   explicit FlutterError(const std::string& code) : code_(code) {}
   explicit FlutterError(const std::string& code, const std::string& message)
       : code_(code), message_(message) {}
-  explicit FlutterError(const std::string& code,
-                        const std::string& message,
+  explicit FlutterError(const std::string& code, const std::string& message,
                         const flutter::EncodableValue& details)
       : code_(code), message_(message), details_(details) {}
 
@@ -97,6 +96,27 @@ enum class Source {
   cache = 2
 };
 
+// The listener retrieves data and listens to updates from the local Firestore
+// cache only. If the cache is empty, an empty snapshot will be returned.
+// Snapshot events will be triggered on cache updates, like local mutations or
+// load bundles.
+//
+// Note that the data might be stale if the cache hasn't synchronized with
+// recent server-side changes.
+enum class ListenSource {
+  // The default behavior. The listener attempts to return initial snapshot from
+  // cache and retrieve up-to-date snapshots from the Firestore server.
+  // Snapshot events will be triggered on local mutations and server side
+  // updates.
+  defaultSource = 0,
+  // The listener retrieves data and listens to updates from the local Firestore
+  // cache only.
+  // If the cache is empty, an empty snapshot will be returned.
+  // Snapshot events will be triggered on cache updates, like local mutations or
+  // load bundles.
+  cache = 1
+};
+
 enum class ServerTimestampBehavior {
   // Return null for [FieldValue.serverTimestamp()] values that have not yet
   none = 0,
@@ -112,6 +132,14 @@ enum class ServerTimestampBehavior {
 enum class AggregateSource {
   // Indicates that the data should be retrieved from the server.
   server = 0
+};
+
+// [PersistenceCacheIndexManagerRequest] represents the request types for the
+// persistence cache index manager.
+enum class PersistenceCacheIndexManagerRequestEnum {
+  enableIndexAutoCreation = 0,
+  disableIndexAutoCreation = 1,
+  deleteAllIndexes = 2
 };
 
 enum class PigeonTransactionResult { success = 0, failure = 1 };
@@ -265,8 +293,7 @@ class PigeonDocumentChange {
   // Constructs an object setting all fields.
   explicit PigeonDocumentChange(const DocumentChangeType& type,
                                 const PigeonDocumentSnapshot& document,
-                                int64_t old_index,
-                                int64_t new_index);
+                                int64_t old_index, int64_t new_index);
 
   const DocumentChangeType& type() const;
   void set_type(const DocumentChangeType& value_arg);
@@ -421,10 +448,8 @@ class DocumentReferenceRequest {
 
   // Constructs an object setting all fields.
   explicit DocumentReferenceRequest(
-      const std::string& path,
-      const flutter::EncodableMap* data,
-      const PigeonDocumentOption* option,
-      const Source* source,
+      const std::string& path, const flutter::EncodableMap* data,
+      const PigeonDocumentOption* option, const Source* source,
       const ServerTimestampBehavior* server_timestamp_behavior);
 
   const std::string& path() const;
@@ -558,12 +583,12 @@ class AggregateQuery {
 class AggregateQueryResponse {
  public:
   // Constructs an object setting all non-nullable fields.
-  explicit AggregateQueryResponse(const AggregateType& type, double value);
+  explicit AggregateQueryResponse(const AggregateType& type);
 
   // Constructs an object setting all fields.
   explicit AggregateQueryResponse(const AggregateType& type,
                                   const std::string* field,
-                                  double value);
+                                  const double* value);
 
   const AggregateType& type() const;
   void set_type(const AggregateType& value_arg);
@@ -572,7 +597,8 @@ class AggregateQueryResponse {
   void set_field(const std::string_view* value_arg);
   void set_field(std::string_view value_arg);
 
-  double value() const;
+  const double* value() const;
+  void set_value(const double* value_arg);
   void set_value(double value_arg);
 
  private:
@@ -583,7 +609,7 @@ class AggregateQueryResponse {
   friend class FirebaseFirestoreHostApiCodecSerializer;
   AggregateType type_;
   std::optional<std::string> field_;
-  double value_;
+  std::optional<double> value_;
 };
 
 class FirebaseFirestoreHostApiCodecSerializer
@@ -600,8 +626,7 @@ class FirebaseFirestoreHostApiCodecSerializer
 
  protected:
   flutter::EncodableValue ReadValueOfType(
-      uint8_t type,
-      flutter::ByteStreamReader* stream) const override;
+      uint8_t type, flutter::ByteStreamReader* stream) const override;
 };
 
 // Generated interface from Pigeon that represents a handler of messages from
@@ -612,12 +637,10 @@ class FirebaseFirestoreHostApi {
   FirebaseFirestoreHostApi& operator=(const FirebaseFirestoreHostApi&) = delete;
   virtual ~FirebaseFirestoreHostApi() {}
   virtual void LoadBundle(
-      const FirestorePigeonFirebaseApp& app,
-      const std::vector<uint8_t>& bundle,
+      const FirestorePigeonFirebaseApp& app, const std::vector<uint8_t>& bundle,
       std::function<void(ErrorOr<std::string> reply)> result) = 0;
   virtual void NamedQueryGet(
-      const FirestorePigeonFirebaseApp& app,
-      const std::string& name,
+      const FirestorePigeonFirebaseApp& app, const std::string& name,
       const PigeonGetOptions& options,
       std::function<void(ErrorOr<PigeonQuerySnapshot> reply)> result) = 0;
   virtual void ClearPersistence(
@@ -646,8 +669,7 @@ class FirebaseFirestoreHostApi {
       const FirestorePigeonFirebaseApp& app,
       std::function<void(ErrorOr<std::string> reply)> result) = 0;
   virtual void TransactionCreate(
-      const FirestorePigeonFirebaseApp& app,
-      int64_t timeout,
+      const FirestorePigeonFirebaseApp& app, int64_t timeout,
       int64_t max_attempts,
       std::function<void(ErrorOr<std::string> reply)> result) = 0;
   virtual void TransactionStoreResult(
@@ -656,8 +678,7 @@ class FirebaseFirestoreHostApi {
       const flutter::EncodableList* commands,
       std::function<void(std::optional<FlutterError> reply)> result) = 0;
   virtual void TransactionGet(
-      const FirestorePigeonFirebaseApp& app,
-      const std::string& transaction_id,
+      const FirestorePigeonFirebaseApp& app, const std::string& transaction_id,
       const std::string& path,
       std::function<void(ErrorOr<PigeonDocumentSnapshot> reply)> result) = 0;
   virtual void DocumentReferenceSet(
@@ -677,37 +698,34 @@ class FirebaseFirestoreHostApi {
       const DocumentReferenceRequest& request,
       std::function<void(std::optional<FlutterError> reply)> result) = 0;
   virtual void QueryGet(
-      const FirestorePigeonFirebaseApp& app,
-      const std::string& path,
-      bool is_collection_group,
-      const PigeonQueryParameters& parameters,
+      const FirestorePigeonFirebaseApp& app, const std::string& path,
+      bool is_collection_group, const PigeonQueryParameters& parameters,
       const PigeonGetOptions& options,
       std::function<void(ErrorOr<PigeonQuerySnapshot> reply)> result) = 0;
   virtual void AggregateQuery(
-      const FirestorePigeonFirebaseApp& app,
-      const std::string& path,
-      const PigeonQueryParameters& parameters,
-      const AggregateSource& source,
-      const flutter::EncodableList& queries,
-      bool is_collection_group,
+      const FirestorePigeonFirebaseApp& app, const std::string& path,
+      const PigeonQueryParameters& parameters, const AggregateSource& source,
+      const flutter::EncodableList& queries, bool is_collection_group,
       std::function<void(ErrorOr<flutter::EncodableList> reply)> result) = 0;
   virtual void WriteBatchCommit(
       const FirestorePigeonFirebaseApp& app,
       const flutter::EncodableList& writes,
       std::function<void(std::optional<FlutterError> reply)> result) = 0;
   virtual void QuerySnapshot(
-      const FirestorePigeonFirebaseApp& app,
-      const std::string& path,
-      bool is_collection_group,
-      const PigeonQueryParameters& parameters,
-      const PigeonGetOptions& options,
-      bool include_metadata_changes,
+      const FirestorePigeonFirebaseApp& app, const std::string& path,
+      bool is_collection_group, const PigeonQueryParameters& parameters,
+      const PigeonGetOptions& options, bool include_metadata_changes,
+      const ListenSource& source,
       std::function<void(ErrorOr<std::string> reply)> result) = 0;
   virtual void DocumentReferenceSnapshot(
       const FirestorePigeonFirebaseApp& app,
-      const DocumentReferenceRequest& parameters,
-      bool include_metadata_changes,
+      const DocumentReferenceRequest& parameters, bool include_metadata_changes,
+      const ListenSource& source,
       std::function<void(ErrorOr<std::string> reply)> result) = 0;
+  virtual void PersistenceCacheIndexManagerRequest(
+      const FirestorePigeonFirebaseApp& app,
+      const PersistenceCacheIndexManagerRequestEnum& request,
+      std::function<void(std::optional<FlutterError> reply)> result) = 0;
 
   // The codec used by FirebaseFirestoreHostApi.
   static const flutter::StandardMessageCodec& GetCodec();
@@ -722,4 +740,4 @@ class FirebaseFirestoreHostApi {
   FirebaseFirestoreHostApi() = default;
 };
 }  // namespace cloud_firestore_linux
-#endif  // PIGEON_MESSAGES_G_H
+#endif  // PIGEON_MESSAGES_G_H_
