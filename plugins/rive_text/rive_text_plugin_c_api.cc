@@ -18,11 +18,17 @@
 
 #include "flutter/plugin_registrar.h"
 
+#include "common/common.h"
+#include "librive_text.h"
 #include "rive_text_plugin.h"
 
 void RiveTextPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar) {
-  plugin_rive_text::RiveTextPlugin::RegisterWithRegistrar(
-      flutter::PluginRegistrarManager::GetInstance()
-          ->GetRegistrar<flutter::PluginRegistrar>(registrar));
+  if (!plugin_rive_text::LibRiveText::IsPresent()) {
+    plugin_rive_text::RiveTextPlugin::RegisterWithRegistrar(
+        flutter::PluginRegistrarManager::GetInstance()
+            ->GetRegistrar<flutter::PluginRegistrar>(registrar));
+  } else {
+    spdlog::debug("librive_text.sp not found. Rive plugin will not be loaded.");
+  }
 }

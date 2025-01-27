@@ -19,17 +19,12 @@
 #include <flutter/plugin_registrar.h>
 
 #include "librive_text.h"
-#include "plugins/common/common.h"
 
 namespace plugin_rive_text {
 
 // static
 void RiveTextPlugin::RegisterWithRegistrar(
-    flutter::PluginRegistrar* /* registrar */) {
-  if (!LibRiveText::IsPresent()) {
-    spdlog::error("librive_text.so not found");
-  }
-}
+    flutter::PluginRegistrar* /* registrar */) {}
 
 RiveTextPlugin::RiveTextPlugin() = default;
 

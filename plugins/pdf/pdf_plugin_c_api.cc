@@ -18,11 +18,17 @@
 
 #include "flutter/plugin_registrar.h"
 
+#include "common/common.h"
+#include "libpdfium.h"
 #include "pdf_plugin.h"
 
 void PrintingPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar) {
-  plugin_pdf::PdfPlugin::RegisterWithRegistrar(
-      flutter::PluginRegistrarManager::GetInstance()
-          ->GetRegistrar<flutter::PluginRegistrar>(registrar));
+  if (plugin_pdf::LibPdfium::IsPresent()) {
+    plugin_pdf::PdfPlugin::RegisterWithRegistrar(
+        flutter::PluginRegistrarManager::GetInstance()
+            ->GetRegistrar<flutter::PluginRegistrar>(registrar));
+  } else {
+    spdlog::debug("libpdfium.so not found. PDF plugin will not be loaded.");
+  }
 }
