@@ -27,7 +27,7 @@ using flutter::EncodableList;
 using flutter::EncodableMap;
 using flutter::EncodableValue;
 
-extern std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel;
+extern std::unique_ptr<flutter::MethodChannel<>> channel;
 
 // Sets up an instance of `PrintingApi` to handle messages through the
 // `binary_messenger`.
@@ -57,38 +57,37 @@ void PrintingApi::SetUp(flutter::BinaryMessenger* binary_messenger,
               const auto& args = std::get_if<EncodableMap>(call.arguments());
               std::string name = "document.pdf";
               std::vector<uint8_t> doc;
-              for (auto& it : *args) {
-                if ("name" == std::get<std::string>(it.first) &&
-                    std::holds_alternative<std::string>(it.second)) {
-                  name = std::get<std::string>(it.second);
+              for (const auto& [fst, snd] : *args) {
+                if ("name" == std::get<std::string>(fst) &&
+                    std::holds_alternative<std::string>(snd)) {
+                  name = std::get<std::string>(snd);
                 }
-                if ("doc" == std::get<std::string>(it.first) &&
-                    std::holds_alternative<std::vector<uint8_t>>(it.second)) {
-                  doc = std::get<std::vector<uint8_t>>(it.second);
+                if ("doc" == std::get<std::string>(fst) &&
+                    std::holds_alternative<std::vector<uint8_t>>(snd)) {
+                  doc = std::get<std::vector<uint8_t>>(snd);
                 }
               }
-              auto res = api->SharePdf(std::move(doc), name);
+              const auto res = api->SharePdf(std::move(doc), name);
               result->Success(flutter::EncodableValue(res ? 1 : 0));
             } else if ("rasterPdf" == call.method_name()) {
               const auto& args = std::get_if<EncodableMap>(call.arguments());
               std::vector<uint8_t> doc;
               std::vector<int32_t> pages;
-              int32_t job_id;
-              double scale;
-              for (auto& it : *args) {
-                if ("doc" == std::get<std::string>(it.first) &&
-                    std::holds_alternative<std::vector<uint8_t>>(it.second)) {
-                  doc = std::get<std::vector<uint8_t>>(it.second);
-                } else if ("pages" == std::get<std::string>(it.first) &&
-                           std::holds_alternative<std::vector<int32_t>>(
-                               it.second)) {
-                  pages = std::get<std::vector<int32_t>>(it.second);
-                } else if ("job" == std::get<std::string>(it.first) &&
-                           std::holds_alternative<int32_t>(it.second)) {
-                  job_id = std::get<int32_t>(it.second);
-                } else if ("scale" == std::get<std::string>(it.first) &&
-                           std::holds_alternative<double>(it.second)) {
-                  scale = std::get<double>(it.second);
+              int32_t job_id = 0;
+              double scale = 0;
+              for (const auto& [fst, snd] : *args) {
+                if ("doc" == std::get<std::string>(fst) &&
+                    std::holds_alternative<std::vector<uint8_t>>(snd)) {
+                  doc = std::get<std::vector<uint8_t>>(snd);
+                } else if ("pages" == std::get<std::string>(fst) &&
+                           std::holds_alternative<std::vector<int32_t>>(snd)) {
+                  pages = std::get<std::vector<int32_t>>(snd);
+                } else if ("job" == std::get<std::string>(fst) &&
+                           std::holds_alternative<int32_t>(snd)) {
+                  job_id = std::get<int32_t>(snd);
+                } else if ("scale" == std::get<std::string>(fst) &&
+                           std::holds_alternative<double>(snd)) {
+                  scale = std::get<double>(snd);
                 }
               }
               api->RasterPdf(std::move(doc), std::move(pages), scale, job_id);
@@ -101,7 +100,7 @@ void PrintingApi::SetUp(flutter::BinaryMessenger* binary_messenger,
   }
 }
 
-EncodableValue PrintingApi::WrapError(std::string_view error_message) {
+EncodableValue PrintingApi::WrapError(const std::string_view error_message) {
   return EncodableValue(
       EncodableList{EncodableValue(std::string(error_message)),
                     EncodableValue("Error"), EncodableValue()});

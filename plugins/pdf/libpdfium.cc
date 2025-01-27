@@ -16,9 +16,11 @@
 
 #include "libpdfium.h"
 
+#include <filesystem>
 #include <iostream>
 
 #include <dlfcn.h>
+#include <link.h>
 #include <shared_library/shared_library.h>
 
 #include "shared_library.h"
@@ -52,13 +54,33 @@ LibPdfiumExports::LibPdfiumExports(void* lib) {
 }
 
 LibPdfiumExports* LibPdfium::operator->() const {
-  return loadExports(nullptr);
+  return loadExports();
 }
 
-LibPdfiumExports* LibPdfium::loadExports(const char* library_path = nullptr) {
+LibPdfiumExports* LibPdfium::loadExports() {
   static LibPdfiumExports exports = [&] {
-    void* lib = dlopen(library_path ? library_path : "libpdfium.so",
-                       RTLD_NOW | RTLD_GLOBAL);
+    void* lib = dlopen("libpdfium.so", RTLD_NOW | RTLD_GLOBAL);
+
+    struct link_map* lmap;
+    dlinfo(lib, RTLD_DI_LINKMAP, &lmap);
+    const std::filesystem::path folder(lmap->l_name);
+
+    if (const auto icudtl_path = folder.parent_path() / "icudtl.dat";
+        !exists(icudtl_path)) {
+      spdlog::error("[libpdfium.so] Failed find icudtl.dat in {}",
+                    folder.c_str());
+      return LibPdfiumExports(nullptr);
+    }
+
+#if PDFIUM_WITH_V8
+    if (const auto snapshot_blob_path =
+            folder.parent_path() / "snapshot_blob.bin";
+        !exists(snapshot_blob_path)) {
+      spdlog::error("[libpdfium.so] Failed find snapshot_blob.bin in {}",
+                    folder.c_str());
+      return LibPdfiumExports(nullptr);
+    }
+#endif
 
     return LibPdfiumExports(lib);
   }();

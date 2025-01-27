@@ -44,27 +44,24 @@ PdfPlugin::PdfPlugin() = default;
 
 PdfPlugin::~PdfPlugin() = default;
 
-std::optional<FlutterError> PdfPlugin::RasterPdf(std::vector<uint8_t> data,
+std::optional<FlutterError> PdfPlugin::RasterPdf(const std::vector<uint8_t> doc,
                                                  std::vector<int32_t> pages,
                                                  double scale,
                                                  int job_id) {
-  SPDLOG_DEBUG("\tdoc_size: {}", data.size());
+  SPDLOG_DEBUG("\tdoc_size: {}", doc.size());
   SPDLOG_DEBUG("\tpages_count: {}", pages.size());
   SPDLOG_DEBUG("\tscale: {}", scale);
   SPDLOG_DEBUG("\tjob: {}", job_id);
-  FPDF_LIBRARY_CONFIG config;
+  FPDF_LIBRARY_CONFIG config{};
   config.version = 2;
-  config.m_pUserFontPaths = nullptr;
-  config.m_pIsolate = nullptr;
-  config.m_v8EmbedderSlot = 0;
   // requires a PDFium build with skia enabled
   config.m_RendererType = FPDF_RENDERERTYPE_SKIA;
 
   LibPdfium->InitLibraryWithConfig(&config);
 
-  const auto doc =
-      LibPdfium->LoadMemDocument64(data.data(), data.size(), nullptr);
-  if (!doc) {
+  const auto pdf_doc =
+      LibPdfium->LoadMemDocument64(doc.data(), doc.size(), nullptr);
+  if (!pdf_doc) {
     const unsigned long err = LibPdfium->GetLastError();
     SPDLOG_DEBUG("[pdf] Load unsuccessful: job: {}", job_id);
     switch (err) {
@@ -96,7 +93,7 @@ std::optional<FlutterError> PdfPlugin::RasterPdf(std::vector<uint8_t> data,
     return std::nullopt;
   }
 
-  const auto pageCount = LibPdfium->GetPageCount(doc);
+  const auto pageCount = LibPdfium->GetPageCount(pdf_doc);
 
   if (pages.empty()) {
     // Use all pages
@@ -109,7 +106,7 @@ std::optional<FlutterError> PdfPlugin::RasterPdf(std::vector<uint8_t> data,
       continue;
     }
 
-    const auto page = LibPdfium->LoadPage(doc, n);
+    const auto page = LibPdfium->LoadPage(pdf_doc, n);
     if (!page) {
       continue;
     }
@@ -147,14 +144,15 @@ std::optional<FlutterError> PdfPlugin::RasterPdf(std::vector<uint8_t> data,
     LibPdfium->ClosePage(page);
   }
 
-  LibPdfium->CloseDocument(doc);
+  LibPdfium->CloseDocument(pdf_doc);
   LibPdfium->DestroyLibrary();
 
   on_page_raster_end(job_id, "");
   return std::nullopt;
 }
 
-bool PdfPlugin::SharePdf(std::vector<uint8_t> buffer, const std::string& name) {
+bool PdfPlugin::SharePdf(const std::vector<uint8_t> buffer,
+                         const std::string& name) {
   SPDLOG_DEBUG("\t{}", name);
 
   const auto filename = "/tmp/" + name;

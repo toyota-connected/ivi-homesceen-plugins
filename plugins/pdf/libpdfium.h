@@ -85,14 +85,12 @@ struct LibPdfiumExports {
 
 class LibPdfium {
  public:
-  static bool IsPresent(const char* library_path = nullptr) {
-    return loadExports(library_path) != nullptr;
-  }
+  static bool IsPresent() { return loadExports() != nullptr; }
 
   LibPdfiumExports* operator->() const;
 
  private:
-  static LibPdfiumExports* loadExports(const char* library_path);
+  static LibPdfiumExports* loadExports();
 };
 
 extern LibPdfium LibPdfium;

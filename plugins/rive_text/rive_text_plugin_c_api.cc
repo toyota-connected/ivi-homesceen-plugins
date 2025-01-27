@@ -29,6 +29,6 @@ void RiveTextPluginCApiRegisterWithRegistrar(
         flutter::PluginRegistrarManager::GetInstance()
             ->GetRegistrar<flutter::PluginRegistrar>(registrar));
   } else {
-    spdlog::debug("librive_text.sp not found. Rive plugin will not be loaded.");
+    spdlog::debug("librive_text.so not found. Rive plugin will not be loaded.");
   }
 }
