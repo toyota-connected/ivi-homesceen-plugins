@@ -22,20 +22,20 @@
 #include <numeric>
 
 #include <flutter/plugin_registrar.h>
-#include <fpdfview.h>
 
+#include "libpdfium.h"
 #include "messages.h"
 #include "plugins/common/common.h"
 
 namespace plugin_pdf {
 
-std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel;
+std::unique_ptr<flutter::MethodChannel<>> channel;
 
 // static
 void PdfPlugin::RegisterWithRegistrar(flutter::PluginRegistrar* registrar) {
   auto plugin = std::make_unique<PdfPlugin>();
 
-  PrintingApi::SetUp(registrar->messenger(), plugin.get());
+  SetUp(registrar->messenger(), plugin.get());
 
   registrar->AddPlugin(std::move(plugin));
 }
@@ -44,27 +44,25 @@ PdfPlugin::PdfPlugin() = default;
 
 PdfPlugin::~PdfPlugin() = default;
 
-std::optional<FlutterError> PdfPlugin::RasterPdf(std::vector<uint8_t> data,
+std::optional<FlutterError> PdfPlugin::RasterPdf(const std::vector<uint8_t> doc,
                                                  std::vector<int32_t> pages,
                                                  double scale,
                                                  int job_id) {
-  SPDLOG_DEBUG("\tdoc_size: {}", data.size());
+  SPDLOG_DEBUG("\tdoc_size: {}", doc.size());
   SPDLOG_DEBUG("\tpages_count: {}", pages.size());
   SPDLOG_DEBUG("\tscale: {}", scale);
   SPDLOG_DEBUG("\tjob: {}", job_id);
-  FPDF_LIBRARY_CONFIG config;
+  FPDF_LIBRARY_CONFIG config{};
   config.version = 2;
-  config.m_pUserFontPaths = nullptr;
-  config.m_pIsolate = nullptr;
-  config.m_v8EmbedderSlot = 0;
   // requires a PDFium build with skia enabled
   config.m_RendererType = FPDF_RENDERERTYPE_SKIA;
 
-  FPDF_InitLibraryWithConfig(&config);
+  LibPdfium->InitLibraryWithConfig(&config);
 
-  auto doc = FPDF_LoadMemDocument64(data.data(), data.size(), nullptr);
-  if (!doc) {
-    unsigned long err = FPDF_GetLastError();
+  const auto pdf_doc =
+      LibPdfium->LoadMemDocument64(doc.data(), doc.size(), nullptr);
+  if (!pdf_doc) {
+    const unsigned long err = LibPdfium->GetLastError();
     SPDLOG_DEBUG("[pdf] Load unsuccessful: job: {}", job_id);
     switch (err) {
       case FPDF_ERR_SUCCESS:
@@ -91,11 +89,11 @@ std::optional<FlutterError> PdfPlugin::RasterPdf(std::vector<uint8_t> data,
       default:
         on_page_raster_end(job_id, "Unknown error " + std::to_string(err));
     }
-    FPDF_DestroyLibrary();
+    LibPdfium->DestroyLibrary();
     return std::nullopt;
   }
 
-  auto pageCount = FPDF_GetPageCount(doc);
+  const auto pageCount = LibPdfium->GetPageCount(pdf_doc);
 
   if (pages.empty()) {
     // Use all pages
@@ -103,37 +101,37 @@ std::optional<FlutterError> PdfPlugin::RasterPdf(std::vector<uint8_t> data,
     std::iota(std::begin(pages), std::end(pages), 0);
   }
 
-  for (auto n : pages) {
+  for (const auto n : pages) {
     if (n >= pageCount) {
       continue;
     }
 
-    auto page = FPDF_LoadPage(doc, n);
+    const auto page = LibPdfium->LoadPage(pdf_doc, n);
     if (!page) {
       continue;
     }
 
-    auto width = FPDF_GetPageWidth(page);
-    auto height = FPDF_GetPageHeight(page);
+    const auto width = LibPdfium->GetPageWidth(page);
+    const auto height = LibPdfium->GetPageHeight(page);
 
-    auto bWidth = static_cast<int>(width * scale);
-    auto bHeight = static_cast<int>(height * scale);
+    const auto bWidth = static_cast<int>(width * scale);
+    const auto bHeight = static_cast<int>(height * scale);
 
-    auto bitmap = FPDFBitmap_Create(bWidth, bHeight, 1);
-    FPDFBitmap_FillRect(bitmap, 0, 0, bWidth, bHeight, 0x00ffffff);
+    const auto bitmap = LibPdfium->Bitmap_Create(bWidth, bHeight, 1);
+    LibPdfium->Bitmap_FillRect(bitmap, 0, 0, bWidth, bHeight, 0x00ffffff);
 
-    FPDF_RenderPageBitmap(bitmap, page, 0, 0, bWidth, bHeight, 0,
-                          FPDF_ANNOT | FPDF_LCD_TEXT);
+    LibPdfium->RenderPageBitmap(bitmap, page, 0, 0, bWidth, bHeight, 0,
+                                FPDF_ANNOT | FPDF_LCD_TEXT);
 
-    auto* p = static_cast<uint8_t*>(FPDFBitmap_GetBuffer(bitmap));
-    auto stride = FPDFBitmap_GetStride(bitmap);
-    auto l = bHeight * stride;
+    auto* p = static_cast<uint8_t*>(LibPdfium->Bitmap_GetBuffer(bitmap));
+    const auto stride = LibPdfium->Bitmap_GetStride(bitmap);
+    const auto l = bHeight * stride;
 
     // BGRA to RGBA conversion
     for (auto y = 0; y < bHeight; y++) {
       auto offset = y * stride;
       for (auto x = 0; x < bWidth; x++) {
-        auto t = p[offset];
+        const auto t = p[offset];
         p[offset] = p[offset + 2];
         p[offset + 2] = t;
         offset += 4;
@@ -142,31 +140,33 @@ std::optional<FlutterError> PdfPlugin::RasterPdf(std::vector<uint8_t> data,
 
     on_page_rasterized(std::vector<uint8_t>{p, p + l}, bWidth, bHeight, job_id);
 
-    FPDFBitmap_Destroy(bitmap);
-    FPDF_ClosePage(page);
+    LibPdfium->Bitmap_Destroy(bitmap);
+    LibPdfium->ClosePage(page);
   }
 
-  FPDF_CloseDocument(doc);
-  FPDF_DestroyLibrary();
+  LibPdfium->CloseDocument(pdf_doc);
+  LibPdfium->DestroyLibrary();
 
   on_page_raster_end(job_id, "");
   return std::nullopt;
 }
 
-bool PdfPlugin::SharePdf(std::vector<uint8_t> buffer, const std::string& name) {
+bool PdfPlugin::SharePdf(const std::vector<uint8_t> buffer,
+                         const std::string& name) {
   SPDLOG_DEBUG("\t{}", name);
 
-  auto filename = "/tmp/" + name;
+  const auto filename = "/tmp/" + name;
 
-  auto fd = fopen(filename.c_str(), "wb");
+  const auto fd = fopen(filename.c_str(), "wb");
   fwrite(buffer.data(), buffer.size(), 1, fd);
   fclose(fd);
 
-  auto pid = fork();
+  const auto pid = fork();
 
   if (pid < 0) {
     return false;
-  } else if (pid == 0) {
+  }
+  if (pid == 0) {
     execlp("xdg-open", "xdg-open", filename.c_str(), nullptr);
   }
 

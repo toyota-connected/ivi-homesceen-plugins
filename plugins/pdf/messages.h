@@ -32,9 +32,11 @@ class FlutterError {
         message_(std::move(message)),
         details_(std::move(details)) {}
 
-  const std::string& code() const { return code_; }
-  const std::string& message() const { return message_; }
-  const flutter::EncodableValue& details() const { return details_; }
+  [[nodiscard]] const std::string& code() const { return code_; }
+  [[nodiscard]] const std::string& message() const { return message_; }
+  [[nodiscard]] const flutter::EncodableValue& details() const {
+    return details_;
+  }
 
  private:
   std::string code_;
@@ -45,14 +47,18 @@ class FlutterError {
 template <class T>
 class ErrorOr {
  public:
-  ErrorOr(const T& rhs) : v_(rhs) {}
-  ErrorOr(const T&& rhs) : v_(std::move(rhs)) {}
-  ErrorOr(const FlutterError& rhs) : v_(rhs) {}
-  ErrorOr(const FlutterError&& rhs) : v_(rhs) {}
+  explicit ErrorOr(const T& rhs) : v_(rhs) {}
+  explicit ErrorOr(const T&& rhs) : v_(std::move(rhs)) {}
+  explicit ErrorOr(const FlutterError& rhs) : v_(rhs) {}
+  explicit ErrorOr(const FlutterError&& rhs) : v_(rhs) {}
 
-  bool has_error() const { return std::holds_alternative<FlutterError>(v_); }
+  [[nodiscard]] bool has_error() const {
+    return std::holds_alternative<FlutterError>(v_);
+  }
   const T& value() const { return std::get<T>(v_); };
-  const FlutterError& error() const { return std::get<FlutterError>(v_); };
+  [[nodiscard]] const FlutterError& error() const {
+    return std::get<FlutterError>(v_);
+  };
 
  private:
   friend class PrintingApi;

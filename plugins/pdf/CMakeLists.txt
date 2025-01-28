@@ -16,30 +16,19 @@
 
 include_guard()
 
-if (NOT EXISTS ${PDFIUM_INCLUDE_DIR})
-    message(FATAL_ERROR "${PDFIUM_INCLUDE_DIR} does not exist")
-endif ()
-if (NOT EXISTS ${PDFIUM_LINK_LIBRARIES_DIR})
-    message(FATAL_ERROR "${PDFIUM_LINK_LIBRARIES_DIR} does not exist")
-endif ()
-
-message(STATUS "  PDFIUM_INCLUDE_DIR: ${PDFIUM_INCLUDE_DIR}")
-message(STATUS "  PDFIUM_LINK_LIBRARIES_DIR: ${PDFIUM_LINK_LIBRARIES_DIR}")
-
 add_library(plugin_pdf STATIC
         pdf_plugin_c_api.cc
         pdf_plugin.cc
+        libpdfium.cc
         messages.cc
 )
 
 target_include_directories(plugin_pdf PRIVATE
         include
-        ${PDFIUM_INCLUDE_DIR}
 )
 
 target_link_libraries(plugin_pdf PUBLIC
         flutter
         platform_homescreen
         plugin_common
-        ${PDFIUM_LINK_LIBRARIES_DIR}/libpdfium.so
 )
